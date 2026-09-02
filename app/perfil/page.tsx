@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/AuthContext";
+import { useRouter } from "next/navigation";
 import { User, Shield, Gamepad2, Settings, LogOut, Lock, Mail, Edit3, Save, CheckCircle, ChevronRight, Heart } from "lucide-react";
 
 export default function PerfilPage() {
+  const { user, token, isLoading, updateUser, logout } = useAuth();
+  const router = useRouter();
+
   const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
-  // Mocked state from database 'usuarios' table
   const [userInfo, setUserInfo] = useState({
-    nombre: "Juan Pérez",
-    email: "juan.perez@pikagames.com",
-    rol: "cliente" // or "admin"
+    nombre: "",
+    apellidos: "",
+    email: "",
+    rol: "cliente"
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -20,30 +25,95 @@ export default function PerfilPage() {
     confirmPassword: ""
   });
 
-  const handleInfoSubmit = (e: React.FormEvent) => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    } else if (user) {
+      setUserInfo({
+        nombre: user.nombre || "",
+        apellidos: user.apellidos || "",
+        email: user.email || "",
+        rol: user.rol || "cliente"
+      });
+    }
+  }, [user, isLoading, router]);
+
+  const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingInfo(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSavingInfo(false);
-      alert("Información personal actualizada con éxito.");
-    }, 1000);
+    
+    try {
+      const response = await fetch(`${apiUrl}/auth/perfil`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre: userInfo.nombre,
+          apellidos: userInfo.apellidos,
+          email: userInfo.email
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        updateUser(data.usuario);
+        alert("Información personal actualizada con éxito.");
+      } else {
+        alert(data.message || "Error al actualizar la información.");
+      }
+    } catch (error) {
+      alert("Error de conexión con el servidor.");
+    }
+
+    setIsSavingInfo(false);
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       alert("Las nuevas contraseñas no coinciden.");
       return;
     }
     setIsSavingPassword(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSavingPassword(false);
-      alert("Contraseña actualizada con éxito.");
-      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    }, 1000);
+    
+    try {
+      const response = await fetch(`${apiUrl}/auth/password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Contraseña actualizada con éxito.");
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        alert(data.message || "Error al actualizar la contraseña.");
+      }
+    } catch (error) {
+      alert("Error de conexión con el servidor.");
+    }
+    
+    setIsSavingPassword(false);
   };
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[#111311] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#ffd90f] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-300 font-sans pt-24 pb-32">
@@ -85,17 +155,32 @@ export default function PerfilPage() {
               </h2>
               
               <form onSubmit={handleInfoSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre Completo</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                    <input 
-                      type="text" 
-                      value={userInfo.nombre}
-                      onChange={(e) => setUserInfo({...userInfo, nombre: e.target.value})}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                      required
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre</label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                      <input 
+                        type="text" 
+                        value={userInfo.nombre}
+                        onChange={(e) => setUserInfo({...userInfo, nombre: e.target.value})}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Apellidos</label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                      <input 
+                        type="text" 
+                        value={userInfo.apellidos}
+                        onChange={(e) => setUserInfo({...userInfo, apellidos: e.target.value})}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -199,7 +284,7 @@ export default function PerfilPage() {
             {/* Quick Links */}
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-2">            
               
-              <button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors text-left text-zinc-500">
+              <button onClick={logout} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors text-left text-zinc-500">
                 <LogOut className="w-5 h-5" />
                 <span className="font-medium">Cerrar Sesión</span>
               </button>

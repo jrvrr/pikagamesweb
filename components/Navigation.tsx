@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/AuthContext";
 import {
   MessageCircle,
   Search,
@@ -12,21 +13,31 @@ import {
   Gamepad2,
   Compass,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  Home,
+  X
 } from "lucide-react";
+import { AuthModal } from "@/components/AuthModal";
 import Link from "next/link";
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   
-  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : "";
+  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/" ? "inicio" : "";
 
   const handleTabClick = (tab: string, path?: string) => {
     setIsMenuOpen(false);
     if (path) {
-      router.push(path);
+      if (path === "/" && pathname === "/") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        router.push(path);
+      }
     }
   };
 
@@ -66,14 +77,23 @@ export function Navigation() {
                 <input type="text" placeholder="Buscar..." className="pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] w-32 md:focus:w-56 transition-all text-white placeholder-zinc-500" />
               </div>
             </div>
-            <a href="#" className="flex items-center px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
+            <Link href="/guardados" className="flex items-center px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
               <Heart className="w-5 h-5" />
-            </a>
+            </Link>
             <div className="flex items-center h-full py-2">
-              <Link href="/perfil" className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm">
-                <User className="w-5 h-5" />
-                <span>Mi Perfil</span>
-              </Link>
+              {isLoading ? (
+                <div className="w-24 h-full bg-zinc-800/50 animate-pulse rounded-full"></div>
+              ) : user ? (
+                <Link href="/perfil" className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm">
+                  <User className="w-5 h-5" />
+                  <span className="max-w-[120px] truncate font-bold">{user.nombre.split(" ")[0]}</span>
+                </Link>
+              ) : (
+                <button onClick={() => setIsAuthModalOpen(true)} className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm focus:outline-none">
+                  <User className="w-5 h-5" />
+                  <span className="font-bold">Entrar</span>
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -92,21 +112,21 @@ export function Navigation() {
                Descubre Pikagames
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Link href="/catalogo" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 p-5 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+              <Link href="/catalogo" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <Gamepad2 className="w-12 h-12 text-[#ffd90f]" />
                 </div>
                 <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-lg">Catálogo de Juegos</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Explora miles de títulos increíbles para tu consola.</p>
               </Link>
-              <Link href="/soporte" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 p-5 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+              <Link href="/soporte" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <HelpCircle className="w-12 h-12 text-[#ffd90f]" />
                 </div>
                 <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-lg">Servicio al Cliente</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">¿Necesitas ayuda? Estamos aquí para resolver tus dudas.</p>
               </Link>
-              <a href="https://wa.me/528136975487" onClick={() => setIsMenuOpen(false)} target="_blank" rel="noreferrer" className="flex flex-col group/item bg-zinc-900/80 p-5 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+              <a href="https://wa.me/528136975487" onClick={() => setIsMenuOpen(false)} target="_blank" rel="noreferrer" className="flex flex-col group/item bg-zinc-900/80 px-4 py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <MessageCircle className="w-12 h-12 text-[#25D366]" />
                 </div>
@@ -121,12 +141,21 @@ export function Navigation() {
             <div>
               <h3 className="text-zinc-500 font-bold mb-6 uppercase tracking-widest text-sm">Enlaces Rápidos</h3>
               <div className="flex flex-col gap-3">
-                <a href="#" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
-                  <Heart className="w-5 h-5 text-[#ffd90f]" /> Guardados
-                </a>
-                <Link href="/perfil" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
-                  <User className="w-5 h-5 text-[#ffd90f]" /> Mi Cuenta
+                <Link href="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
+                  <Home className="w-5 h-5 text-[#ffd90f]" /> Regresar a Inicio
                 </Link>
+                <Link href="/guardados" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
+                  <Heart className="w-5 h-5 text-[#ffd90f]" /> Guardados
+                </Link>
+                {user ? (
+                  <Link href="/perfil" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
+                    <User className="w-5 h-5 text-[#ffd90f]" /> Mi Cuenta
+                  </Link>
+                ) : (
+                  <button onClick={() => { setIsAuthModalOpen(true); setIsMenuOpen(false); }} className="flex items-center w-full gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 focus:outline-none text-left">
+                    <User className="w-5 h-5 text-[#ffd90f]" /> Iniciar Sesión
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -142,33 +171,56 @@ export function Navigation() {
       </div>
 
       {/* Mobile Bottom Tab Bar (Floating Pill) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-[70] bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2">
-        <button onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full">
-          <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
-            <Menu className="w-6 h-6" />
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-[70] bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">
+        
+        {isMobileSearchOpen ? (
+          <div className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">
+            <Search className="w-5 h-5 text-[#ffd90f] shrink-0 ml-2" />
+            <input 
+              type="text" 
+              placeholder="Buscar juegos..." 
+              className="w-full h-full bg-transparent border-none text-white pl-3 pr-2 focus:outline-none focus:ring-0 text-sm font-medium placeholder-zinc-500"
+              autoFocus
+            />
+            <button 
+              onClick={() => setIsMobileSearchOpen(false)}
+              className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 ml-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        </button>
-        <button onClick={() => handleTabClick("guardados", "/guardados")} className="flex items-center justify-center w-full h-full">
-          <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "guardados" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
-            <Heart className="w-6 h-6" />
+        ) : (
+          <div className="flex justify-around items-center w-full h-full animate-in fade-in zoom-in duration-200">
+            <button onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full">
+              <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
+                <Menu className="w-6 h-6" />
+              </div>
+            </button>
+            <button onClick={() => handleTabClick("guardados", "/guardados")} className="flex items-center justify-center w-full h-full">
+              <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "guardados" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
+                <Heart className="w-6 h-6" />
+              </div>
+            </button>
+            <button onClick={() => setIsMobileSearchOpen(true)} className="flex items-center justify-center w-full h-full">
+              <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMobileSearchOpen && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
+                <Search className="w-6 h-6" />
+              </div>
+            </button>
+            <button onClick={() => handleTabClick("inicio", "/")} className="flex items-center justify-center w-full h-full">
+              <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "inicio" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
+                <Gamepad2 className="w-6 h-6" />
+              </div>
+            </button>
+            <button onClick={() => handleTabClick("perfil", "/perfil")} className="flex items-center justify-center w-full h-full">
+              <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "perfil" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
+                <User className="w-6 h-6" />
+              </div>
+            </button>
           </div>
-        </button>
-        <button onClick={() => handleTabClick("buscar", "/buscar")} className="flex items-center justify-center w-full h-full">
-          <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "buscar" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
-            <Search className="w-6 h-6" />
-          </div>
-        </button>
-        <button onClick={() => handleTabClick("inicio", "/")} className="flex items-center justify-center w-full h-full">
-          <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "inicio" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
-            <Gamepad2 className="w-6 h-6" />
-          </div>
-        </button>
-        <button onClick={() => handleTabClick("perfil", "/perfil")} className="flex items-center justify-center w-full h-full">
-          <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "perfil" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
-            <User className="w-6 h-6" />
-          </div>
-        </button>
+        )}
       </div>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );
 }
