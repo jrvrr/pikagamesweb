@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "./api";
 
 export interface User {
   id: string;
@@ -29,31 +30,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
   const checkAuth = async () => {
     setIsLoading(true);
     const storedToken = localStorage.getItem("token");
     
     if (storedToken) {
       try {
-        const response = await fetch(`${apiUrl}/auth/me`, {
-          headers: {
-            "Authorization": `Bearer ${storedToken}`
-          }
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setToken(storedToken);
-        } else {
-          // Token is invalid or expired
-          localStorage.removeItem("token");
-          setUser(null);
-          setToken(null);
-        }
+        const userData = await apiFetch("/auth/me");
+        setUser(userData);
+        setToken(storedToken);
       } catch (error) {
+        // Token is invalid or expired
+        localStorage.removeItem("token");
+        setUser(null);
+        setToken(null);
         console.error("Error al verificar sesión:", error);
       }
     } else {
