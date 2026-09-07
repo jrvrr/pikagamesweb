@@ -57,17 +57,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const data = await response.json();
 
       if (response.ok) {
-        // Fetch user info with the new token
-        const meResponse = await fetch(`${apiUrl}/auth/me`, {
-          headers: { "Authorization": `Bearer ${data.token}` }
-        });
-        
-        if (meResponse.ok) {
-          const userData = await meResponse.json();
-          login(data.token, userData);
-          onClose(); // Close modal on success
+        const token = data.token;
+        const userObj = data.usuario || data.user;
+
+        if (token && userObj) {
+          login(token, userObj);
+          onClose();
+        } else if (token) {
+          // Si el servidor no devolvió el objeto usuario en el login, intentar /auth/me
+          const meResponse = await fetch(`${apiUrl}/auth/me`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          
+          if (meResponse.ok) {
+            const meData = await meResponse.json();
+            const fetchedUser = meData.usuario || meData.user || meData;
+            login(token, fetchedUser);
+            onClose();
+          } else {
+            setError("Error al obtener datos del usuario.");
+          }
         } else {
-          setError("Error al obtener datos del usuario.");
+          setError("Respuesta del servidor no válida.");
         }
       } else {
         setError(data.message || (isLogin ? "Credenciales inválidas." : "Error al registrarse."));

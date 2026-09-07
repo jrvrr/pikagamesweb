@@ -37,7 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedToken) {
       try {
         const userData = await apiFetch("/auth/me");
-        setUser(userData);
+        const userObj = userData?.usuario || userData?.user || userData;
+        setUser(userObj);
         setToken(storedToken);
       } catch (error) {
         // Token is invalid or expired
