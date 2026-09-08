@@ -237,6 +237,7 @@ export default function PerfilPage() {
                   <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Contraseña Actual</label>
                   <input 
                     type="password" 
+                    autoComplete="current-password"
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
                     placeholder="••••••••"
@@ -250,6 +251,7 @@ export default function PerfilPage() {
                     <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nueva Contraseña</label>
                     <input 
                       type="password" 
+                      autoComplete="new-password"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
                       placeholder="••••••••"
@@ -261,6 +263,7 @@ export default function PerfilPage() {
                     <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Confirmar Nueva Contraseña</label>
                     <input 
                       type="password" 
+                      autoComplete="new-password"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
                       placeholder="••••••••"
