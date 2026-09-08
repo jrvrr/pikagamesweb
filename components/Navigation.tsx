@@ -103,57 +103,57 @@ export function Navigation() {
       <div onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 md:top-16 bg-black/70 backdrop-blur-sm z-50 transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}></div>
 
       {/* Mega Menu (Dropdown) */}
-      <div className={`fixed top-14 md:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-[60] cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] md:max-h-[calc(100vh-4rem)] pb-6 md:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
-        <div className="max-w-6xl mx-auto w-full py-8 md:py-12 px-6 grid grid-cols-1 md:grid-cols-4 gap-8 relative z-50">
+      <div className={`fixed top-14 md:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-[60] cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] md:max-h-[calc(100vh-4rem)] pb-28 md:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
+        <div className="max-w-6xl mx-auto w-full py-5 md:py-12 px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-5 md:gap-8 relative z-50">
           
           {/* Left Main Content */}
           <div className="col-span-3">
-            <h3 className="text-zinc-500 font-bold mb-6 uppercase tracking-widest text-sm flex items-center gap-2">
+            <h3 className="text-zinc-500 font-bold mb-3 md:mb-6 uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2">
                Descubre Pikagames
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Link href="/catalogo" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 md:gap-4">
+              <Link href="/catalogo" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <Gamepad2 className="w-12 h-12 text-[#ffd90f]" />
                 </div>
-                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-lg">Catálogo de Juegos</span>
+                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Catálogo de Juegos</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Explora miles de títulos increíbles para tu consola.</p>
               </Link>
-              <Link href="/soporte" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+              <Link href="/soporte" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <HelpCircle className="w-12 h-12 text-[#ffd90f]" />
                 </div>
-                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-lg">Servicio al Cliente</span>
+                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Servicio al Cliente</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">¿Necesitas ayuda? Estamos aquí para resolver tus dudas.</p>
               </Link>
-              <a href="https://wa.me/528136975487" onClick={() => setIsMenuOpen(false)} target="_blank" rel="noreferrer" className="flex flex-col group/item bg-zinc-900/80 px-4 py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+              <a href="https://wa.me/528136975487" onClick={() => setIsMenuOpen(false)} target="_blank" rel="noreferrer" className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <MessageCircle className="w-12 h-12 text-[#25D366]" />
                 </div>
-                <span className="font-bold text-white group-hover/item:text-[#25D366] transition-colors text-lg">Vía WhatsApp</span>
+                <span className="font-bold text-white group-hover/item:text-[#25D366] transition-colors text-base md:text-lg">Vía WhatsApp</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Escríbenos directamente y recibe atención personalizada.</p>
               </a>
             </div>
           </div>
 
           {/* Right Sidebar */}
-          <div className="col-span-1 md:border-l md:border-t-0 border-t border-zinc-800 md:pl-8 pt-8 md:pt-0 flex flex-col justify-between">
+          <div className="col-span-1 md:border-l md:border-t-0 border-t border-zinc-800 md:pl-8 pt-4 md:pt-0 flex flex-col justify-between">
             <div>
-              <h3 className="text-zinc-500 font-bold mb-6 uppercase tracking-widest text-sm">Enlaces Rápidos</h3>
-              <div className="flex flex-col gap-3">
-                <Link href="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
-                  <Home className="w-5 h-5 text-[#ffd90f]" /> Regresar a Inicio
+              <h3 className="text-zinc-500 font-bold mb-3 md:mb-6 uppercase tracking-widest text-xs sm:text-sm">Enlaces Rápidos</h3>
+              <div className="flex flex-col gap-2.5 md:gap-3">
+                <Link href="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
+                  <Home className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Regresar a Inicio
                 </Link>
-                <Link href="/guardados" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
-                  <Heart className="w-5 h-5 text-[#ffd90f]" /> Guardados
+                <Link href="/guardados" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
+                  <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Guardados
                 </Link>
                 {user ? (
-                  <Link href="/perfil" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800">
-                    <User className="w-5 h-5 text-[#ffd90f]" /> Mi Cuenta
+                  <Link href="/perfil" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Mi Cuenta
                   </Link>
                 ) : (
-                  <button onClick={() => { setIsAuthModalOpen(true); setIsMenuOpen(false); }} className="flex items-center w-full gap-3 px-4 py-2 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 focus:outline-none text-left">
-                    <User className="w-5 h-5 text-[#ffd90f]" /> Iniciar Sesión
+                  <button onClick={() => { setIsAuthModalOpen(true); setIsMenuOpen(false); }} className="flex items-center w-full gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 focus:outline-none text-left text-sm sm:text-base">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Iniciar Sesión
                   </button>
                 )}
               </div>
@@ -211,7 +211,17 @@ export function Navigation() {
                 <Gamepad2 className="w-6 h-6" />
               </div>
             </button>
-            <button onClick={() => handleTabClick("perfil", "/perfil")} className="flex items-center justify-center w-full h-full">
+            <button 
+              onClick={() => {
+                if (user) {
+                  handleTabClick("perfil", "/perfil");
+                } else {
+                  setIsMenuOpen(false);
+                  setIsAuthModalOpen(true);
+                }
+              }} 
+              className="flex items-center justify-center w-full h-full"
+            >
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "perfil" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <User className="w-6 h-6" />
               </div>
