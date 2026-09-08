@@ -26,8 +26,13 @@ import {
   Star,
   StarHalf,
   ChevronLeft,
-  X
+  X,
+  CreditCard,
+  Landmark,
+  Send,
+  Loader2
 } from "lucide-react";
+import { getPopularGames, Game } from "@/lib/rawg";
 
 export default function HomePage() {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -39,6 +44,30 @@ export default function HomePage() {
   const [mensaje, setMensaje] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Game Catalog States
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoadingGames, setIsLoadingGames] = useState(true);
+  const [purchaseModal, setPurchaseModal] = useState<{isOpen: boolean; game: Game | null; step: 'method' | 'paypal' | 'transferencia'}>({
+    isOpen: false,
+    game: null,
+    step: 'method'
+  });
+
+  useEffect(() => {
+    async function loadGames() {
+      const data = await getPopularGames(1, 8);
+      setGames(data);
+      setIsLoadingGames(false);
+    }
+    loadGames();
+  }, []);
+
+  const handleWhatsAppRedirect = (gameName: string) => {
+    const message = `Hola Pikagames, acabo de realizar una transferencia para comprar el juego "${gameName}". Aquí envío mi comprobante:`;
+    const whatsappUrl = `https://wa.me/528136975487?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const handleSubmitComentario = async () => {
     if (rating === 0 || mensaje.trim() === "") {
@@ -290,7 +319,7 @@ export default function HomePage() {
       </section>
 
       {/* Catálogo Section */}
-      <section className="py-20 px-6 md:px-12 border-b-4 border-zinc-900 bg-white overflow-hidden">
+      <section className="py-20 px-6 md:px-12 border-b-4 border-zinc-900 bg-white overflow-hidden" id="catalogo">
         <motion.h2 
           initial={{ opacity: 0, y: -100, scale: 1.2 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -298,31 +327,59 @@ export default function HomePage() {
           transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
           className="text-3xl font-black mb-10 uppercase tracking-tight text-center text-zinc-900"
         >
-          Catálogo
+          Catálogo Destacado
         </motion.h2>
-        <motion.div 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.2 }}
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: { staggerChildren: 0.1 }
-            }
-          }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto"
-        >
-          {[1, 2, 3, 4].map((item) => (
-            <motion.div 
-              variants={{ hidden: { opacity: 0, y: -150, scale: 0.8 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-              key={item} 
-              className="bg-zinc-200 aspect-[3/4] rounded-xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(24,24,27,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex items-center justify-center"
-            >
-              <span className="font-bold text-zinc-400">Juego</span>
-            </motion.div>
-          ))}
-        </motion.div>
+
+        {isLoadingGames ? (
+          <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
+            <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
+            <p className="font-bold text-lg">Cargando catálogo...</p>
+          </div>
+        ) : (
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.2 }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1 }
+              }
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto"
+          >
+            {games.map((game) => (
+              <motion.div 
+                variants={{ hidden: { opacity: 0, y: 50, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+                key={game.id} 
+                className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group"
+              >
+                <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                  {game.background_image ? (
+                    <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
+                  )}
+                  <div className="absolute top-2 right-2 bg-[#ffd90f] text-zinc-900 font-bold px-2 py-1 rounded-md text-xs shadow-md flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-current" /> {game.rating.toFixed(1)}
+                  </div>
+                </div>
+                <div className="p-4 flex flex-col flex-grow">
+                  <h3 className="text-white font-bold text-lg mb-2 line-clamp-2 leading-tight">{game.name}</h3>
+                  <div className="mt-auto pt-4 flex gap-2">
+                    <Button 
+                      onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                      className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase tracking-wide border-2 border-transparent hover:border-white shadow-sm"
+                    >
+                      Comprar
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </section>
 
       {/* Comentarios Section */}
@@ -396,7 +453,7 @@ export default function HomePage() {
                       ))}
                     </div>
                     <p className={`${comment.color} font-bold leading-tight text-[13px] md:text-base line-clamp-4`}>
-                      "{comment.text}"
+                      &quot;{comment.text}&quot;
                     </p>
                   </div>
                 </div>
@@ -661,6 +718,157 @@ export default function HomePage() {
                           Enviar Correo
                         </Button>
                       </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Compra */}
+      <AnimatePresence>
+        {purchaseModal.isOpen && purchaseModal.game && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white border-4 border-zinc-900 rounded-3xl shadow-[8px_8px_0px_0px_rgba(255,217,15,1)] overflow-hidden z-10 flex flex-col my-auto"
+            >
+              {/* Header */}
+              <div className="relative h-40 bg-zinc-900 overflow-hidden border-b-4 border-zinc-900">
+                {purchaseModal.game.background_image && (
+                  <img src={purchaseModal.game.background_image} alt="Game background" className="w-full h-full object-cover opacity-50" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+                <button 
+                  onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white border-2 border-zinc-900 hover:bg-[#ffd90f] flex items-center justify-center text-zinc-900 transition-colors z-20 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                >
+                  <X className="w-5 h-5 font-bold" />
+                </button>
+                <div className="absolute bottom-4 left-4 right-4 z-20">
+                  <span className="bg-[#ff7a93] text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded border-2 border-zinc-900 mb-2 inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Comprar Juego</span>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] line-clamp-1">{purchaseModal.game.name}</h3>
+                </div>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-6">
+                <AnimatePresence mode="wait">
+                  {purchaseModal.step === 'method' && (
+                    <motion.div 
+                      key="method"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex flex-col gap-4"
+                    >
+                      <h4 className="font-black text-zinc-900 text-lg uppercase tracking-tight text-center mb-2">Selecciona un método de pago</h4>
+                      
+                      <button 
+                        onClick={() => setPurchaseModal({ ...purchaseModal, step: 'paypal' })}
+                        className="group relative w-full bg-blue-50 border-4 border-blue-900 hover:bg-blue-100 rounded-2xl p-4 flex items-center gap-4 transition-all hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(30,58,138,1)] active:translate-y-0 active:shadow-none"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0">
+                          <CreditCard className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-black text-blue-900 text-lg">PayPal</div>
+                          <div className="text-blue-800/70 font-medium text-sm">Pago rápido y seguro</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => setPurchaseModal({ ...purchaseModal, step: 'transferencia' })}
+                        className="group relative w-full bg-emerald-50 border-4 border-emerald-900 hover:bg-emerald-100 rounded-2xl p-4 flex items-center gap-4 transition-all hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(6,78,59,1)] active:translate-y-0 active:shadow-none"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-emerald-900 text-white flex items-center justify-center shrink-0">
+                          <Landmark className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-black text-emerald-900 text-lg">Transferencia Bancaria</div>
+                          <div className="text-emerald-800/70 font-medium text-sm">Envía tu comprobante por WhatsApp</div>
+                        </div>
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {purchaseModal.step === 'paypal' && (
+                    <motion.div 
+                      key="paypal"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex flex-col items-center text-center"
+                    >
+                      <button onClick={() => setPurchaseModal({ ...purchaseModal, step: 'method' })} className="text-zinc-500 hover:text-zinc-900 mb-4 flex items-center gap-1 self-start font-bold transition-colors">
+                        <ChevronLeft className="w-4 h-4" /> Volver
+                      </button>
+                      
+                      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 border-4 border-blue-900">
+                         <CreditCard className="w-10 h-10 text-blue-900" />
+                      </div>
+                      <h4 className="font-black text-2xl text-zinc-900 mb-2">Pago con PayPal</h4>
+                      <p className="text-zinc-600 font-medium mb-6">Serás redirigido a PayPal para completar tu compra de forma segura.</p>
+                      
+                      <Button className="w-full bg-[#ffc439] hover:bg-[#f4b828] text-blue-900 font-black text-lg py-6 rounded-xl border-4 border-blue-900 shadow-[4px_4px_0px_0px_rgba(30,58,138,1)]">
+                        Pagar con PayPal
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {purchaseModal.step === 'transferencia' && (
+                    <motion.div 
+                      key="transferencia"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex flex-col"
+                    >
+                      <button onClick={() => setPurchaseModal({ ...purchaseModal, step: 'method' })} className="text-zinc-500 hover:text-zinc-900 mb-4 flex items-center gap-1 self-start font-bold transition-colors">
+                        <ChevronLeft className="w-4 h-4" /> Volver
+                      </button>
+                      
+                      <h4 className="font-black text-xl text-zinc-900 mb-4 uppercase text-center border-b-4 border-dashed border-zinc-200 pb-4">Datos Bancarios</h4>
+                      
+                      <div className="bg-zinc-100 p-4 rounded-xl border-2 border-zinc-300 mb-6 font-medium text-zinc-800 space-y-3 shadow-inner">
+                        <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
+                           <span className="text-zinc-500 text-sm">Banco:</span>
+                           <span className="font-black text-zinc-900">Banorte</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
+                           <span className="text-zinc-500 text-sm">Titular:</span>
+                           <span className="font-black text-zinc-900">Pikagames S.A de C.V</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                           <span className="text-zinc-500 text-sm">CLABE / Cuenta:</span>
+                           <span className="font-black text-zinc-900 text-lg tracking-wider">072 580 1234567890 1</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#ffd90f]/20 border-2 border-[#ffd90f] p-4 rounded-xl mb-6">
+                        <p className="text-sm font-bold text-zinc-800 text-center">
+                          ⚠️ Instrucciones: Realiza la transferencia y luego envíanos el comprobante por WhatsApp presionando el botón de abajo.
+                        </p>
+                      </div>
+
+                      <Button 
+                        onClick={() => handleWhatsAppRedirect(purchaseModal.game?.name || "Juego")}
+                        className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-lg py-6 rounded-xl border-4 border-zinc-900 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] flex items-center justify-center gap-2"
+                      >
+                        <Send className="w-5 h-5" />
+                        Enviar recibo a WhatsApp
+                      </Button>
                     </motion.div>
                   )}
                 </AnimatePresence>

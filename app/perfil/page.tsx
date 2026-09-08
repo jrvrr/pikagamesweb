@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
 import { User, Shield, Gamepad2, Settings, LogOut, Lock, Mail, Edit3, Save, CheckCircle, ChevronRight, Heart } from "lucide-react";
