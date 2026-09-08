@@ -429,13 +429,14 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto relative z-10 flex flex-col items-center">
           
           {/* Button */}
-          <div className="mb-20">
+          <div className="mb-10 sm:mb-14 md:mb-16">
             <Button 
               onClick={() => setIsCustomerServiceOpen(true)}
               size="lg" 
-              className="text-xl md:text-2xl font-black px-8 py-5 rounded-full bg-gradient-to-r from-[#ffdf91] to-[#ff7a93] text-zinc-900 border-4 border-white hover:from-[#ffcf61] hover:to-[#ff607d] transition-all shadow-[0_6px_25px_rgba(255,122,147,0.3)] hover:shadow-[0_12px_40px_rgba(255,122,147,0.7)] hover:-translate-y-2 hover:scale-105 tracking-tight flex items-center gap-3"
+              className="text-sm sm:text-lg md:text-xl font-extrabold px-5 py-2.5 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-gradient-to-r from-[#ffdf91] to-[#ff7a93] text-zinc-900 border-2 border-white hover:from-[#ffcf61] hover:to-[#ff607d] transition-all shadow-[0_4px_20px_rgba(255,122,147,0.3)] hover:shadow-[0_8px_30px_rgba(255,122,147,0.6)] hover:-translate-y-1 tracking-tight flex items-center gap-2 sm:gap-3"
             >
-              Servicio al cliente <ChevronRight className="w-8 h-8 stroke-[4]" />
+              <span>Servicio al cliente</span>
+              <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 stroke-[3] shrink-0" />
             </Button>
           </div>
 
@@ -517,12 +518,12 @@ export default function HomePage() {
       {/* Modal de Servicio al Cliente */}
       <AnimatePresence>
         {isCustomerServiceOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/75 backdrop-blur-sm"
               onClick={() => {
                 setIsCustomerServiceOpen(false);
                 setTimeout(() => setCustomerServiceView('selection'), 300);
@@ -532,26 +533,26 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-zinc-900 border-4 border-zinc-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-10 flex flex-col"
+              className="relative w-full max-w-xl bg-zinc-900 border-2 border-zinc-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col my-auto max-h-[85vh] sm:max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex justify-between items-center p-6 border-b-2 border-zinc-800 bg-zinc-900/50">
-                <h3 className="text-2xl font-black text-white flex items-center gap-2">
-                  <Heart className="text-[#ff7a93] fill-[#ff7a93]" /> Servicio al Cliente
+              <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-zinc-800 bg-zinc-900/80">
+                <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#ff7a93] fill-[#ff7a93]" /> Servicio al Cliente
                 </h3>
                 <button 
                   onClick={() => {
                     setIsCustomerServiceOpen(false);
                     setTimeout(() => setCustomerServiceView('selection'), 300);
                   }}
-                  className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
 
               {/* Contenido */}
-              <div className="p-6 md:p-8 min-h-[400px] flex flex-col justify-center relative">
+              <div className="p-5 sm:p-6 md:p-8 flex flex-col justify-center relative overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {customerServiceView === 'selection' && (
                     <motion.div 
@@ -559,28 +560,28 @@ export default function HomePage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="flex flex-col md:flex-row gap-6 w-full"
+                      className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full py-2"
                     >
                       <button 
                         onClick={() => setCustomerServiceView('comment')}
-                        className="flex-1 group bg-zinc-800 border-2 border-zinc-700 hover:border-[#ffd90f] hover:bg-zinc-800/80 rounded-2xl p-8 flex flex-col items-center text-center transition-all hover:-translate-y-2"
+                        className="flex-1 group bg-zinc-800/90 border-2 border-zinc-700 hover:border-[#ffd90f] hover:bg-zinc-800 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1 active:translate-y-0"
                       >
-                        <div className="w-20 h-20 rounded-full bg-zinc-700 group-hover:bg-[#ffd90f]/20 flex items-center justify-center mb-6 transition-colors">
-                          <MessageCircle className="w-10 h-10 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-zinc-700/70 group-hover:bg-[#ffd90f]/20 flex items-center justify-center mb-4 transition-colors">
+                          <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
                         </div>
-                        <h4 className="text-xl font-bold text-white mb-2">Dejar un Comentario</h4>
-                        <p className="text-sm text-zinc-400">Cuéntanos tu experiencia y aparece en nuestra página.</p>
+                        <h4 className="text-lg sm:text-xl font-bold text-white mb-1.5">Dejar un Comentario</h4>
+                        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">Cuéntanos tu experiencia y aparece en nuestra página.</p>
                       </button>
 
                       <button 
                         onClick={() => setCustomerServiceView('email')}
-                        className="flex-1 group bg-zinc-800 border-2 border-zinc-700 hover:border-[#ff7a93] hover:bg-zinc-800/80 rounded-2xl p-8 flex flex-col items-center text-center transition-all hover:-translate-y-2"
+                        className="flex-1 group bg-zinc-800/90 border-2 border-zinc-700 hover:border-[#ff7a93] hover:bg-zinc-800 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1 active:translate-y-0"
                       >
-                        <div className="w-20 h-20 rounded-full bg-zinc-700 group-hover:bg-[#ff7a93]/20 flex items-center justify-center mb-6 transition-colors">
-                          <Mail className="w-10 h-10 text-zinc-400 group-hover:text-[#ff7a93] transition-colors" />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-zinc-700/70 group-hover:bg-[#ff7a93]/20 flex items-center justify-center mb-4 transition-colors">
+                          <Mail className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-400 group-hover:text-[#ff7a93] transition-colors" />
                         </div>
-                        <h4 className="text-xl font-bold text-white mb-2">Enviar un Correo</h4>
-                        <p className="text-sm text-zinc-400">Contáctanos directamente para soporte o dudas.</p>
+                        <h4 className="text-lg sm:text-xl font-bold text-white mb-1.5">Enviar un Correo</h4>
+                        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">Contáctanos directamente para soporte o dudas.</p>
                       </button>
                     </motion.div>
                   )}

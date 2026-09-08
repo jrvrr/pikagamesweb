@@ -29,7 +29,7 @@ export default function PerfilPage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login");
+      router.push("/");
     } else if (user) {
       setUserInfo({
         nombre: user.nombre || "",
@@ -116,9 +116,19 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#111311] text-zinc-300 font-sans pt-24 pb-32">
+    <div className="min-h-screen bg-[#111311] text-zinc-300 font-sans pt-20 md:pt-24 pb-32">
       <div className="max-w-6xl mx-auto px-6">
         
+        {/* Back to home button for easy mobile navigation */}
+        <div className="mb-6">
+          <button 
+            onClick={() => router.push("/")} 
+            className="bg-zinc-800 text-white border border-zinc-700 hover:bg-zinc-700 hover:border-[#ffd90f] rounded-full px-5 py-2 text-xs md:text-sm font-bold shadow-md inline-flex items-center gap-2 transition-all hover:-translate-y-0.5"
+          >
+            ← Volver a Inicio
+          </button>
+        </div>
+
         {/* Profile Header */}
         <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
           <div className="relative group">

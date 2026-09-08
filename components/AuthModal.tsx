@@ -84,7 +84,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setError(data.message || (isLogin ? "Credenciales inválidas." : "Error al registrarse."));
       }
     } catch (err) {
-      setError("Error de conexión al servidor.");
+      if (typeof window !== "undefined" && !navigator.onLine) {
+        setError("Sin conexión a Internet. Por favor verifica tu red.");
+      } else {
+        setError("No se pudo conectar al servidor. Intenta de nuevo.");
+      }
     }
 
     setIsSubmitting(false);
