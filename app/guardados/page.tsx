@@ -6,48 +6,43 @@ import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart, Trash2, ArrowLeft, Gamepad2, Tag } from "lucide-react";
 import { ShapeGrid } from "@/components/ShapeGrid";
 
-// Mock data for saved games
-const initialSavedGames = [
-  {
-    id: 1,
-    title: "Zelda: Tears of the Kingdom",
-    price: "$1,399",
-    image: "/1.png",
-    category: "Aventura",
-    discount: "-10%",
-    oldPrice: "$1,599",
-  },
-  {
-    id: 2,
-    title: "Mario Kart 8 Deluxe",
-    price: "$1,199",
-    image: "/2.avif",
-    category: "Carreras",
-  },
-  {
-    id: 3,
-    title: "Super Smash Bros. Ultimate",
-    price: "$1,299",
-    image: "/1.png", // Reusing image since we lack specific assets
-    category: "Peleas",
-    discount: "-5%",
-    oldPrice: "$1,369",
-  },
-  {
-    id: 4,
-    title: "Animal Crossing: New Horizons",
-    price: "$1,199",
-    image: "/2.avif",
-    category: "Simulación",
-  }
-];
+import { useEffect } from "react";
 
 export default function GuardadosPage() {
-  const [savedGames, setSavedGames] = useState(initialSavedGames);
+  const [savedGames, setSavedGames] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('savedGames');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setSavedGames(parsed);
+        } else {
+          setSavedGames([]);
+        }
+      } catch (e) {
+        setSavedGames([]);
+      }
+    } else {
+      setSavedGames([]);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('savedGames', JSON.stringify(savedGames));
+    }
+  }, [savedGames, isLoaded]);
 
   const removeGame = (id: number) => {
-    setSavedGames(savedGames.filter(game => game.id !== id));
+    const updated = savedGames.filter(game => game.id !== id);
+    setSavedGames(updated);
+    localStorage.setItem('savedGames', JSON.stringify(updated));
   };
+
 
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 pb-20 md:pb-12">
@@ -133,20 +128,19 @@ export default function GuardadosPage() {
                 <div className="h-32 md:h-56 w-full bg-zinc-800 relative flex items-center justify-center overflow-hidden p-3 md:p-6">
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent z-10 opacity-60" />
                   <img 
-                    src={game.image} 
-                    alt={game.title} 
-                    className="w-full h-full object-contain relative z-0 group-hover:scale-110 transition-transform duration-500 drop-shadow-xl"
+                    src={game.image || game.background_image || '/1.png'} 
+                    alt={game.title || game.name} 
+                    className="w-full h-full object-cover rounded-lg relative z-0 group-hover:scale-110 transition-transform duration-500 drop-shadow-xl"
                   />
                 </div>
 
                 {/* Content */}
                 <div className="p-3 md:p-6 flex flex-col flex-grow relative z-20 bg-zinc-900">
-                  <span className="text-[#ffd90f] text-[9px] md:text-xs font-bold uppercase tracking-widest mb-1 md:mb-2">{game.category}</span>
-                  <h3 className="text-sm md:text-xl font-black text-white mb-2 md:mb-4 leading-tight group-hover:text-[#ffd90f] transition-colors line-clamp-2">{game.title}</h3>
-                  
+                  <span className="text-[#ffd90f] text-[9px] md:text-xs font-bold uppercase tracking-widest mb-1 md:mb-2">{game.category || 'Nintendo Switch'}</span>
+                  <h3 className="text-sm md:text-xl font-black text-white mb-2 md:mb-4 leading-tight group-hover:text-[#ffd90f] transition-colors line-clamp-2">{game.title || game.name}</h3>
                   <div className="mt-auto">
                     <div className="flex flex-col md:flex-row items-start md:items-end gap-0 md:gap-3 mb-3 md:mb-6">
-                      <span className="text-lg md:text-3xl font-black text-white leading-none">{game.price}</span>
+                      <span className="text-lg md:text-3xl font-black text-white leading-none">{game.price || '$1,299'}</span>
                       {game.oldPrice && (
                         <span className="text-zinc-500 line-through font-bold text-[10px] md:text-base mt-1 md:mt-0 md:mb-1">{game.oldPrice}</span>
                       )}

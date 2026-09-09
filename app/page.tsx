@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +19,6 @@ import {
   ArrowUp,
   Heart,
   Menu,
-  Bookmark,
   Gamepad2,
   Compass,
   ChevronDown,
@@ -30,11 +31,19 @@ import {
   CreditCard,
   Landmark,
   Send,
-  Loader2
+  Loader2,
+  Eye,
+  Sparkles,
+  Calendar,
+  Info,
+  Check,
+  Flame
 } from "lucide-react";
-import { getPopularGames, Game } from "@/lib/rawg";
+import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, Game } from "@/lib/rawg";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function HomePage() {
+  const { savedGames, toggleSaveGame, isGameSaved } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
   
   // Modal states
@@ -48,12 +57,33 @@ export default function HomePage() {
   // Game Catalog States
   const [games, setGames] = useState<Game[]>([]);
   const [isLoadingGames, setIsLoadingGames] = useState(true);
+  
+  // New releases state
+  const [newReleases, setNewReleases] = useState<Game[]>([]);
+  const [isLoadingNewReleases, setIsLoadingNewReleases] = useState(true);
+
+  // Catalog tab selection
+  const [catalogTab, setCatalogTab] = useState<'destacados' | 'estrenos'>('destacados');
+
+  // Purchase Modal State
   const [purchaseModal, setPurchaseModal] = useState<{isOpen: boolean; game: Game | null; step: 'method' | 'paypal' | 'transferencia'}>({
     isOpen: false,
     game: null,
     step: 'method'
   });
 
+  // Game Detail Modal ("Ver Videojuego") State
+  const [detailModal, setDetailModal] = useState<{isOpen: boolean; game: Game | null; isLoading: boolean}>({
+    isOpen: false,
+    game: null,
+    isLoading: false
+  });
+
+  // Upcoming games state
+  const [upcomingGames, setUpcomingGames] = useState<Game[]>([]);
+  const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(true);
+
+  // Load Popular Games
   useEffect(() => {
     async function loadGames() {
       const data = await getPopularGames(1, 8);
@@ -62,6 +92,38 @@ export default function HomePage() {
     }
     loadGames();
   }, []);
+
+  // Load Upcoming Games from RAWG
+  useEffect(() => {
+    async function loadUpcoming() {
+      const data = await getUpcomingGames(1, 8);
+      setUpcomingGames(data);
+      setIsLoadingUpcoming(false);
+    }
+    loadUpcoming();
+  }, []);
+
+  // Load New Releases from RAWG
+  useEffect(() => {
+    async function loadReleases() {
+      const data = await getNewReleases(1, 8);
+      setNewReleases(data);
+      setIsLoadingNewReleases(false);
+    }
+    loadReleases();
+  }, []);
+
+  // Helper to open game detail modal ("Ver videojuego")
+  const handleOpenDetailModal = async (game: Game) => {
+    setDetailModal({ isOpen: true, game, isLoading: true });
+    const fullDetails = await getGameDetails(game.id);
+    if (fullDetails) {
+      setDetailModal({ isOpen: true, game: fullDetails, isLoading: false });
+    } else {
+      setDetailModal({ isOpen: true, game, isLoading: false });
+    }
+  };
+
 
   const handleWhatsAppRedirect = (gameName: string) => {
     const message = `Hola Pikagames, acabo de realizar una transferencia para comprar el juego "${gameName}". Aquí envío mi comprobante:`;
@@ -132,8 +194,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111311] text-zinc-900 font-sans">
-
+    <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans">
       {/* Hero Section */}
       <section className="relative w-full min-h-[700px] md:min-h-[800px] flex flex-col md:flex-row items-center justify-between px-6 md:px-12 pb-12 pt-32 md:pt-40 overflow-hidden border-b-4 border-zinc-900 bg-[#111311]">
         {/* Animated Background */}
@@ -159,9 +220,11 @@ export default function HomePage() {
             <span className="text-zinc-900 bg-[#ffd90f] px-4 py-1 inline-block -rotate-2 my-2 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">Switch</span> <br /> 
             Comienza Aquí
           </h1>
-          <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 rounded-full font-bold px-8 text-lg shadow-[0_4px_14px_rgba(255,217,15,0.4)]">
-            Explorar Catálogo
-          </Button>
+          <Link href="/catalogo" passHref>
+            <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 rounded-full font-bold px-8 text-lg shadow-[0_4px_14px_rgba(255,217,15,0.4)]">
+              Explorar Catálogo
+            </Button>
+          </Link>
         </motion.div>
 
         {/* Floating Cards / Images */}
@@ -283,104 +346,249 @@ export default function HomePage() {
       </div>
 
       {/* Próximamente Section */}
-      <section className="relative z-10 py-20 px-6 md:px-12 border-t-4 border-b-4 border-zinc-900 bg-white overflow-hidden">
-        <motion.h2 
-          initial={{ opacity: 0, y: 100, scale: 0.8 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
-          className="text-3xl font-black mb-10 uppercase tracking-tight text-center text-zinc-900"
-        >
-          Próximamente
-        </motion.h2>
-        <motion.div 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.2 }}
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: { staggerChildren: 0.1 }
-            }
-          }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto"
-        >
-          {[1, 2, 3, 4].map((item) => (
+      <section className="relative z-10 py-20 px-6 md:px-12 border-t-4 border-b-4 border-zinc-900 bg-white overflow-hidden" id="proximos">
+        <div className="max-w-6xl mx-auto flex flex-col items-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
+            className="flex flex-col items-center mb-10 text-center"
+          >
+            <span className="bg-[#ffd90f] text-zinc-900 font-extrabold text-xs md:text-sm uppercase tracking-widest px-4 py-1 rounded-full border-2 border-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mb-3 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-zinc-900" /> Próximos Lanzamientos
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-zinc-900">
+              Próximos Estrenos
+            </h2>
+            <p className="text-zinc-600 font-medium text-sm md:text-base mt-2 max-w-xl">
+              Anticípate a los lanzamientos más esperados de Nintendo Switch. ¡Guárdalos o resérvalos hoy mismo!
+            </p>
+          </motion.div>
+
+          {isLoadingUpcoming ? (
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
+              <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
+              <p className="font-bold text-lg text-zinc-800">Cargando próximos estrenos...</p>
+            </div>
+          ) : (
             <motion.div 
-              variants={{ hidden: { opacity: 0, y: 150, scale: 0.8 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-              key={item} 
-              className="bg-zinc-200 aspect-[3/4] rounded-xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(24,24,27,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex items-center justify-center"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.1 }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.08 }
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 w-full"
             >
-              <span className="font-bold text-zinc-400">Estreno</span>
+              {upcomingGames.map((game) => {
+                const saved = isGameSaved(game.id);
+                return (
+                  <motion.div 
+                    key={game.id}
+                    variants={{ hidden: { opacity: 0, y: 100, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+                    className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
+                  >
+                    {/* Image & Badges */}
+                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                      {game.background_image ? (
+                        <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
+                      )}
+                      
+                      {/* Release date tag */}
+                      <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-md text-[#ffd90f] font-bold px-2.5 py-1 rounded-lg text-[11px] border border-zinc-700 flex items-center gap-1 shadow-md">
+                        <Calendar className="w-3 h-3 text-[#ffd90f]" />
+                        <span>{game.released ? game.released : 'Próximamente'}</span>
+                      </div>
+
+                      {/* Bookmark button */}
+                      <button
+                        onClick={() => toggleSaveGame(game)}
+                        className={`absolute top-2 right-2 p-2 rounded-xl border-2 border-zinc-900 transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                          saved 
+                            ? 'bg-[#ffd90f] text-zinc-900 hover:bg-[#e5c30d]' 
+                            : 'bg-zinc-900/80 text-white hover:bg-[#ffd90f] hover:text-zinc-900'
+                        }`}
+                        title={saved ? "Quitar de guardados" : "Guardar en favoritos"}
+                      >
+                        <Heart className={`w-4 h-4 ${saved ? 'fill-zinc-900' : ''}`} />
+                      </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 flex flex-col flex-grow">
+                      <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
+                        {game.name}
+                      </h3>
+                      
+                      <div className="mt-auto pt-2 flex flex-col gap-2">
+                        {/* Botón Ver Videojuego */}
+                        <Button 
+                          onClick={() => handleOpenDetailModal(game)}
+                          variant="outline"
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-2 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                        >
+                          <Eye className="w-4 h-4 text-[#ffd90f]" />
+                          Ver Videojuego
+                        </Button>
+
+                        {/* Botón Comprar */}
+                        <Button 
+                          onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                          className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Reservar
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
-          ))}
-        </motion.div>
+          )}
+        </div>
       </section>
 
       {/* Catálogo Section */}
       <section className="py-20 px-6 md:px-12 border-b-4 border-zinc-900 bg-white overflow-hidden" id="catalogo">
-        <motion.h2 
-          initial={{ opacity: 0, y: -100, scale: 1.2 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
-          className="text-3xl font-black mb-10 uppercase tracking-tight text-center text-zinc-900"
-        >
-          Catálogo Destacado
-        </motion.h2>
-
-        {isLoadingGames ? (
-          <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
-            <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
-            <p className="font-bold text-lg">Cargando catálogo...</p>
-          </div>
-        ) : (
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
+        <div className="max-w-6xl mx-auto flex flex-col items-center">
+          <motion.h2 
+            initial={{ opacity: 0, y: -50 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.2 }}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.1 }
-              }
-            }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto"
+            transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
+            className="text-3xl md:text-5xl font-black mb-6 uppercase tracking-tight text-center text-zinc-900"
           >
-            {games.map((game) => (
-              <motion.div 
-                variants={{ hidden: { opacity: 0, y: 50, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-                key={game.id} 
-                className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group"
-              >
-                <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
-                  {game.background_image ? (
-                    <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
-                  )}
-                  <div className="absolute top-2 right-2 bg-[#ffd90f] text-zinc-900 font-bold px-2 py-1 rounded-md text-xs shadow-md flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-current" /> {game.rating.toFixed(1)}
-                  </div>
-                </div>
-                <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="text-white font-bold text-lg mb-2 line-clamp-2 leading-tight">{game.name}</h3>
-                  <div className="mt-auto pt-4 flex gap-2">
-                    <Button 
-                      onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
-                      className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase tracking-wide border-2 border-transparent hover:border-white shadow-sm"
-                    >
-                      Comprar
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+            Catálogo de Videojuegos
+          </motion.h2>
+
+          {/* Interactive Catalog Tabs */}
+          <div className="flex flex-wrap justify-center items-center gap-3 mb-10">
+            <button
+              onClick={() => setCatalogTab('destacados')}
+              className={`px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wide border-2 border-zinc-900 transition-all flex items-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 ${
+                catalogTab === 'destacados'
+                  ? 'bg-[#ffd90f] text-zinc-900'
+                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+              }`}
+            >
+              <Flame className="w-4 h-4 text-orange-600 fill-orange-600" /> Populares
+            </button>
+
+            <button
+              onClick={() => setCatalogTab('estrenos')}
+              className={`px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wide border-2 border-zinc-900 transition-all flex items-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 ${
+                catalogTab === 'estrenos'
+                  ? 'bg-[#ff7a93] text-white'
+                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-white" /> Estrenos Recientes
+            </button>
+
+            <Link href="/guardados" passHref>
+              <button className="px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wide border-2 border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-[3px_3px_0px_0px_rgba(255,217,15,1)]">
+                <Heart className="w-4 h-4 text-[#ff7a93] fill-[#ff7a93]" /> 
+                Guardados ({savedGames.length})
+              </button>
+            </Link>
+          </div>
+
+          {/* Grid Content */}
+          {(catalogTab === 'destacados' ? isLoadingGames : isLoadingNewReleases) ? (
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
+              <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
+              <p className="font-bold text-lg text-zinc-800">Cargando videojuegos...</p>
+            </div>
+          ) : (
+            <motion.div 
+              key={catalogTab}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.08 }
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 w-full"
+            >
+              {(catalogTab === 'destacados' ? games : newReleases).map((game) => {
+                const saved = isGameSaved(game.id);
+                return (
+                  <motion.div 
+                    variants={{ hidden: { opacity: 0, y: 50, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+                    key={game.id} 
+                    className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
+                  >
+                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                      {game.background_image ? (
+                        <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
+                      )}
+                      
+                      {/* Rating */}
+                      <div className="absolute top-2 left-2 bg-zinc-900/90 text-[#ffd90f] font-bold px-2 py-1 rounded-md text-xs shadow-md border border-zinc-700 flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-current" /> {game.rating ? game.rating.toFixed(1) : "4.8"}
+                      </div>
+
+                      {/* Bookmark button */}
+                      <button
+                        onClick={() => toggleSaveGame(game)}
+                        className={`absolute top-2 right-2 p-2 rounded-xl border-2 border-zinc-900 transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                          saved 
+                            ? 'bg-[#ffd90f] text-zinc-900 hover:bg-[#e5c30d]' 
+                            : 'bg-zinc-900/80 text-white hover:bg-[#ffd90f] hover:text-zinc-900'
+                        }`}
+                        title={saved ? "Quitar de guardados" : "Guardar en favoritos"}
+                      >
+                        <Heart className={`w-4 h-4 ${saved ? 'fill-zinc-900' : ''}`} />
+                      </button>
+                    </div>
+
+                    <div className="p-4 flex flex-col flex-grow">
+                      <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
+                        {game.name}
+                      </h3>
+                      
+                      <div className="mt-auto pt-2 flex flex-col gap-2">
+                        {/* Botón Ver Videojuego */}
+                        <Button 
+                          onClick={() => handleOpenDetailModal(game)}
+                          variant="outline"
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-2 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                        >
+                          <Eye className="w-4 h-4 text-[#ffd90f]" />
+                          Ver Videojuego
+                        </Button>
+
+                        {/* Botón Comprar */}
+                        <Button 
+                          onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                          className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Comprar
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </div>
       </section>
+
 
       {/* Comentarios Section */}
       <section className="py-24 px-6 md:px-12 bg-white bg-dots border-b-4 border-zinc-900 overflow-hidden relative">
@@ -877,6 +1085,151 @@ export default function HomePage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal de Detalle del Videojuego ("Ver Videojuego") */}
+      <AnimatePresence>
+        {detailModal.isOpen && detailModal.game && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+              onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-zinc-900 border-4 border-zinc-900 rounded-3xl shadow-[8px_8px_0px_0px_rgba(255,217,15,1)] overflow-hidden z-10 flex flex-col my-auto max-h-[90vh]"
+            >
+              {/* Cover Banner */}
+              <div className="relative h-56 sm:h-72 w-full bg-zinc-800 overflow-hidden border-b-4 border-zinc-900 shrink-0">
+                {detailModal.game.background_image ? (
+                  <img 
+                    src={detailModal.game.background_image} 
+                    alt={detailModal.game.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                    <Gamepad2 size={64} />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-zinc-900/80 hover:bg-[#ffd90f] hover:text-zinc-900 text-white border-2 border-zinc-700 flex items-center justify-center transition-colors z-20"
+                >
+                  <X className="w-5 h-5 font-bold" />
+                </button>
+
+                {/* Rating Badge */}
+                <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2">
+                  <span className="bg-[#ffd90f] text-zinc-900 font-black text-xs px-3 py-1 rounded-full border border-zinc-900 flex items-center gap-1 shadow-md">
+                    <Star className="w-3.5 h-3.5 fill-current" /> {detailModal.game.rating ? detailModal.game.rating.toFixed(1) : "4.8"} / 5
+                  </span>
+                  {detailModal.game.released && (
+                    <span className="bg-zinc-900/90 text-white font-bold text-xs px-3 py-1 rounded-full border border-zinc-700 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-[#ffd90f]" /> {detailModal.game.released}
+                    </span>
+                  )}
+                </div>
+
+                {/* Title & Platform Header */}
+                <div className="absolute bottom-4 left-6 right-6 z-20">
+                  <span className="bg-[#ff7a93] text-white text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded border border-white mb-2 inline-block shadow-sm">
+                    Nintendo Switch
+                  </span>
+                  <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight drop-shadow-md">
+                    {detailModal.game.name}
+                  </h2>
+                </div>
+              </div>
+
+              {/* Detail Content Body */}
+              <div className="p-6 overflow-y-auto space-y-6">
+                {detailModal.isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
+                    <Loader2 className="w-10 h-10 animate-spin mb-3 text-[#ffd90f]" />
+                    <p className="font-bold text-sm">Cargando información detallada...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Genres */}
+                    {detailModal.game.genres && detailModal.game.genres.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Géneros</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {detailModal.game.genres.map((g) => (
+                            <span key={g.id} className="bg-zinc-800 text-zinc-200 border border-zinc-700 text-xs font-bold px-3 py-1 rounded-full">
+                              {g.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Overview Description */}
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Descripción del Juego</h4>
+                      <p className="text-zinc-300 text-sm leading-relaxed font-medium bg-zinc-800/50 p-4 rounded-xl border border-zinc-800">
+                        {detailModal.game.description_raw 
+                          ? detailModal.game.description_raw 
+                          : `Sumérgete en la increíble aventura de ${detailModal.game.name} para Nintendo Switch. Disfruta de gráficos deslumbrantes, jugabilidad fluida y horas inigualables de diversión.`}
+                      </p>
+                    </div>
+
+                    {/* Metacritic & Features */}
+                    {detailModal.game.metacritic && (
+                      <div className="flex items-center justify-between bg-zinc-800 p-4 rounded-xl border border-zinc-700">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-[#ffd90f]" />
+                          <span className="text-sm font-bold text-white">Metascore de la crítica:</span>
+                        </div>
+                        <span className="bg-emerald-600 text-white font-black text-sm px-3 py-1 rounded-md">
+                          {detailModal.game.metacritic} / 100
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Footer Buttons */}
+                <div className="pt-4 border-t border-zinc-800 flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => toggleSaveGame(detailModal.game!)}
+                    variant="outline"
+                    className={`flex-1 font-extrabold text-sm py-5 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                      isGameSaved(detailModal.game.id)
+                        ? 'bg-[#ffd90f] text-zinc-900 border-[#ffd90f] hover:bg-[#e5c30d]'
+                        : 'bg-zinc-800 text-white border-zinc-700 hover:border-[#ffd90f]'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${isGameSaved(detailModal.game.id) ? 'fill-zinc-900' : ''}`} />
+                    {isGameSaved(detailModal.game.id) ? 'Guardado en Favoritos' : 'Guardar en Favoritos'}
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      const gameToBuy = detailModal.game;
+                      setDetailModal({ isOpen: false, game: null, isLoading: false });
+                      setPurchaseModal({ isOpen: true, game: gameToBuy, step: 'method' });
+                    }}
+                    className="flex-1 bg-[#ff7a93] hover:bg-[#e66a82] text-white font-black text-sm py-5 rounded-xl shadow-md border-2 border-transparent hover:border-white flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Comprar Ahora
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
 
     </div>
   );
