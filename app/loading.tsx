@@ -8,7 +8,7 @@ export default function Loading() {
           <div className="leap-frog__dot"></div>
         </div>
         <p className="text-[#fce362] font-black tracking-[0.2em] uppercase text-sm animate-pulse">
-          Cargando...
+          Cargando..
         </p>
       </div>
     </div>
