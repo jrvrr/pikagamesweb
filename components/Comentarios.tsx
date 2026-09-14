@@ -24,7 +24,7 @@ export function Comentarios() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
 
   const fetchComentarios = async () => {
     try {

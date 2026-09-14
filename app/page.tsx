@@ -139,7 +139,7 @@ export default function HomePage() {
     
     setIsSubmitting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
       const response = await fetch(`${apiUrl}/comentarios`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -762,7 +762,7 @@ export default function HomePage() {
              {/* Pikachu */}
              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[69%] z-30 pointer-events-none">
                 <img 
-                   src="/footer/pikachu.jpg" 
+                   src="/footer/pikachu.png" 
                    alt="Pikachu" 
                    className="w-48 md:w-60 h-auto pointer-events-none"
                    style={{ mixBlendMode: 'lighten' }}
