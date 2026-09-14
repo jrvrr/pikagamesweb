@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
 
 /**
  * Función centralizada para realizar peticiones a la API.

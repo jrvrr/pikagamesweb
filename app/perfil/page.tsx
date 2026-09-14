@@ -26,7 +26,7 @@ export default function PerfilPage() {
     confirmPassword: ""
   });
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "pikagamesapiweb.vercel.app/api";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
 
   useEffect(() => {
     if (!isLoading && !user) {
