@@ -762,7 +762,7 @@ export default function HomePage() {
              {/* Pikachu */}
              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[69%] z-30 pointer-events-none">
                 <img 
-                   src="/footer/pikachu.jpg" 
+                   src="/footer/pikachu.png" 
                    alt="Pikachu" 
                    className="w-48 md:w-60 h-auto pointer-events-none"
                    style={{ mixBlendMode: 'lighten' }}
