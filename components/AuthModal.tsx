@@ -21,7 +21,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "pikagamesapiweb.vercel.app
+/api";
 
   // Prevent scroll when modal is open
   useEffect(() => {

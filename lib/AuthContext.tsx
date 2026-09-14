@@ -132,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Upload local favorites to server
           for (const game of localGames) {
             try {
-              await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/favoritos`, {
+              await fetch(`${process.env.NEXT_PUBLIC_API_URL || "pikagamesapiweb.vercel.app/api"}/favoritos`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
