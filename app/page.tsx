@@ -39,7 +39,7 @@ import {
   Check,
   Flame
 } from "lucide-react";
-import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, Game } from "@/lib/rawg";
+import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function HomePage() {
@@ -62,8 +62,14 @@ export default function HomePage() {
   const [newReleases, setNewReleases] = useState<Game[]>([]);
   const [isLoadingNewReleases, setIsLoadingNewReleases] = useState(true);
 
-  // Catalog tab selection
-  const [catalogTab, setCatalogTab] = useState<'destacados' | 'estrenos'>('destacados');
+  // Mario & Price category states
+  const [marioGames, setMarioGames] = useState<Game[]>([]);
+  const [isLoadingMario, setIsLoadingMario] = useState(false);
+  const [priceGames, setPriceGames] = useState<Game[]>([]);
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+
+  // Active category selected from '¿Qué buscas?' folders
+  const [catalogCategory, setCatalogCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario'>('popular');
 
   // Purchase Modal State
   const [purchaseModal, setPurchaseModal] = useState<{isOpen: boolean; game: Game | null; step: 'method' | 'paypal' | 'transferencia'}>({
@@ -121,6 +127,26 @@ export default function HomePage() {
       setDetailModal({ isOpen: true, game: fullDetails, isLoading: false });
     } else {
       setDetailModal({ isOpen: true, game, isLoading: false });
+    }
+  };
+
+  // Handle folder card clicks to filter and scroll to catalog
+  const handleFolderClick = async (category: 'popular' | 'estreno' | 'precio' | 'mario') => {
+    setCatalogCategory(category);
+    if (category === 'mario' && marioGames.length === 0) {
+      setIsLoadingMario(true);
+      const data = await searchGames('Mario', 1, 8);
+      setMarioGames(data);
+      setIsLoadingMario(false);
+    } else if (category === 'precio' && priceGames.length === 0) {
+      setIsLoadingPrice(true);
+      const data = await getPopularGames(2, 8);
+      setPriceGames(data);
+      setIsLoadingPrice(false);
+    }
+    const catalogoElement = document.getElementById('catalogo');
+    if (catalogoElement) {
+      catalogoElement.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -198,54 +224,60 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative w-full min-h-[700px] md:min-h-[800px] flex flex-col md:flex-row items-center justify-between px-6 md:px-12 pb-12 pt-32 md:pt-40 overflow-hidden border-b-4 border-zinc-900 bg-[#111311]">
         {/* Animated Background */}
-        <ShapeGrid 
-          speed={0.5}
-          squareSize={40}
-          direction="diagonal"
-          borderColor="#2a2a2a"
-          hoverFillColor="#ffd90f"
-          shape="square"
-          hoverTrailAmount={0}
-        />
-        
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.5, y: 50 }}
-          whileInView={{ opacity: 1, scale: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
-          className="relative z-10 md:w-1/2 flex flex-col items-start space-y-6"
-        >
-          <h1 className="text-5xl md:text-7xl font-black leading-tight uppercase tracking-tighter text-zinc-100 transition-all duration-300 hover:drop-shadow-[0_4px_12px_rgba(255,217,15,0.4)] cursor-default">
-            Tu Aventura <br />
-            <span className="text-zinc-900 bg-[#ffd90f] px-4 py-1 inline-block -rotate-2 my-2 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">Switch</span> <br /> 
-            Comienza Aquí
-          </h1>
-          <Link href="/catalogo" passHref>
-            <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 rounded-full font-bold px-8 text-lg shadow-[0_4px_14px_rgba(255,217,15,0.4)]">
-              Explorar Catálogo
-            </Button>
-          </Link>
-        </motion.div>
+        <div className="absolute inset-0 z-0 opacity-40">
+          <ShapeGrid 
+            speed={0.5}
+            squareSize={40}
+            direction="diagonal"
+            borderColor="#333"
+            hoverFillColor="#222"
+            shape="square"
+          />
+        </div>
 
-        {/* Floating Cards / Images */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.5, x: 100 }}
-          whileInView={{ opacity: 1, scale: 1, x: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
-          className="relative z-10 w-full mt-12 md:mt-0 md:w-1/2 flex justify-center md:justify-end gap-6 h-64 md:h-96"
-        >
-            <div className="w-40 md:w-64 h-full bg-zinc-200 rounded-xl border-4 border-zinc-900 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] -rotate-6 hover:rotate-0 hover:translate-y-[-10px] transition-all duration-300 flex items-center justify-center">
-               <span className="font-bold text-zinc-400">Juego 1</span>
-            </div>
-            <div className="w-32 md:w-48 h-4/5 mt-12 bg-zinc-300 rounded-xl border-4 border-zinc-900 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] rotate-6 hover:rotate-0 hover:translate-y-[-10px] transition-all duration-300 flex items-center justify-center">
-               <span className="font-bold text-zinc-500">Juego 2</span>
-            </div>
-        </motion.div>
+        {/* Hero Content */}
+        <div className="relative z-10 flex flex-col items-start max-w-xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 text-[#ffd90f] font-bold text-sm mb-6 animate-pulse">
+            <Sparkles className="w-4 h-4" />
+            <span>Nuevos Títulos Switch 1 & 2 Disponibles</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase leading-[1.05] mb-6">
+            Tu Universo de <span className="text-[#ffd90f]">Nintendo</span> en un solo lugar
+          </h1>
+          <p className="text-zinc-400 text-base md:text-lg mb-8 leading-relaxed font-medium">
+            Encuentra los videojuegos más épicos, estrenos exclusivos y las mejores ofertas digitales y físicas para tu consola favorita.
+          </p>
+          <div className="flex flex-wrap gap-4 w-full sm:w-auto">
+            <Link href="/catalogo">
+              <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-2xl px-8 py-6 text-base shadow-[0_4px_20px_rgba(255,217,15,0.4)] transition-all hover:scale-105 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5" />
+                Ver Catálogo Completo
+              </Button>
+            </Link>
+            <Link href="/buscar">
+              <Button size="lg" variant="outline" className="border-2 border-zinc-700 hover:border-[#ffd90f] bg-zinc-900/80 text-white font-bold rounded-2xl px-8 py-6 text-base transition-all hover:bg-zinc-800">
+                <Search className="w-5 h-5 mr-2 text-[#ffd90f]" />
+                Buscar Juego
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Hero Visuals */}
+        <div className="relative z-10 mt-12 md:mt-0 flex items-center justify-center">
+          <div className="relative w-72 md:w-96 aspect-square flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#ffd90f]/20 to-transparent rounded-full blur-3xl" />
+            <img 
+              src="/1.png" 
+              alt="Nintendo Switch Cartridges" 
+              className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500" 
+            />
+          </div>
+        </div>
       </section>
 
-      {/* Qué Buscas Section */}
-      <section className="relative z-10 py-16 px-6 md:px-12 bg-white bg-dots border-b-4 border-t-4 border-zinc-900 overflow-hidden">
+      {/* ¿Qué buscas? Section */}
+      <section className="relative z-10 py-16 md:py-20 px-6 md:px-12 bg-[#ffd90f] border-b-4 border-zinc-900 overflow-hidden">
         <motion.h2 
           initial={{ opacity: 0, x: -100 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -269,35 +301,42 @@ export default function HomePage() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto"
         >
           {[
-            { title: 'Precio', folder: '/svg/folder1.svg', cartucho: '/png/cartucho3.png' },
-            { title: 'Popular', folder: '/svg/folder2.svg', cartucho: '/png/cartucho4.png' },
-            { title: 'Estreno', folder: '/svg/folder3.svg', cartucho: '/png/cartucho1.png' },
-            { title: 'Mario', folder: '/svg/folder4.svg', cartucho: '/png/cartucho2.png' }
-          ].map((item) => (
-            <motion.div 
-               variants={{ hidden: { opacity: 0, y: 100, scale: 0.8 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-               key={item.title} 
-               className="group cursor-pointer hover:-translate-y-2 transition-all flex flex-col items-center justify-center pt-8 md:pt-12 pb-4"
-            >
-              {/* Contenedor ajustado a la carpeta para posicionar bien el cartucho */}
-              <div className="relative w-32 md:w-40 flex items-end justify-center">
-                {/* Cartucho (Guardado adentro, sale al hover) */}
-                <div className="absolute bottom-2 w-16 md:w-20 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-16 md:group-hover:-translate-y-20 z-10 flex flex-col items-center justify-start">
-                   <img src={item.cartucho} alt={`Cartucho ${item.title}`} className="w-full h-auto relative z-10" />
-                </div>
+            { id: 'precio' as const, title: 'Precio', folder: '/svg/folder1.svg', cartucho: '/png/cartucho3.png' },
+            { id: 'popular' as const, title: 'Popular', folder: '/svg/folder2.svg', cartucho: '/png/cartucho4.png' },
+            { id: 'estreno' as const, title: 'Estreno', folder: '/svg/folder3.svg', cartucho: '/png/cartucho1.png' },
+            { id: 'mario' as const, title: 'Mario', folder: '/svg/folder4.svg', cartucho: '/png/cartucho2.png' }
+          ].map((item) => {
+            const isSelected = catalogCategory === item.id;
+            return (
+              <motion.div 
+                variants={{ hidden: { opacity: 0, y: 100, scale: 0.8 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+                key={item.title} 
+                onClick={() => handleFolderClick(item.id)}
+                className={`group cursor-pointer hover:-translate-y-2 transition-all flex flex-col items-center justify-center pt-8 md:pt-12 pb-4 rounded-2xl ${
+                  isSelected ? 'scale-105' : ''
+                }`}
+                title={`Ver juegos de ${item.title}`}
+              >
+                {/* Contenedor ajustado a la carpeta para posicionar bien el cartucho */}
+                <div className="relative w-32 md:w-40 flex items-end justify-center">
+                  {/* Cartucho (Guardado adentro, sale al hover) */}
+                  <div className="absolute bottom-2 w-16 md:w-20 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-16 md:group-hover:-translate-y-20 z-10 flex flex-col items-center justify-start">
+                     <img src={item.cartucho} alt={`Cartucho ${item.title}`} className="w-full h-auto relative z-10" />
+                  </div>
 
-                {/* Carpeta (Frente) con el texto */}
-                <div className="relative z-20 w-full group-hover:scale-[1.03] transition-transform duration-300 flex flex-col items-center justify-center">
-                  <img src={item.folder} alt={`Carpeta ${item.title}`} className="w-full h-auto relative z-20 drop-shadow-md" />
-                  
-                  {/* Texto alineado sobre la carpeta */}
-                  <span className="absolute top-[55%] md:top-[60%] w-[80%] text-center font-black text-[12px] md:text-sm uppercase tracking-tighter text-zinc-900 z-30 leading-none" style={{ transform: 'translateY(-50%)' }}>
-                    {item.title}
-                  </span>
+                  {/* Carpeta (Frente) con el texto */}
+                  <div className={`relative z-20 w-full group-hover:scale-[1.03] transition-transform duration-300 flex flex-col items-center justify-center ${isSelected ? 'ring-4 ring-zinc-900 rounded-2xl shadow-xl' : ''}`}>
+                    <img src={item.folder} alt={`Carpeta ${item.title}`} className="w-full h-auto relative z-20 drop-shadow-md" />
+                    
+                    {/* Texto alineado sobre la carpeta */}
+                    <span className="absolute top-[55%] md:top-[60%] w-[80%] text-center font-black text-[12px] md:text-sm uppercase tracking-tighter text-zinc-900 z-30 leading-none" style={{ transform: 'translateY(-50%)' }}>
+                      {item.title}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </motion.div>
       </section>
 
@@ -459,132 +498,140 @@ export default function HomePage() {
       {/* Catálogo Section */}
       <section className="py-20 px-6 md:px-12 border-b-4 border-zinc-900 bg-white overflow-hidden" id="catalogo">
         <div className="max-w-6xl mx-auto flex flex-col items-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: -50 }}
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
-            className="text-3xl md:text-5xl font-black mb-6 uppercase tracking-tight text-center text-zinc-900"
+            className="flex flex-col items-center mb-10 text-center"
           >
-            Catálogo de Videojuegos
-          </motion.h2>
-
-          {/* Interactive Catalog Tabs */}
-          <div className="flex flex-wrap justify-center items-center gap-3 mb-10">
-            <button
-              onClick={() => setCatalogTab('destacados')}
-              className={`px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wide border-2 border-zinc-900 transition-all flex items-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 ${
-                catalogTab === 'destacados'
-                  ? 'bg-[#ffd90f] text-zinc-900'
-                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-              }`}
-            >
-              <Flame className="w-4 h-4 text-orange-600 fill-orange-600" /> Populares
-            </button>
-
-            <button
-              onClick={() => setCatalogTab('estrenos')}
-              className={`px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wide border-2 border-zinc-900 transition-all flex items-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 ${
-                catalogTab === 'estrenos'
-                  ? 'bg-[#ff7a93] text-white'
-                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 text-white" /> Estrenos Recientes
-            </button>
-
-            <Link href="/guardados" passHref>
-              <button className="px-5 py-2.5 rounded-full font-black text-sm uppercase tracking-wide border-2 border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-[3px_3px_0px_0px_rgba(255,217,15,1)]">
-                <Heart className="w-4 h-4 text-[#ff7a93] fill-[#ff7a93]" /> 
-                Guardados ({savedGames.length})
-              </button>
-            </Link>
-          </div>
+            <span className="bg-[#ffd90f] text-zinc-900 font-extrabold text-xs md:text-sm uppercase tracking-widest px-4 py-1.5 rounded-full border-2 border-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mb-3 flex items-center gap-1.5">
+              {catalogCategory === 'popular' && <Flame className="w-4 h-4 text-orange-600 fill-orange-600" />}
+              {catalogCategory === 'estreno' && <Sparkles className="w-4 h-4 text-zinc-900" />}
+              {catalogCategory === 'mario' && <span className="text-sm">🍄</span>}
+              {catalogCategory === 'precio' && <span className="text-sm">🏷️</span>}
+              <span>
+                {catalogCategory === 'popular' ? 'Categoría: Populares' :
+                 catalogCategory === 'estreno' ? 'Categoría: Estrenos Recientes' :
+                 catalogCategory === 'mario' ? 'Categoría: Super Mario' : 'Categoría: Mejores Precios'}
+              </span>
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-zinc-900">
+              Catálogo de Videojuegos
+            </h2>
+            <p className="text-zinc-600 font-medium text-sm md:text-base mt-2 max-w-xl">
+              {catalogCategory === 'popular' && 'Los juegos más jugados y aclamados por la comunidad de Nintendo Switch.'}
+              {catalogCategory === 'estreno' && 'Las novedades más recientes que acaban de llegar a la plataforma.'}
+              {catalogCategory === 'mario' && 'Explora las aventuras más legendarias de Mario, Luigi y el Reino Champiñón.'}
+              {catalogCategory === 'precio' && 'Las mejores opciones, promociones especiales y grandes títulos al mejor precio.'}
+            </p>
+          </motion.div>
 
           {/* Grid Content */}
-          {(catalogTab === 'destacados' ? isLoadingGames : isLoadingNewReleases) ? (
+          {((catalogCategory === 'popular' ? isLoadingGames :
+             catalogCategory === 'estreno' ? isLoadingNewReleases :
+             catalogCategory === 'mario' ? isLoadingMario : isLoadingPrice)) ? (
             <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
               <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
               <p className="font-bold text-lg text-zinc-800">Cargando videojuegos...</p>
             </div>
           ) : (
-            <motion.div 
-              key={catalogTab}
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.08 }
-                }
-              }}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 w-full"
-            >
-              {(catalogTab === 'destacados' ? games : newReleases).map((game) => {
-                const saved = isGameSaved(game.id);
-                return (
-                  <motion.div 
-                    variants={{ hidden: { opacity: 0, y: 50, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-                    key={game.id} 
-                    className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
+            <>
+              <motion.div 
+                key={catalogCategory}
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.08 }
+                  }
+                }}
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 w-full"
+              >
+                {(catalogCategory === 'popular' ? games :
+                  catalogCategory === 'estreno' ? newReleases :
+                  catalogCategory === 'mario' ? (marioGames.length > 0 ? marioGames : games) :
+                  (priceGames.length > 0 ? priceGames : games)).map((game) => {
+                  const saved = isGameSaved(game.id);
+                  return (
+                    <motion.div 
+                      variants={{ hidden: { opacity: 0, y: 50, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+                      key={game.id} 
+                      className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
+                    >
+                      <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                        {game.background_image ? (
+                          <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
+                        )}
+                        
+                        {/* Rating */}
+                        <div className="absolute top-2 left-2 bg-zinc-900/90 text-[#ffd90f] font-bold px-2 py-1 rounded-md text-xs shadow-md border border-zinc-700 flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-current" /> {game.rating ? game.rating.toFixed(1) : "4.8"}
+                        </div>
+
+                        {/* Bookmark button */}
+                        <button
+                          onClick={() => toggleSaveGame(game)}
+                          className={`absolute top-2 right-2 p-2 rounded-xl border-2 border-zinc-900 transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                            saved 
+                              ? 'bg-[#ffd90f] text-zinc-900 hover:bg-[#e5c30d]' 
+                              : 'bg-zinc-900/80 text-white hover:bg-[#ffd90f] hover:text-zinc-900'
+                          }`}
+                          title={saved ? "Quitar de guardados" : "Guardar en favoritos"}
+                        >
+                          <Heart className={`w-4 h-4 ${saved ? 'fill-zinc-900' : ''}`} />
+                        </button>
+                      </div>
+
+                      <div className="p-4 flex flex-col flex-grow">
+                        <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
+                          {game.name}
+                        </h3>
+                        
+                        <div className="mt-auto pt-2 flex flex-col gap-2">
+                          {/* Botón Ver Videojuego */}
+                          <Button 
+                            onClick={() => handleOpenDetailModal(game)}
+                            variant="outline"
+                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-2 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                          >
+                            <Eye className="w-4 h-4 text-[#ffd90f]" />
+                            Ver Videojuego
+                          </Button>
+
+                          {/* Botón Comprar */}
+                          <Button 
+                            onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                            className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            Comprar
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Botón Ver más juegos */}
+              <div className="mt-12 flex justify-center w-full">
+                <Link href="/catalogo">
+                  <Button 
+                    size="lg" 
+                    className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 border-4 border-zinc-900 rounded-full font-black px-10 py-7 text-lg md:text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all hover:scale-105 flex items-center gap-3"
                   >
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
-                      {game.background_image ? (
-                        <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
-                      )}
-                      
-                      {/* Rating */}
-                      <div className="absolute top-2 left-2 bg-zinc-900/90 text-[#ffd90f] font-bold px-2 py-1 rounded-md text-xs shadow-md border border-zinc-700 flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-current" /> {game.rating ? game.rating.toFixed(1) : "4.8"}
-                      </div>
-
-                      {/* Bookmark button */}
-                      <button
-                        onClick={() => toggleSaveGame(game)}
-                        className={`absolute top-2 right-2 p-2 rounded-xl border-2 border-zinc-900 transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                          saved 
-                            ? 'bg-[#ffd90f] text-zinc-900 hover:bg-[#e5c30d]' 
-                            : 'bg-zinc-900/80 text-white hover:bg-[#ffd90f] hover:text-zinc-900'
-                        }`}
-                        title={saved ? "Quitar de guardados" : "Guardar en favoritos"}
-                      >
-                        <Heart className={`w-4 h-4 ${saved ? 'fill-zinc-900' : ''}`} />
-                      </button>
-                    </div>
-
-                    <div className="p-4 flex flex-col flex-grow">
-                      <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
-                        {game.name}
-                      </h3>
-                      
-                      <div className="mt-auto pt-2 flex flex-col gap-2">
-                        {/* Botón Ver Videojuego */}
-                        <Button 
-                          onClick={() => handleOpenDetailModal(game)}
-                          variant="outline"
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-2 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
-                        >
-                          <Eye className="w-4 h-4 text-[#ffd90f]" />
-                          Ver Videojuego
-                        </Button>
-
-                        {/* Botón Comprar */}
-                        <Button 
-                          onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
-                          className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Comprar
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+                    <Gamepad2 className="w-6 h-6 text-zinc-900" />
+                    <span>Ver más juegos</span>
+                    <ChevronRight className="w-6 h-6 text-zinc-900 stroke-[3]" />
+                  </Button>
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </section>

@@ -21,6 +21,17 @@ export interface SavedGame {
   released?: string | null;
 }
 
+// Helper to normalize game data from RAWG or backend API
+export const normalizeSavedGame = (item: any): SavedGame => {
+  return {
+    id: Number(item.rawg_game_id || item.id),
+    name: item.name || item.game_name || item.title || "Videojuego",
+    background_image: item.background_image || item.game_image || item.image || null,
+    rating: item.rating !== undefined && item.rating !== null ? Number(item.rating) : (item.game_rating !== undefined && item.game_rating !== null ? Number(item.game_rating) : null),
+    released: item.released || item.game_released || null,
+  };
+};
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -31,7 +42,7 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
   // Favorites
   savedGames: SavedGame[];
-  toggleSaveGame: (game: SavedGame) => void;
+  toggleSaveGame: (game: any) => void;
   isGameSaved: (gameId: number) => boolean;
   isFavoritesLoading: boolean;
 }
@@ -46,48 +57,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isFavoritesLoading, setIsFavoritesLoading] = useState(false);
   const router = useRouter();
 
-  // Load favorites from server (when logged in) or localStorage (when not)
-  const loadFavorites = useCallback(async (hasToken: boolean) => {
-    if (hasToken) {
-      // Load from server
-      setIsFavoritesLoading(true);
-      try {
-        const data = await apiFetch("/favoritos");
-        setSavedGames(data?.favoritos || []);
-      } catch (error) {
-        console.error("Error al cargar favoritos del servidor:", error);
-        // Fallback to localStorage
-        loadFavoritesFromLocalStorage();
-      }
-      setIsFavoritesLoading(false);
-    } else {
-      loadFavoritesFromLocalStorage();
-    }
-  }, []);
-
-  const loadFavoritesFromLocalStorage = () => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("savedGames");
-    if (stored) {
-      try {
+  const loadFavoritesFromLocalStorage = (): SavedGame[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("savedGames");
+      if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          setSavedGames(parsed);
+          return parsed.map(normalizeSavedGame);
         }
-      } catch {
-        console.error("Failed to parse saved games from localStorage");
       }
+    } catch {
+      console.error("Failed to parse saved games from localStorage");
     }
+    return [];
   };
 
   const saveFavoritesToLocalStorage = (games: SavedGame[]) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("savedGames", JSON.stringify(games));
+      try {
+        localStorage.setItem("savedGames", JSON.stringify(games));
+      } catch (e) {
+        console.error("Error writing savedGames to localStorage:", e);
+      }
     }
   };
 
+  // Load favorites from server (when logged in) or localStorage (when not)
+  const loadFavorites = useCallback(async (hasToken: boolean) => {
+    const localGames = loadFavoritesFromLocalStorage();
+    setSavedGames(localGames);
+
+    if (hasToken) {
+      setIsFavoritesLoading(true);
+      try {
+        const data = await apiFetch("/favoritos");
+        const rawFavorites = data?.favoritos || (Array.isArray(data) ? data : []);
+        if (Array.isArray(rawFavorites)) {
+          const serverGames: SavedGame[] = rawFavorites.map(normalizeSavedGame);
+          
+          // Merge local games with server games
+          const gameMap = new Map<number, SavedGame>();
+          serverGames.forEach(g => gameMap.set(g.id, g));
+          localGames.forEach(g => {
+            if (!gameMap.has(g.id)) gameMap.set(g.id, g);
+          });
+          
+          const merged = Array.from(gameMap.values());
+          setSavedGames(merged);
+          saveFavoritesToLocalStorage(merged);
+        }
+      } catch (error) {
+        console.error("Error al cargar favoritos del servidor:", error);
+      } finally {
+        setIsFavoritesLoading(false);
+      }
+    }
+  }, []);
+
   const checkAuth = async () => {
     setIsLoading(true);
+    // Initial local favorites load immediately
+    const localGames = loadFavoritesFromLocalStorage();
+    setSavedGames(localGames);
+
     const storedToken = localStorage.getItem("token");
     
     if (storedToken) {
@@ -98,17 +131,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(storedToken);
         await loadFavorites(true);
       } catch (error) {
-        // Token is invalid or expired
         localStorage.removeItem("token");
         setUser(null);
         setToken(null);
-        loadFavorites(false);
+        setSavedGames(localGames);
         console.error("Error al verificar sesión:", error);
       }
     } else {
       setUser(null);
       setToken(null);
-      loadFavorites(false);
     }
     
     setIsLoading(false);
@@ -124,87 +155,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
 
     // Migrate localStorage favorites to server
-    const localStored = localStorage.getItem("savedGames");
-    if (localStored) {
-      try {
-        const localGames: SavedGame[] = JSON.parse(localStored);
-        if (Array.isArray(localGames) && localGames.length > 0) {
-          // Upload local favorites to server
-          for (const game of localGames) {
-            try {
-              await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api"}/favoritos`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${newToken}`,
-                },
-                body: JSON.stringify({
-                  rawg_game_id: game.id,
-                  game_name: game.name,
-                  game_image: game.background_image || null,
-                  game_rating: game.rating || null,
-                  game_released: game.released || null,
-                }),
-              });
-            } catch {
-              // Individual game migration failure is non-critical
-            }
-          }
-          // Clear localStorage after migration
-          localStorage.removeItem("savedGames");
-        }
-      } catch {
-        // Ignore parse errors
-      }
-    }
-
-    // Load server favorites
-    await loadFavorites(true);
-    router.push("/perfil");
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-    setSavedGames([]);
-    router.push("/");
-  };
-
-  const updateUser = (userData: User) => {
-    setUser(userData);
-  };
-
-  const toggleSaveGame = async (game: SavedGame) => {
-    const exists = savedGames.some((g) => g.id === game.id);
-
-    if (exists) {
-      // Remove
-      const updated = savedGames.filter((g) => g.id !== game.id);
-      setSavedGames(updated);
-
-      if (token) {
-        // Remove from server
+    const localGames = loadFavoritesFromLocalStorage();
+    if (localGames.length > 0) {
+      for (const game of localGames) {
         try {
-          await apiFetch(`/favoritos/${game.id}`, { method: "DELETE" });
-        } catch (error) {
-          console.error("Error al eliminar favorito:", error);
-          // Revert on error
-          setSavedGames(savedGames);
-        }
-      } else {
-        saveFavoritesToLocalStorage(updated);
-      }
-    } else {
-      // Add
-      const updated = [...savedGames, game];
-      setSavedGames(updated);
-
-      if (token) {
-        // Add to server
-        try {
-          await apiFetch("/favoritos", {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api"}/favoritos`, {
             method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${newToken}`,
+            },
             body: JSON.stringify({
               rawg_game_id: game.id,
               game_name: game.name,
@@ -213,19 +173,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               game_released: game.released || null,
             }),
           });
-        } catch (error) {
-          console.error("Error al agregar favorito:", error);
-          // Revert on error
-          setSavedGames(savedGames);
+        } catch {
+          // Individual migration failure is non-blocking
         }
-      } else {
-        saveFavoritesToLocalStorage(updated);
+      }
+    }
+
+    await loadFavorites(true);
+    router.push("/perfil");
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    const localGames = loadFavoritesFromLocalStorage();
+    setSavedGames(localGames);
+    router.push("/");
+  };
+
+  const updateUser = (userData: User) => {
+    setUser(userData);
+  };
+
+  const toggleSaveGame = async (game: any) => {
+    if (!game) return;
+    const normalized = normalizeSavedGame(game);
+    const exists = savedGames.some((g) => Number(g.id) === Number(normalized.id));
+
+    let updated: SavedGame[];
+    if (exists) {
+      updated = savedGames.filter((g) => Number(g.id) !== Number(normalized.id));
+      setSavedGames(updated);
+      saveFavoritesToLocalStorage(updated);
+
+      if (token) {
+        try {
+          await apiFetch(`/favoritos/${normalized.id}`, { method: "DELETE" });
+        } catch (error) {
+          console.error("Error al eliminar favorito del servidor:", error);
+        }
+      }
+    } else {
+      updated = [...savedGames, normalized];
+      setSavedGames(updated);
+      saveFavoritesToLocalStorage(updated);
+
+      if (token) {
+        try {
+          await apiFetch("/favoritos", {
+            method: "POST",
+            body: JSON.stringify({
+              rawg_game_id: normalized.id,
+              game_name: normalized.name,
+              game_image: normalized.background_image || null,
+              game_rating: normalized.rating || null,
+              game_released: normalized.released || null,
+            }),
+          });
+        } catch (error) {
+          console.error("Error al agregar favorito al servidor:", error);
+        }
       }
     }
   };
 
   const isGameSaved = (gameId: number) => {
-    return savedGames.some((g) => g.id === gameId);
+    if (gameId === undefined || gameId === null) return false;
+    return savedGames.some((g) => Number(g.id) === Number(gameId));
   };
 
   return (
