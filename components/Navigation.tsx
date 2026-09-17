@@ -24,11 +24,13 @@ export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { user, isLoading } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const { user, isLoading, savedGames } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   
-  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/" ? "inicio" : "";
+  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/catalogo" ? "catalogo" : pathname === "/" ? "inicio" : "";
 
   const handleTabClick = (tab: string, path?: string) => {
     setIsMenuOpen(false);
@@ -41,13 +43,34 @@ export function Navigation() {
     }
   };
 
+  const handleDesktopSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/buscar');
+    }
+  };
+
+  const handleMobileSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mobileSearchQuery.trim()) {
+      router.push(`/buscar?q=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setIsMobileSearchOpen(false);
+    } else {
+      router.push('/buscar');
+      setIsMobileSearchOpen(false);
+    }
+  };
+
   return (
     <>
       {/* Top Navbar (Dark Theme) - Hidden on mobile */}
       <div className="fixed top-0 left-0 w-full z-50 bg-[#18181b] border-b border-zinc-800 hidden md:block transition-all">
         <header className="w-full flex items-stretch h-16">
           {/* Logo Area */}
-          <Link href="/" className="bg-[#ffd90f] px-6 flex items-center justify-center">
+          <Link href="/" className="bg-[#ffd90f] px-6 flex items-center justify-center gap-2 hover:bg-[#f5cf07] transition-colors">
+            <img src="/icon.png" alt="Pikagames" className="w-8 h-8 object-contain" />
             <div className="font-black text-xl tracking-tighter text-zinc-900">PIKAGAMES</div>
           </Link>
           
@@ -62,7 +85,11 @@ export function Navigation() {
               </button>
             </div>
             
-            <a href="#" className="flex items-center gap-2 px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
+            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
+              <Gamepad2 className="w-5 h-5" /> Catálogo
+            </Link>
+
+            <a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 h-full hover:text-[#25D366] hover:bg-zinc-800 transition-colors">
               <ShoppingBag className="w-5 h-5" /> Comprar
             </a>
           </nav>
@@ -72,13 +99,26 @@ export function Navigation() {
           {/* Right Actions */}
           <div className="flex items-center h-full mr-4 space-x-2 font-bold text-sm text-zinc-300">
             <div className="flex items-center px-4 h-full">
-              <div className="relative flex items-center">
-                <Search className="w-4 h-4 absolute left-3 text-zinc-500" />
-                <input type="text" placeholder="Buscar..." className="pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] w-32 md:focus:w-56 transition-all text-white placeholder-zinc-500" />
-              </div>
+              <form onSubmit={handleDesktopSearch} className="relative flex items-center">
+                <button type="submit" className="absolute left-3 text-zinc-500 hover:text-[#ffd90f] transition-colors" title="Buscar">
+                  <Search className="w-4 h-4" />
+                </button>
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar juegos..." 
+                  className="pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] w-32 md:focus:w-64 transition-all text-white placeholder-zinc-500" 
+                />
+              </form>
             </div>
-            <Link href="/guardados" className="flex items-center px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
-              <Heart className="w-5 h-5" />
+            <Link href="/guardados" className="relative flex items-center px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors" title="Ver guardados">
+              <Heart className={`w-5 h-5 ${savedGames.length > 0 ? "text-[#ff7a93] fill-[#ff7a93]" : ""}`} />
+              {savedGames.length > 0 && (
+                <span className="absolute top-3 right-2 bg-[#ffd90f] text-zinc-900 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+                  {savedGames.length > 9 ? "9+" : savedGames.length}
+                </span>
+              )}
             </Link>
             <div className="flex items-center h-full py-2">
               {isLoading ? (
@@ -174,21 +214,26 @@ export function Navigation() {
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-[70] bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">
         
         {isMobileSearchOpen ? (
-          <div className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">
-            <Search className="w-5 h-5 text-[#ffd90f] shrink-0 ml-2" />
+          <form onSubmit={handleMobileSearch} className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">
+            <button type="submit" className="shrink-0 ml-2" title="Buscar">
+              <Search className="w-5 h-5 text-[#ffd90f]" />
+            </button>
             <input 
               type="text" 
+              value={mobileSearchQuery}
+              onChange={(e) => setMobileSearchQuery(e.target.value)}
               placeholder="Buscar juegos..." 
               className="w-full h-full bg-transparent border-none text-white pl-3 pr-2 focus:outline-none focus:ring-0 text-sm font-medium placeholder-zinc-500"
               autoFocus
             />
             <button 
+              type="button"
               onClick={() => setIsMobileSearchOpen(false)}
               className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 ml-1"
             >
               <X className="w-4 h-4" />
             </button>
-          </div>
+          </form>
         ) : (
           <div className="flex justify-around items-center w-full h-full animate-in fade-in zoom-in duration-200">
             <button onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full">
