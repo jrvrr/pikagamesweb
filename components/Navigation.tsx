@@ -32,6 +32,14 @@ export function Navigation() {
   
   const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/catalogo" ? "catalogo" : pathname === "/" ? "inicio" : "";
 
+  // Clear search inputs when user navigates away from /buscar
+  useEffect(() => {
+    if (pathname !== "/buscar") {
+      setSearchQuery("");
+      setMobileSearchQuery("");
+    }
+  }, [pathname]);
+
   const handleTabClick = (tab: string, path?: string) => {
     setIsMenuOpen(false);
     if (path) {
@@ -70,7 +78,6 @@ export function Navigation() {
         <header className="w-full flex items-stretch h-16">
           {/* Logo Area */}
           <Link href="/" className="bg-[#ffd90f] px-6 flex items-center justify-center gap-2 hover:bg-[#f5cf07] transition-colors">
-            <img src="/icon.png" alt="Pikagames" className="w-8 h-8 object-contain" />
             <div className="font-black text-xl tracking-tighter text-zinc-900">PIKAGAMES</div>
           </Link>
           
@@ -203,12 +210,8 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Mobile Top Bar (Simple Logo) */}
-      <div className="fixed top-0 left-0 w-full z-[45] bg-[#18181b] border-b border-zinc-800 h-14 flex items-center justify-center px-4 md:hidden shadow-md">
-        <Link href="/">
-           <div className="font-black text-xl tracking-tighter text-[#ffd90f]">PIKAGAMES</div>
-        </Link>
-      </div>
+      {/* Mobile Top Bar (Minimal - no logo) */}
+      <div className="fixed top-0 left-0 w-full z-[45] bg-[#18181b] border-b border-zinc-800 h-14 md:hidden shadow-md" />
 
       {/* Mobile Bottom Tab Bar (Floating Pill) */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-[70] bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">

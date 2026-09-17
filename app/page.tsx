@@ -277,7 +277,7 @@ export default function HomePage() {
       </section>
 
       {/* ¿Qué buscas? Section */}
-      <section className="relative z-10 py-16 md:py-20 px-6 md:px-12 bg-[#ffd90f] border-b-4 border-zinc-900 overflow-hidden">
+      <section className="relative z-10 py-16 md:py-20 px-6 md:px-12 bg-white border-b-4 border-zinc-900 overflow-hidden">
         <motion.h2 
           initial={{ opacity: 0, x: -100 }}
           whileInView={{ opacity: 1, x: 0 }}
