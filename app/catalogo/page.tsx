@@ -605,7 +605,9 @@ function CatalogoContent() {
                     {isGameSaved(detailModal.game.id) ? "Guardado en Favoritos" : "Guardar en Favoritos"}
                   </Button>
                   <Button 
-                    onClick={() => router.push(`/comprar/${detailModal.game.id}`)}
+                    onClick={() => {
+                      if (detailModal.game) router.push(`/comprar/${detailModal.game.id}`);
+                    }}
                     className="flex-1 py-5 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-xl text-sm"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />

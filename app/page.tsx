@@ -1252,7 +1252,9 @@ export default function HomePage() {
                   </Button>
 
                   <Button
-                    onClick={() => router.push(`/comprar/${detailModal.game.id}`)}
+                    onClick={() => {
+                      if (detailModal.game) router.push(`/comprar/${detailModal.game.id}`);
+                    }}
                     className="flex-1 bg-[#ff7a93] hover:bg-[#e66a82] text-white font-black text-sm py-5 rounded-xl shadow-md border-2 border-transparent hover:border-white flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-4 h-4" />
