@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ShapeGrid } from "@/components/ShapeGrid";
@@ -105,6 +106,7 @@ const switch2Games: Game[] = [
 ];
 
 function CatalogoContent() {
+  const router = useRouter();
   const [consoleTab, setConsoleTab] = useState<'all' | 'switch1' | 'switch2'>('all');
   const [genreFilter, setGenreFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
@@ -486,7 +488,7 @@ function CatalogoContent() {
                         </Button>
 
                         <Button 
-                          onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                          onClick={() => router.push(`/comprar/${game.id}`)}
                           className={`w-full font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5 ${
                             isSwitch2
                               ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white'
@@ -494,7 +496,7 @@ function CatalogoContent() {
                           }`}
                         >
                           <ShoppingCart className="w-4 h-4" />
-                          {isSwitch2 ? 'Reservar Switch 2' : 'Comprar ($1,299)'}
+                          {isSwitch2 ? 'Reservar Switch 2' : 'Comprar'}
                         </Button>
                       </div>
                     </div>
@@ -607,15 +609,11 @@ function CatalogoContent() {
                     {isGameSaved(detailModal.game.id) ? "Guardado en Favoritos" : "Guardar en Favoritos"}
                   </Button>
                   <Button 
-                    onClick={() => {
-                      const g = detailModal.game;
-                      setDetailModal({ isOpen: false, game: null, isLoading: false });
-                      setPurchaseModal({ isOpen: true, game: g, step: 'method' });
-                    }}
+                    onClick={() => router.push(`/comprar/${detailModal.game.id}`)}
                     className="flex-1 py-5 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-xl text-sm"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    Comprar Ahora ($1,299)
+                    Comprar Ahora
                   </Button>
                 </div>
               </div>

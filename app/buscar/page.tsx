@@ -313,7 +313,7 @@ function BuscarContent() {
                           </Button>
 
                           <Button 
-                            onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                            onClick={() => router.push(`/comprar/${game.id}`)}
                             className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5"
                           >
                             <ShoppingCart className="w-4 h-4" />
@@ -441,11 +441,7 @@ function BuscarContent() {
                     {isGameSaved(detailModal.game.id) ? "Guardado en Favoritos" : "Guardar en Favoritos"}
                   </Button>
                   <Button 
-                    onClick={() => {
-                      const g = detailModal.game;
-                      setDetailModal({ isOpen: false, game: null, isLoading: false });
-                      setPurchaseModal({ isOpen: true, game: g, step: 'method' });
-                    }}
+                    onClick={() => router.push(`/comprar/${detailModal.game.id}`)}
                     className="flex-1 py-5 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-xl text-sm"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />

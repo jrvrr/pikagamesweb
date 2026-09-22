@@ -83,11 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Load favorites from server (when logged in) or localStorage (when not)
+  // Load favorites from server (when logged in) or localStorage (when guest)
   const loadFavorites = useCallback(async (hasToken: boolean) => {
-    const localGames = loadFavoritesFromLocalStorage();
-    setSavedGames(localGames);
-
     if (hasToken) {
       setIsFavoritesLoading(true);
       try {
@@ -95,32 +92,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const rawFavorites = data?.favoritos || (Array.isArray(data) ? data : []);
         if (Array.isArray(rawFavorites)) {
           const serverGames: SavedGame[] = rawFavorites.map(normalizeSavedGame);
-          
-          // Merge local games with server games
-          const gameMap = new Map<number, SavedGame>();
-          serverGames.forEach(g => gameMap.set(g.id, g));
-          localGames.forEach(g => {
-            if (!gameMap.has(g.id)) gameMap.set(g.id, g);
-          });
-          
-          const merged = Array.from(gameMap.values());
-          setSavedGames(merged);
-          saveFavoritesToLocalStorage(merged);
+          setSavedGames(serverGames);
         }
       } catch (error) {
         console.error("Error al cargar favoritos del servidor:", error);
       } finally {
         setIsFavoritesLoading(false);
       }
+    } else {
+      const localGames = loadFavoritesFromLocalStorage();
+      setSavedGames(localGames);
     }
   }, []);
 
   const checkAuth = async () => {
     setIsLoading(true);
-    // Initial local favorites load immediately
-    const localGames = loadFavoritesFromLocalStorage();
-    setSavedGames(localGames);
-
     const storedToken = localStorage.getItem("token");
     
     if (storedToken) {
@@ -134,12 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("token");
         setUser(null);
         setToken(null);
-        setSavedGames(localGames);
+        setSavedGames(loadFavoritesFromLocalStorage());
         console.error("Error al verificar sesión:", error);
       }
     } else {
       setUser(null);
       setToken(null);
+      setSavedGames(loadFavoritesFromLocalStorage());
     }
     
     setIsLoading(false);
@@ -154,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     setUser(userData);
 
-    // Migrate localStorage favorites to server
+    // Migrate local guest favorites to server upon login
     const localGames = loadFavoritesFromLocalStorage();
     if (localGames.length > 0) {
       for (const game of localGames) {
@@ -177,6 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Individual migration failure is non-blocking
         }
       }
+      // Clear guest local storage after migration
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("savedGames");
+      }
     }
 
     await loadFavorites(true);
@@ -185,10 +176,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("savedGames");
+    }
     setToken(null);
     setUser(null);
-    const localGames = loadFavoritesFromLocalStorage();
-    setSavedGames(localGames);
+    setSavedGames([]);
     router.push("/");
   };
 
@@ -205,7 +198,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (exists) {
       updated = savedGames.filter((g) => Number(g.id) !== Number(normalized.id));
       setSavedGames(updated);
-      saveFavoritesToLocalStorage(updated);
 
       if (token) {
         try {
@@ -213,11 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error("Error al eliminar favorito del servidor:", error);
         }
+      } else {
+        saveFavoritesToLocalStorage(updated);
       }
     } else {
       updated = [...savedGames, normalized];
       setSavedGames(updated);
-      saveFavoritesToLocalStorage(updated);
 
       if (token) {
         try {
@@ -234,6 +227,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error("Error al agregar favorito al servidor:", error);
         }
+      } else {
+        saveFavoritesToLocalStorage(updated);
       }
     }
   };
