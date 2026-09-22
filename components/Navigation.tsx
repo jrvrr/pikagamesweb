@@ -96,9 +96,9 @@ export function Navigation() {
               <Gamepad2 className="w-5 h-5" /> Catálogo
             </Link>
 
-            <a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 h-full hover:text-[#25D366] hover:bg-zinc-800 transition-colors">
+            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full hover:text-[#25D366] hover:bg-zinc-800 transition-colors">
               <ShoppingBag className="w-5 h-5" /> Comprar
-            </a>
+            </Link>
           </nav>
 
           <div className="flex-grow"></div>

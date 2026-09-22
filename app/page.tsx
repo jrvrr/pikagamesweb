@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, sear
 import { useAuth } from "@/lib/AuthContext";
 
 export default function HomePage() {
+  const router = useRouter();
   const { savedGames, toggleSaveGame, isGameSaved } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
   
@@ -479,7 +481,7 @@ export default function HomePage() {
 
                         {/* Botón Comprar */}
                         <Button 
-                          onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                          onClick={() => router.push(`/comprar/${game.id}`)}
                           className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
                         >
                           <ShoppingCart className="w-4 h-4" />
@@ -605,7 +607,7 @@ export default function HomePage() {
 
                           {/* Botón Comprar */}
                           <Button 
-                            onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                            onClick={() => router.push(`/comprar/${game.id}`)}
                             className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
                           >
                             <ShoppingCart className="w-4 h-4" />
@@ -1260,11 +1262,7 @@ export default function HomePage() {
                   </Button>
 
                   <Button
-                    onClick={() => {
-                      const gameToBuy = detailModal.game;
-                      setDetailModal({ isOpen: false, game: null, isLoading: false });
-                      setPurchaseModal({ isOpen: true, game: gameToBuy, step: 'method' });
-                    }}
+                    onClick={() => router.push(`/comprar/${detailModal.game.id}`)}
                     className="flex-1 bg-[#ff7a93] hover:bg-[#e66a82] text-white font-black text-sm py-5 rounded-xl shadow-md border-2 border-transparent hover:border-white flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-4 h-4" />
