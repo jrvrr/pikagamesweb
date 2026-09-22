@@ -248,7 +248,6 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-4 w-full sm:w-auto">
             <Link href="/catalogo">
               <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-2xl px-8 py-6 text-base shadow-[0_4px_20px_rgba(255,217,15,0.4)] transition-all hover:scale-105 flex items-center gap-2">
-                <Gamepad2 className="w-5 h-5" />
                 Ver Catálogo Completo
               </Button>
             </Link>
@@ -1101,7 +1100,7 @@ export default function HomePage() {
 
                       <Button 
                         onClick={() => handleWhatsAppRedirect(purchaseModal.game?.name || "Juego")}
-                        className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-lg py-6 rounded-xl border-4 border-zinc-900 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] flex items-center justify-center gap-2"
+                        className="w-full bg-[#ffd90f] hover:bg-[#20bd5a] text-white font-black text-lg py-6 rounded-xl border-4 border-zinc-900 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] flex items-center justify-center gap-2"
                       >
                         <Send className="w-5 h-5" />
                         Enviar recibo a WhatsApp
