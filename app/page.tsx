@@ -239,10 +239,6 @@ export default function HomePage() {
 
         {/* Hero Content */}
         <div className="relative z-10 flex flex-col items-start max-w-xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 text-[#ffd90f] font-bold text-sm mb-6 animate-pulse">
-            <Sparkles className="w-4 h-4" />
-            <span>Nuevos Títulos Switch 1 & 2 Disponibles</span>
-          </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase leading-[1.05] mb-6">
             Tu Universo de <span className="text-[#ffd90f]">Nintendo</span> en un solo lugar
           </h1>
@@ -254,12 +250,6 @@ export default function HomePage() {
               <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-2xl px-8 py-6 text-base shadow-[0_4px_20px_rgba(255,217,15,0.4)] transition-all hover:scale-105 flex items-center gap-2">
                 <Gamepad2 className="w-5 h-5" />
                 Ver Catálogo Completo
-              </Button>
-            </Link>
-            <Link href="/buscar">
-              <Button size="lg" variant="outline" className="border-2 border-zinc-700 hover:border-[#ffd90f] bg-zinc-900/80 text-white font-bold rounded-2xl px-8 py-6 text-base transition-all hover:bg-zinc-800">
-                <Search className="w-5 h-5 mr-2 text-[#ffd90f]" />
-                Buscar Juego
               </Button>
             </Link>
           </div>
@@ -808,21 +798,11 @@ export default function HomePage() {
           </div>
 
           <div className="relative mt-20 w-full border-t border-zinc-700 pt-8 pb-4 flex flex-col md:flex-row justify-between items-center text-sm text-zinc-500 gap-4 z-20">
-             {/* Pikachu */}
-             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[69%] z-30 pointer-events-none">
-                <img 
-                   src="/footer/pikachu.png" 
-                   alt="Pikachu" 
-                   className="w-48 md:w-60 h-auto pointer-events-none"
-                   style={{ mixBlendMode: 'lighten' }}
-                />
-             </div>
-
              <p className="flex items-center gap-2 z-20">
                <span className="w-2 h-2 rounded-full bg-[#ff7a93] inline-block"></span>
                *Se podrían requerir juegos, consolas o accesorios adicionales para el modo multijugador.
              </p>
-             <p className="font-bold flex items-center gap-2 z-20 md:pr-40">
+             <p className="font-bold flex items-center gap-2 z-20">
                 © 2026 Pikagames
              </p>
           </div>
@@ -1262,7 +1242,9 @@ export default function HomePage() {
                   </Button>
 
                   <Button
-                    onClick={() => router.push(`/comprar/${detailModal.game.id}`)}
+                    onClick={() => {
+                      if (detailModal.game) router.push(`/comprar/${detailModal.game.id}`);
+                    }}
                     className="flex-1 bg-[#ff7a93] hover:bg-[#e66a82] text-white font-black text-sm py-5 rounded-xl shadow-md border-2 border-transparent hover:border-white flex items-center justify-center gap-2"
                   >
                     <ShoppingCart className="w-4 h-4" />

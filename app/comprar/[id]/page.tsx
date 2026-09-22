@@ -152,7 +152,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               <p className="mt-2 flex items-center gap-2 text-xs text-zinc-400"><ShieldCheck className="h-4 w-4 text-[#ffd90f]" /> Confirmarás los detalles de entrega con un asesor.</p>
             </div>
 
-            <button type="button" onClick={continueToWhatsApp} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-4 font-black text-white transition-colors hover:bg-[#1fbe59]">
+            <button type="button" onClick={continueToWhatsApp} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#ffd90f] px-5 py-4 font-black text-zinc-900 transition-colors hover:bg-[#e5c30d]">
               <Send className="h-5 w-5" /> Continuar por WhatsApp
             </button>
           </aside>
