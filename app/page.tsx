@@ -808,21 +808,11 @@ export default function HomePage() {
           </div>
 
           <div className="relative mt-20 w-full border-t border-zinc-700 pt-8 pb-4 flex flex-col md:flex-row justify-between items-center text-sm text-zinc-500 gap-4 z-20">
-             {/* Pikachu */}
-             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[69%] z-30 pointer-events-none">
-                <img 
-                   src="/footer/pikachu.png" 
-                   alt="Pikachu" 
-                   className="w-48 md:w-60 h-auto pointer-events-none"
-                   style={{ mixBlendMode: 'lighten' }}
-                />
-             </div>
-
              <p className="flex items-center gap-2 z-20">
                <span className="w-2 h-2 rounded-full bg-[#ff7a93] inline-block"></span>
                *Se podrían requerir juegos, consolas o accesorios adicionales para el modo multijugador.
              </p>
-             <p className="font-bold flex items-center gap-2 z-20 md:pr-40">
+             <p className="font-bold flex items-center gap-2 z-20">
                 © 2026 Pikagames
              </p>
           </div>

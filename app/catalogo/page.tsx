@@ -16,7 +16,6 @@ import {
   Calendar, 
   ArrowLeft, 
   Loader2, 
-  Sparkles, 
   Flame, 
   ChevronDown, 
   X, 
@@ -259,9 +258,6 @@ function CatalogoContent() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-800">
             <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 text-[#ffd90f] font-black text-xs uppercase tracking-wider mb-3">
-                <Sparkles className="w-3.5 h-3.5" /> Catálogo Oficial Nintendo
-              </div>
               <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white flex items-center gap-3">
                 <Gamepad2 className="w-9 h-9 md:w-12 md:h-12 text-[#ffd90f]" />
                 Catálogo de Juegos
