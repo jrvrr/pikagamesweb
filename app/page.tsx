@@ -385,9 +385,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
             className="flex flex-col items-center mb-10 text-center"
           >
-            <span className="bg-[#ffd90f] text-zinc-900 font-extrabold text-xs md:text-sm uppercase tracking-widest px-4 py-1 rounded-full border-2 border-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mb-3 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-zinc-900" /> Próximos Lanzamientos
-            </span>
+           
             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-zinc-900">
               Próximos Estrenos
             </h2>
