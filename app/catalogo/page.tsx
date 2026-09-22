@@ -259,7 +259,6 @@ function CatalogoContent() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-800">
             <div>
               <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-                <Gamepad2 className="w-9 h-9 md:w-12 md:h-12 text-[#ffd90f]" />
                 Catálogo de Juegos
               </h1>
               <p className="text-zinc-400 mt-2 font-medium text-sm md:text-base max-w-2xl">
@@ -277,7 +276,7 @@ function CatalogoContent() {
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                Todos (1 y 2)
+                Todos
               </button>
               <button
                 onClick={() => setConsoleTab('switch1')}
@@ -287,7 +286,6 @@ function CatalogoContent() {
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 Switch 1
               </button>
               <button
@@ -298,8 +296,7 @@ function CatalogoContent() {
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <Zap className="w-3.5 h-3.5 fill-current" />
-                Switch 2 (Next-Gen)
+                Switch 2
               </button>
             </div>
           </div>
@@ -310,11 +307,11 @@ function CatalogoContent() {
           {/* Genre & Tag Chips */}
           <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
             {[
-              { id: 'todos', label: '🔥 Todos los Populares' },
-              { id: 'estrenos', label: '✨ Nuevos Estrenos' },
-              { id: 'mario', label: '🍄 Super Mario' },
-              { id: 'zelda', label: '🗡️ The Legend of Zelda' },
-              { id: 'pokemon', label: '⚡ Pokémon' },
+              { id: 'todos', label: 'Populares' },
+              { id: 'estrenos', label: 'Nuevos Estrenos' },
+              { id: 'mario', label: 'Super Mario' },
+              { id: 'zelda', label: 'The Legend of Zelda' },
+              { id: 'pokemon', label: 'Pokémon' },
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -359,7 +356,6 @@ function CatalogoContent() {
           <div className="mb-8 p-6 bg-gradient-to-r from-blue-900/40 via-cyan-900/30 to-zinc-900 rounded-3xl border-2 border-cyan-500/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0">
-                <Zap className="w-8 h-8 text-cyan-400" />
               </div>
               <div>
                 <h3 className="text-xl font-black text-white">Línea de Títulos Nintendo Switch 2 (Próxima Generación)</h3>
@@ -428,7 +424,7 @@ function CatalogoContent() {
                       <div className="absolute top-2 left-2 flex items-center gap-1.5">
                         {isSwitch2 ? (
                           <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black px-2.5 py-1 rounded-md text-[10px] tracking-wider uppercase shadow-md flex items-center gap-1">
-                            <Zap className="w-3 h-3 fill-current" /> Switch 2
+                            Switch 2
                           </span>
                         ) : (
                           <span className="bg-[#e60012] text-white font-black px-2 py-0.5 rounded-md text-[10px] tracking-wider uppercase shadow-md">
