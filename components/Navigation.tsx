@@ -96,7 +96,7 @@ export function Navigation() {
               <Gamepad2 className="w-5 h-5" /> Catálogo
             </Link>
 
-            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full hover:text-[#25D366] hover:bg-zinc-800 transition-colors">
+            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full text-[#25D366] hover:bg-zinc-800 transition-colors">
               <ShoppingBag className="w-5 h-5" /> Comprar
             </Link>
           </nav>

@@ -239,10 +239,6 @@ export default function HomePage() {
 
         {/* Hero Content */}
         <div className="relative z-10 flex flex-col items-start max-w-xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 text-[#ffd90f] font-bold text-sm mb-6 animate-pulse">
-            <Sparkles className="w-4 h-4" />
-            <span>Nuevos Títulos Switch 1 & 2 Disponibles</span>
-          </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase leading-[1.05] mb-6">
             Tu Universo de <span className="text-[#ffd90f]">Nintendo</span> en un solo lugar
           </h1>
@@ -254,12 +250,6 @@ export default function HomePage() {
               <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-2xl px-8 py-6 text-base shadow-[0_4px_20px_rgba(255,217,15,0.4)] transition-all hover:scale-105 flex items-center gap-2">
                 <Gamepad2 className="w-5 h-5" />
                 Ver Catálogo Completo
-              </Button>
-            </Link>
-            <Link href="/buscar">
-              <Button size="lg" variant="outline" className="border-2 border-zinc-700 hover:border-[#ffd90f] bg-zinc-900/80 text-white font-bold rounded-2xl px-8 py-6 text-base transition-all hover:bg-zinc-800">
-                <Search className="w-5 h-5 mr-2 text-[#ffd90f]" />
-                Buscar Juego
               </Button>
             </Link>
           </div>
