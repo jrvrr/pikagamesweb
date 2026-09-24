@@ -54,11 +54,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        const token = data.token;
-        const userObj = data.usuario || data.user;
+        const token = data.token || data.data?.token;
+        const userObj = data.usuario || data.user || data.data?.usuario || data.data?.user;
 
         if (token && userObj) {
           login(token, userObj);
@@ -71,7 +71,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           
           if (meResponse.ok) {
             const meData = await meResponse.json();
-            const fetchedUser = meData.usuario || meData.user || meData;
+            const fetchedUser = meData.usuario || meData.user || meData.data?.usuario || meData.data?.user || meData;
             login(token, fetchedUser);
             onClose();
           } else {
@@ -81,7 +81,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setError("Respuesta del servidor no válida.");
         }
       } else {
-        setError(data.message || (isLogin ? "Credenciales inválidas." : "Error al registrarse."));
+        setError(
+          data.message || data.mensaje || data.error ||
+            (response.status >= 500
+              ? "El servicio de inicio de sesión no está disponible. Intenta de nuevo más tarde."
+              : isLogin
+                ? "Credenciales inválidas."
+                : "Error al registrarse.")
+        );
       }
     } catch (err) {
       if (typeof window !== "undefined" && !navigator.onLine) {
@@ -251,3 +258,4 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     </div>
   );
 }
+

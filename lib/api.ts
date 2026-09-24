@@ -30,7 +30,9 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     let errorMessage = `Error ${response.status}`;
     try {
       const errorData = await response.json();
-      if (errorData.message) errorMessage = errorData.message;
+      if (errorData.message || errorData.mensaje || errorData.error) {
+        errorMessage = errorData.message || errorData.mensaje || errorData.error;
+      }
     } catch (e) {
       // Si no es JSON, mantenemos el mensaje de estado por defecto
     }

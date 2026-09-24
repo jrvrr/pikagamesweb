@@ -26,7 +26,6 @@ import {
   ShoppingBag,
   HelpCircle,
   Star,
-  StarHalf,
   ChevronLeft,
   X,
   CreditCard,
@@ -37,15 +36,27 @@ import {
   Sparkles,
   Calendar,
   Info,
-  Check
+  Check,
+  Flame
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
+import { apiFetch } from "@/lib/api";
+
+interface ApiComment {
+  id: string | number;
+  nombre: string;
+  calificacion: number;
+  mensaje: string;
+  fecha_creacion?: string;
+}
 
 export default function HomePage() {
   const router = useRouter();
-  const { savedGames, toggleSaveGame, isGameSaved } = useAuth();
+  const { user, token, toggleSaveGame, isGameSaved } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [activeComment, setActiveComment] = useState(0);
+  const [apiComments, setApiComments] = useState<ApiComment[]>([]);
   
   // Modal states
   const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
@@ -54,6 +65,26 @@ export default function HomePage() {
   const [mensaje, setMensaje] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [commentError, setCommentError] = useState("");
+  const commentUserName = user
+    ? `${user.nombre || ""} ${user.apellidos || ""}`.trim() || user.email
+    : "";
+
+  const loadComments = async () => {
+    try {
+      const data = await apiFetch("/comentarios");
+      const comments = Array.isArray(data) ? data : data?.comentarios;
+      if (Array.isArray(comments)) {
+        setApiComments(comments);
+      }
+    } catch (error) {
+      console.error("Error al cargar comentarios:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadComments();
+  }, []);
 
   // Game Catalog States
   const [games, setGames] = useState<Game[]>([]);
@@ -160,65 +191,75 @@ export default function HomePage() {
 
   const handleSubmitComentario = async () => {
     if (rating === 0 || mensaje.trim() === "") {
-      alert("Por favor selecciona una calificación y escribe un comentario.");
+      setCommentError("Selecciona una calificación y escribe un comentario.");
+      return;
+    }
+
+    if (!user || !token || !commentUserName) {
+      setCommentError("Inicia sesión para publicar un comentario.");
       return;
     }
     
     setIsSubmitting(true);
+    setCommentError("");
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
-      const response = await fetch(`${apiUrl}/comentarios`, {
+      await apiFetch("/comentarios", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: "Jerry Gamer", calificacion: rating, mensaje })
+        body: JSON.stringify({
+          user_id: user.id || null,
+          nombre: commentUserName,
+          calificacion: Number(rating),
+          mensaje: mensaje.trim(),
+        }),
       });
       
-      if (response.ok) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          setIsCustomerServiceOpen(false);
-          setIsSuccess(false);
-          setMensaje("");
-          setRating(0);
-          setTimeout(() => setCustomerServiceView('selection'), 300);
-        }, 2000);
-      } else {
-        alert("Hubo un error al enviar tu comentario.");
-      }
+      setIsSuccess(true);
+      await loadComments();
+      setTimeout(() => {
+        setIsCustomerServiceOpen(false);
+        setIsSuccess(false);
+        setMensaje("");
+        setRating(0);
+        setTimeout(() => setCustomerServiceView('selection'), 300);
+      }, 2000);
     } catch (error) {
       console.error(error);
-      alert("Error de red. Asegúrate de que el servidor esté corriendo.");
+      setCommentError(error instanceof Error ? error.message : "Error al enviar el comentario.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
+    if (apiComments.length === 0) return;
     const interval = setInterval(() => {
       if (carouselRef.current) {
         const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
         // If reached the end, go back to start, else scroll right
         if (scrollLeft + clientWidth >= scrollWidth - 10) {
           carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+          setActiveComment(0);
         } else {
           carouselRef.current.scrollBy({ left: 512, behavior: "smooth" });
+          setActiveComment((current) => (current + 1) % apiComments.length);
         }
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [apiComments.length]);
 
-  const scrollLeft = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -512, behavior: "smooth" });
-    }
-  };
+  const averageCommentRating = apiComments.length
+    ? (apiComments.reduce((sum, comment) => sum + (Number(comment.calificacion) || 0), 0) / apiComments.length).toFixed(1)
+    : null;
 
-  const scrollRight = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 512, behavior: "smooth" });
-    }
-  };
+  const commentCards = apiComments.map((comment, index) => ({
+        bgSvg: `/svg/comentario${(index % 6) + 1}.svg`,
+        text: comment.mensaje,
+        name: comment.nombre,
+        rating: Math.max(0, Math.min(5, Number(comment.calificacion) || 0)),
+        color: index % 3 === 1 ? "text-white" : "text-zinc-900",
+        alignment: index % 2 === 0 ? "pb-8 md:pb-12" : "pt-8 md:pt-12",
+      }));
 
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans">
@@ -418,7 +459,7 @@ export default function HomePage() {
                   <motion.div 
                     key={game.id}
                     variants={{ hidden: { opacity: 0, y: 100, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-                    className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
+                    className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-lg hover:-translate-y-1 hover:border-[#ffd90f] hover:shadow-[0_16px_36px_rgba(255,217,15,0.12)] transition-all flex flex-col overflow-hidden group relative"
                   >
                     {/* Image & Badges */}
                     <div className="relative w-full aspect-4/3 overflow-hidden bg-zinc-800">
@@ -454,25 +495,17 @@ export default function HomePage() {
                         {game.name}
                       </h3>
                       
-                      <div className="mt-auto pt-2 flex flex-col gap-2">
+                      <div className="mt-auto flex justify-center pt-2">
                         {/* Botón Ver Videojuego */}
                         <Button 
                           onClick={() => handleOpenDetailModal(game)}
                           variant="outline"
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-2 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                          className="w-auto min-w-36 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold text-[10px] sm:text-xs tracking-wide flex items-center justify-center gap-1 px-3"
                         >
                           <Eye className="w-4 h-4 text-[#ffd90f]" />
-                          Ver Videojuego
+                          ver detalles
                         </Button>
 
-                        {/* Botón Comprar */}
-                        <Button 
-                          onClick={() => router.push(`/comprar/${game.id}`)}
-                          className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Reservar
-                        </Button>
                       </div>
                     </div>
                   </motion.div>
@@ -493,6 +526,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
             className="flex flex-col items-center mb-10 text-center"
           >
+
             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-zinc-900">
               Catálogo de Videojuegos
             </h2>
@@ -536,7 +570,7 @@ export default function HomePage() {
                     <motion.div 
                       variants={{ hidden: { opacity: 0, y: 50, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
                       key={game.id} 
-                      className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
+                      className="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-lg hover:-translate-y-1 hover:border-[#ffd90f] hover:shadow-[0_16px_36px_rgba(255,217,15,0.12)] transition-all flex flex-col overflow-hidden group relative"
                     >
                       <div className="relative w-full aspect-4/3 overflow-hidden bg-zinc-800">
                         {game.background_image ? (
@@ -569,24 +603,24 @@ export default function HomePage() {
                           {game.name}
                         </h3>
                         
-                        <div className="mt-auto pt-2 flex flex-col gap-2">
+                        <div className="mt-auto grid grid-cols-2 gap-2 pt-2">
                           {/* Botón Ver Videojuego */}
                           <Button 
                             onClick={() => handleOpenDetailModal(game)}
                             variant="outline"
-                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-2 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                            className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold text-[10px] sm:text-xs tracking-wide flex items-center justify-center gap-1 px-2"
                           >
                             <Eye className="w-4 h-4 text-[#ffd90f]" />
-                            Ver Videojuego
+                            ver detalles
                           </Button>
 
                           {/* Botón Comprar */}
                           <Button 
                             onClick={() => router.push(`/comprar/${game.id}`)}
-                            className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-bold uppercase text-xs tracking-wide border-2 border-transparent hover:border-white shadow-sm flex items-center justify-center gap-1.5"
+                            className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black text-[10px] sm:text-xs tracking-wide border-0 shadow-sm flex items-center justify-center gap-1 px-2"
                           >
                             <ShoppingCart className="w-4 h-4" />
-                            Comprar
+                            comprar
                           </Button>
                         </div>
                       </div>
@@ -602,7 +636,6 @@ export default function HomePage() {
                     size="lg" 
                     className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 border-4 border-zinc-900 rounded-full font-black px-10 py-7 text-lg md:text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all hover:scale-105 flex items-center gap-3"
                   >
-                    <Gamepad2 className="w-6 h-6 text-zinc-900" />
                     <span>Ver más juegos</span>
                     <ChevronRight className="w-6 h-6 text-zinc-900 stroke-3" />
                   </Button>
@@ -634,47 +667,29 @@ export default function HomePage() {
               <h2 className="text-2xl md:text-4xl font-medium text-zinc-900 tracking-tight border-b-4 border-dotted border-[#ffd90f] pb-2 text-center inline-block">
                 Lo que opinan nuestros clientes
               </h2>
-              <div className="flex items-center gap-2 text-[#ffd90f] mt-5 drop-shadow-sm">
-                <Star className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-                <Star className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-                <Star className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-                <Star className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-                <StarHalf className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-                <span className="text-zinc-900 font-black text-2xl md:text-3xl ml-3">4.8 / 5</span>
-              </div>
+              {averageCommentRating && (
+                <div className="flex items-center gap-2 text-[#ffd90f] mt-5 drop-shadow-sm">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className={`w-6 h-6 md:w-8 md:h-8 ${star <= Math.round(Number(averageCommentRating)) ? "fill-current" : "fill-transparent"}`} />
+                  ))}
+                  <span className="text-zinc-900 font-black text-2xl md:text-3xl ml-3">{averageCommentRating} / 5</span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Carousel */}
-          <div className="relative w-full mt-10">
-            {/* Arrows */}
-            <button 
-              onClick={scrollLeft}
-              className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white border-4 border-zinc-900 rounded-full flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] hover:bg-[#ffd90f] transition-colors hover:scale-110 active:scale-95"
-            >
-              <ChevronLeft className="w-6 h-6 text-zinc-900" strokeWidth={3} />
-            </button>
-
-            <button 
-              onClick={scrollRight}
-              className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white border-4 border-zinc-900 rounded-full flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] hover:bg-[#ffd90f] transition-colors hover:scale-110 active:scale-95"
-            >
-              <ChevronRight className="w-6 h-6 text-zinc-900" strokeWidth={3} />
-            </button>
-
+          <div className="relative mt-10 w-full">
+            {commentCards.length === 0 ? (
+              <p className="py-8 text-center text-zinc-600">Aún no hay comentarios publicados.</p>
+            ) : (
+              <>
             <div 
               ref={carouselRef}
-              className="flex overflow-x-auto gap-6 md:gap-8 pb-12 pt-4 snap-x snap-mandatory hide-scrollbar -mx-6 px-6 md:mx-0 md:px-4"
+              className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-3 pb-4 pt-4 hide-scrollbar sm:gap-6 md:gap-8"
             >
-              {[
-                { bgSvg: "/svg/comentario1.svg", text: "¡El mejor lugar para encontrar mis juegos favoritos! La entrega fue súper rápida.", name: "GamerPro99", rating: 5, color: "text-zinc-900", alignment: "pb-8 md:pb-12" },
-                { bgSvg: "/svg/comentario2.svg", text: "Me encanta la interfaz. Fue muy fácil encontrar lo que buscaba y el servicio es excelente.", name: "ZeldaFan", rating: 5, color: "text-white", alignment: "pt-8 md:pt-12" },
-                { bgSvg: "/svg/comentario3.svg", text: "Descubrí juegos indie increíbles. Definitivamente recomendaré esta tienda a mis amigos.", name: "IndieExplorer", rating: 4, color: "text-zinc-900", alignment: "pt-8 md:pt-12" },
-                { bgSvg: "/svg/comentario4.svg", text: "Compré el nuevo Mario aquí y llegó en perfectas condiciones. Precios competitivos.", name: "MarioBro", rating: 5, color: "text-zinc-900", alignment: "pb-10 md:pb-14" },
-                { bgSvg: "/svg/comentario5.svg", text: "Soy cliente frecuente y siempre tienen disponibilidad en los estrenos más esperados.", name: "SwitchMaster", rating: 5, color: "text-white", alignment: "pt-8 md:pt-12" },
-                { bgSvg: "/svg/comentario6.svg", text: "Tuve una duda con mi pedido y el soporte me respondió rapidísimo. Muy confiables.", name: "PikaTrainer", rating: 4, color: "text-zinc-900", alignment: "pb-10 md:pb-14" }
-              ].map((comment, i) => (
-                <div key={i} className={`w-[320px] h-47.5 md:w-120 md:h-65 shrink-0 snap-center relative hover:-translate-y-2 transition-transform duration-300 group flex items-center justify-center px-6 md:px-12 ${comment.alignment}`}>
+              {commentCards.map((comment, i) => (
+                <div key={i} className={`w-[calc(100vw-3rem)] max-w-120 min-h-48 shrink-0 snap-center relative hover:-translate-y-2 transition-transform duration-300 group flex items-center justify-center px-8 py-10 sm:px-10 md:min-h-65 md:px-12 ${comment.alignment}`}>
                   <img src={comment.bgSvg} alt="Comentario" className="absolute inset-0 w-full h-full object-fill -z-10 drop-shadow-[8px_8px_0px_rgba(24,24,27,1)] group-hover:scale-[1.02] transition-transform duration-300" />
                   
                   <div className="flex flex-col items-center text-center max-w-[90%] relative z-10">
@@ -684,13 +699,32 @@ export default function HomePage() {
                          <Star key={idx} className={`w-4 h-4 md:w-5 md:h-5 ${idx < comment.rating ? 'fill-current' : 'fill-transparent'} stroke-current`} strokeWidth={2.5} />
                       ))}
                     </div>
-                    <p className={`${comment.color} font-bold leading-tight text-[13px] md:text-base line-clamp-4`}>
+                    <p className={`${comment.color} font-bold leading-tight text-[13px] md:text-base line-clamp-5`}>
                       &quot;{comment.text}&quot;
                     </p>
                   </div>
                 </div>
               ))}
             </div>
+            <div className="mt-5 flex items-center justify-center gap-2" aria-label="Seleccionar comentario">
+              {Array.from({ length: commentCards.length }, (_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Ver comentario ${index + 1}`}
+                  aria-current={activeComment === index ? "true" : undefined}
+                  onClick={() => {
+                    const carousel = carouselRef.current;
+                    if (!carousel) return;
+                    carousel.scrollTo({ left: index * (carousel.scrollWidth / commentCards.length), behavior: "smooth" });
+                    setActiveComment(index);
+                  }}
+                  className={`h-2.5 rounded-full transition-all ${activeComment === index ? "w-7 bg-[#ffd90f]" : "w-2.5 bg-zinc-300 hover:bg-zinc-500"}`}
+                />
+              ))}
+            </div>
+              </>
+            )}
           </div>
         </motion.div>
       </section>
@@ -842,7 +876,7 @@ export default function HomePage() {
                       className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full py-2"
                     >
                       <button 
-                        onClick={() => setCustomerServiceView('comment')}
+                        onClick={() => { setCommentError(""); setCustomerServiceView('comment'); }}
                         className="flex-1 group bg-zinc-800/90 border-2 border-zinc-700 hover:border-[#ffd90f] hover:bg-zinc-800 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1 active:translate-y-0"
                       >
                         <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-zinc-700/70 group-hover:bg-[#ffd90f]/20 flex items-center justify-center mb-4 transition-colors">
@@ -877,15 +911,20 @@ export default function HomePage() {
                         <ChevronLeft className="w-5 h-5" /> Volver
                       </button>
                       <div className="space-y-5 w-full">
+                        {commentError && (
+                          <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+                            {commentError}
+                          </p>
+                        )}
                         <div>
                           <label className="block text-sm font-bold text-zinc-300 mb-2">Tu Nombre (Automático)</label>
-                          <input type="text" readOnly value="Jerry Gamer" className="w-full bg-zinc-800 border-2 border-zinc-700 rounded-xl px-4 py-3 text-zinc-300 font-medium cursor-not-allowed outline-none" />
+                          <input type="text" readOnly value={commentUserName || "Inicia sesión para comentar"} className="w-full bg-zinc-800 border-2 border-zinc-700 rounded-xl px-4 py-3 text-zinc-300 font-medium cursor-not-allowed outline-none" />
                         </div>
                         <div>
                           <label className="block text-sm font-bold text-zinc-300 mb-2">Calificación</label>
                           <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <button key={star} onClick={() => setRating(star)} className="focus:outline-none hover:scale-110 transition-transform">
+                              <button key={star} type="button" onClick={() => { setRating(star); setCommentError(""); }} className="focus:outline-none hover:scale-110 transition-transform">
                                 <Star className={`w-8 h-8 ${rating >= star ? 'fill-[#ffd90f] text-[#ffd90f]' : 'text-zinc-600'} transition-colors`} strokeWidth={2} />
                               </button>
                             ))}
@@ -898,7 +937,7 @@ export default function HomePage() {
                             placeholder="¡Me encantó mi nuevo juego para Switch!" 
                             className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"
                             value={mensaje}
-                            onChange={(e) => setMensaje(e.target.value)}
+                            onChange={(e) => { setMensaje(e.target.value); setCommentError(""); }}
                           ></textarea>
                         </div>
                         <Button 

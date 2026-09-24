@@ -155,7 +155,7 @@ export default function GuardadosPage() {
             {savedGames.map((game) => (
               <div 
                 key={game.id} 
-                className="group bg-zinc-900 rounded-2xl border-2 border-zinc-800 overflow-hidden hover:border-[#ffd90f] transition-all flex flex-col relative shadow-lg"
+                className="group bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden hover:border-[#ffd90f] hover:-translate-y-1 transition-all flex flex-col relative shadow-lg"
               >
                 {/* Remove button */}
                 <button 
@@ -167,7 +167,7 @@ export default function GuardadosPage() {
                 </button>
 
                 {/* Image Container */}
-                <div className="aspect-[4/3] w-full bg-zinc-800 relative flex items-center justify-center overflow-hidden">
+                <div className="w-full aspect-4/3 bg-zinc-800 relative flex items-center justify-center overflow-hidden">
                   {game.background_image ? (
                     <img 
                       src={game.background_image} 
@@ -195,7 +195,7 @@ export default function GuardadosPage() {
                 </div>
 
                 {/* Content */}
-                <div className="p-4 flex flex-col flex-grow bg-zinc-900">
+                <div className="flex flex-col grow p-4 bg-zinc-900">
                   <span className="text-[#ffd90f] text-[11px] font-bold uppercase tracking-wider mb-1">
                     Nintendo Switch
                   </span>
@@ -203,22 +203,22 @@ export default function GuardadosPage() {
                     {game.name}
                   </h3>
                   
-                  <div className="mt-auto flex flex-col gap-2">
+                  <div className="mt-auto grid grid-cols-2 gap-2">
                     <Button 
                       onClick={() => handleOpenDetailModal(game)}
                       variant="outline"
-                      className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                      className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-center gap-1 px-2"
                     >
                       <Eye className="w-4 h-4 text-[#ffd90f]" />
-                      Ver Videojuego
+                      ver detalles
                     </Button>
 
                     <Button 
                       onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
-                      className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5"
+                      className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Comprar ($1,299)
+                      comprar ($1,299)
                     </Button>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function GuardadosPage() {
 
       {/* GAME DETAIL MODAL */}
       {detailModal.isOpen && detailModal.game && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 flex items-center justify-center z-100 p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
@@ -252,7 +252,7 @@ export default function GuardadosPage() {
                     alt={detailModal.game.name} 
                     className="w-full h-full object-cover" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t via-transparent from-zinc-900 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                     <h2 className="text-2xl md:text-3xl font-black text-white drop-shadow-md">
                       {detailModal.game.name}
@@ -309,7 +309,7 @@ export default function GuardadosPage() {
 
       {/* PURCHASE MODAL */}
       {purchaseModal.isOpen && purchaseModal.game && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 flex items-center justify-center z-100 p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}

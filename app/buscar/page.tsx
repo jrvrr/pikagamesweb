@@ -217,14 +217,14 @@ function BuscarContent() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Loader2 className="w-12 h-12 text-[#ffd90f] animate-spin mb-4" />
-            <h2 className="text-xl font-black text-white">Buscando "{query}"...</h2>
+            <h2 className="text-xl font-black text-white">Buscando &quot;{query}&quot;...</h2>
             <p className="text-zinc-400 text-sm mt-1">Explorando el catálogo de Nintendo Switch</p>
           </div>
         ) : hasSearched ? (
           <div>
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800">
               <h2 className="text-xl md:text-2xl font-black text-white">
-                Resultados para <span className="text-[#ffd90f]">"{query}"</span>
+                Resultados para <span className="text-[#ffd90f]">&quot;{query}&quot;</span>
               </h2>
               <span className="bg-zinc-900 px-3 py-1 rounded-full text-xs font-bold text-zinc-400 border border-zinc-800">
                 {results.length} {results.length === 1 ? "juego encontrado" : "juegos encontrados"}
@@ -252,9 +252,9 @@ function BuscarContent() {
                   return (
                     <div 
                       key={game.id} 
-                      className="bg-zinc-900 rounded-2xl border-2 border-zinc-800 hover:border-[#ffd90f] transition-all flex flex-col overflow-hidden group shadow-lg"
+                      className="bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-[#ffd90f] hover:-translate-y-1 transition-all flex flex-col overflow-hidden group shadow-lg"
                     >
-                      <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                      <div className="relative w-full aspect-4/3 overflow-hidden bg-zinc-800">
                         {game.background_image ? (
                           <img 
                             src={game.background_image} 
@@ -294,7 +294,7 @@ function BuscarContent() {
                         )}
                       </div>
 
-                      <div className="p-4 flex flex-col flex-grow">
+                      <div className="p-4 flex flex-col grow">
                         <span className="text-[#ffd90f] text-[11px] font-bold uppercase tracking-wider mb-1">
                           Nintendo Switch
                         </span>
@@ -302,22 +302,22 @@ function BuscarContent() {
                           {game.name}
                         </h3>
                         
-                        <div className="mt-auto pt-2 flex flex-col gap-2">
+                        <div className="mt-auto grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             onClick={() => handleOpenDetailModal(game)}
                             variant="outline"
-                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                            className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-center gap-1 px-2"
                           >
                             <Eye className="w-4 h-4 text-[#ffd90f]" />
-                            Ver Videojuego
+                            ver detalles
                           </Button>
 
                           <Button 
                             onClick={() => router.push(`/comprar/${game.id}`)}
-                            className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5"
+                            className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                           >
                             <ShoppingCart className="w-4 h-4" />
-                            Comprar
+                            comprar
                           </Button>
                         </div>
                       </div>
@@ -372,7 +372,7 @@ function BuscarContent() {
 
       {/* GAME DETAIL MODAL */}
       {detailModal.isOpen && detailModal.game && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
@@ -394,7 +394,7 @@ function BuscarContent() {
                     alt={detailModal.game.name} 
                     className="w-full h-full object-cover" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-zinc-900 via-transparent to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                     <h2 className="text-2xl md:text-3xl font-black text-white drop-shadow-md">
                       {detailModal.game.name}
@@ -458,7 +458,7 @@ function BuscarContent() {
 
       {/* PURCHASE MODAL */}
       {purchaseModal.isOpen && purchaseModal.game && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
