@@ -37,7 +37,8 @@ import {
   Sparkles,
   Calendar,
   Info,
-  Check
+  Check,
+  Flame
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -493,6 +494,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
             className="flex flex-col items-center mb-10 text-center"
           >
+
             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-zinc-900">
               Catálogo de Videojuegos
             </h2>
@@ -602,7 +604,6 @@ export default function HomePage() {
                     size="lg" 
                     className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 border-4 border-zinc-900 rounded-full font-black px-10 py-7 text-lg md:text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all hover:scale-105 flex items-center gap-3"
                   >
-                    <Gamepad2 className="w-6 h-6 text-zinc-900" />
                     <span>Ver más juegos</span>
                     <ChevronRight className="w-6 h-6 text-zinc-900 stroke-3" />
                   </Button>

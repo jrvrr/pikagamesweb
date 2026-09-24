@@ -3,27 +3,23 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ShapeGrid } from "@/components/ShapeGrid";
+import { GameCard } from "@/components/GameCard";
 import { 
   Gamepad2, 
   Search, 
   Heart, 
-  Eye, 
   ShoppingCart, 
   Star, 
   Calendar, 
   ArrowLeft, 
   Loader2, 
-  Flame, 
   ChevronDown, 
   X, 
   CreditCard, 
   Landmark, 
-  Send,
-  Zap,
-  Filter
+  Send
 } from "lucide-react";
 import { getPopularGames, getNewReleases, searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -292,7 +288,7 @@ function CatalogoContent() {
                 onClick={() => setConsoleTab('switch2')}
                 className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   consoleTab === 'switch2'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                    ? 'bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-md'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -331,7 +327,7 @@ function CatalogoContent() {
           </div>
 
           {/* Inline Search Bar */}
-          <div className="relative min-w-[280px] lg:w-80">
+          <div className="relative min-w-70 lg:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ffd90f]" />
             <input 
               type="text" 
@@ -353,7 +349,7 @@ function CatalogoContent() {
 
         {/* Console 2 Banner Announcement */}
         {consoleTab === 'switch2' && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-blue-900/40 via-cyan-900/30 to-zinc-900 rounded-3xl border-2 border-cyan-500/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+          <div className="mb-8 p-6 bg-linear-to-r from-blue-900/40 via-cyan-900/30 to-zinc-900 rounded-3xl border-2 border-cyan-500/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0">
               </div>
@@ -398,101 +394,16 @@ function CatalogoContent() {
                 const isSwitch2 = game.id >= 99900 || game.name.includes('Switch 2');
                 
                 return (
-                  <div 
-                    key={game.id} 
-                    className={`bg-zinc-900 rounded-2xl border-2 transition-all duration-300 flex flex-col overflow-hidden group relative shadow-lg ${
-                      isSwitch2 
-                        ? 'border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_8px_30px_rgba(6,182,212,0.25)]' 
-                        : 'border-zinc-800 hover:border-[#ffd90f] hover:shadow-[0_8px_30px_rgba(255,217,15,0.15)]'
-                    }`}
-                  >
-                    {/* Image Area */}
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
-                      {game.background_image ? (
-                        <img 
-                          src={game.background_image} 
-                          alt={game.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                          <Gamepad2 size={40} />
-                        </div>
-                      )}
-
-                      {/* Console Badge */}
-                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                        {isSwitch2 ? (
-                          <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black px-2.5 py-1 rounded-md text-[10px] tracking-wider uppercase shadow-md flex items-center gap-1">
-                            Switch 2
-                          </span>
-                        ) : (
-                          <span className="bg-[#e60012] text-white font-black px-2 py-0.5 rounded-md text-[10px] tracking-wider uppercase shadow-md">
-                            Switch 1
-                          </span>
-                        )}
-                        
-                        <span className="bg-zinc-900/90 text-[#ffd90f] font-bold px-2 py-0.5 rounded-md text-[11px] shadow-md border border-zinc-700 flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-current" /> {game.rating ? Number(game.rating).toFixed(1) : "4.8"}
-                        </span>
-                      </div>
-
-                      {/* Bookmark button */}
-                      <button
-                        onClick={() => toggleSaveGame(game)}
-                        className={`absolute top-2 right-2 p-2 rounded-xl border-2 transition-all duration-200 shadow-md ${
-                          saved 
-                            ? 'bg-[#ffd90f] text-zinc-900 border-[#ffd90f]' 
-                            : 'bg-zinc-900/80 text-white border-zinc-700 hover:bg-[#ffd90f] hover:text-zinc-900'
-                        }`}
-                        title={saved ? "Quitar de guardados" : "Guardar en favoritos"}
-                      >
-                        <Heart className={`w-4 h-4 ${saved ? 'fill-zinc-900' : ''}`} />
-                      </button>
-
-                      {/* Release date tag */}
-                      {game.released && (
-                        <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-md text-zinc-300 font-medium px-2 py-0.5 rounded text-[10px] border border-zinc-700 flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-[#ffd90f]" />
-                          <span>{game.released}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 flex flex-col flex-grow bg-zinc-900">
-                      <span className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mb-1">
-                        {game.genres?.[0]?.name || 'Nintendo Switch'}
-                      </span>
-                      
-                      <h3 className="text-base font-black text-white mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
-                        {game.name}
-                      </h3>
-                      
-                      <div className="mt-auto pt-2 flex flex-col gap-2">
-                        <Button 
-                          onClick={() => handleOpenDetailModal(game)}
-                          variant="outline"
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
-                        >
-                          <Eye className="w-4 h-4 text-[#ffd90f]" />
-                          Ver Videojuego
-                        </Button>
-
-                        <Button 
-                          onClick={() => router.push(`/comprar/${game.id}`)}
-                          className={`w-full font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5 ${
-                            isSwitch2
-                              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white'
-                              : 'bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900'
-                          }`}
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          {isSwitch2 ? 'Reservar Switch 2' : 'Comprar'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    saved={saved}
+                    onToggleSave={toggleSaveGame}
+                    onView={handleOpenDetailModal}
+                    onBuy={(selectedGame) => router.push(`/comprar/${selectedGame.id}`)}
+                    isSwitch2={isSwitch2}
+                    buyLabel={isSwitch2 ? "Reservar" : "Comprar"}
+                  />
                 );
               })}
             </div>
@@ -527,7 +438,7 @@ function CatalogoContent() {
 
       {/* GAME DETAIL MODAL */}
       {detailModal.isOpen && detailModal.game && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
@@ -549,7 +460,7 @@ function CatalogoContent() {
                     alt={detailModal.game.name} 
                     className="w-full h-full object-cover" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-zinc-900 via-transparent to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                     <h2 className="text-2xl md:text-3xl font-black text-white drop-shadow-md">
                       {detailModal.game.name}
@@ -618,7 +529,7 @@ function CatalogoContent() {
 
       {/* PURCHASE MODAL */}
       {purchaseModal.isOpen && purchaseModal.game && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
