@@ -96,12 +96,12 @@ export function Navigation() {
               <Gamepad2 className="w-5 h-5" /> Catálogo
             </Link>
 
-            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full text-[#25D366] hover:bg-zinc-800 transition-colors">
+            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full text-white hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
               <ShoppingBag className="w-5 h-5" /> Comprar
             </Link>
           </nav>
 
-          <div className="flex-grow"></div>
+          <div className="grow"></div>
 
           {/* Right Actions */}
           <div className="flex items-center h-full mr-4 space-x-2 font-bold text-sm text-zinc-300">
@@ -133,7 +133,7 @@ export function Navigation() {
               ) : user ? (
                 <Link href="/perfil" className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm">
                   <User className="w-5 h-5" />
-                  <span className="max-w-[120px] truncate font-bold">{user.nombre.split(" ")[0]}</span>
+                  <span className="max-w-30 truncate font-bold">{user.nombre.split(" ")[0]}</span>
                 </Link>
               ) : (
                 <button onClick={() => setIsAuthModalOpen(true)} className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm focus:outline-none">
@@ -150,7 +150,7 @@ export function Navigation() {
       <div onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 md:top-16 bg-black/70 backdrop-blur-sm z-50 transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}></div>
 
       {/* Mega Menu (Dropdown) */}
-      <div className={`fixed top-14 md:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-[60] cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] md:max-h-[calc(100vh-4rem)] pb-28 md:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
+      <div className={`fixed top-14 md:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-60 cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] md:max-h-[calc(100vh-4rem)] pb-28 md:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
         <div className="max-w-6xl mx-auto w-full py-5 md:py-12 px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-5 md:gap-8 relative z-50">
           
           {/* Left Main Content */}
@@ -211,10 +211,10 @@ export function Navigation() {
       </div>
 
       {/* Mobile Top Bar (Minimal - no logo) */}
-      <div className="fixed top-0 left-0 w-full z-[45] bg-[#18181b] border-b border-zinc-800 h-14 md:hidden shadow-md" />
+      <div className="fixed top-0 left-0 w-full z-45 bg-[#18181b] border-b border-zinc-800 h-14 md:hidden shadow-md" />
 
       {/* Mobile Bottom Tab Bar (Floating Pill) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-[70] bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-100 z-70 bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">
         
         {isMobileSearchOpen ? (
           <form onSubmit={handleMobileSearch} className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">

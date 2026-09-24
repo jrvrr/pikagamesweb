@@ -37,8 +37,7 @@ import {
   Sparkles,
   Calendar,
   Info,
-  Check,
-  Flame
+  Check
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -224,7 +223,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans">
       {/* Hero Section */}
-      <section className="relative w-full min-h-[700px] md:min-h-[800px] flex flex-col md:flex-row items-center justify-between px-6 md:px-12 pb-12 pt-32 md:pt-40 overflow-hidden border-b-4 border-zinc-900 bg-[#111311]">
+      <section className="relative w-full min-h-175 md:min-h-200 flex flex-col md:flex-row items-center justify-between px-6 md:px-12 pb-12 pt-32 md:pt-40 overflow-hidden border-b-4 border-zinc-900 bg-[#111311]">
         {/* Animated Background */}
         <div className="absolute inset-0 z-0 opacity-40">
           <ShapeGrid 
@@ -257,7 +256,7 @@ export default function HomePage() {
         {/* Hero Visuals */}
         <div className="relative z-10 mt-12 md:mt-0 flex items-center justify-center">
           <div className="relative w-72 md:w-96 aspect-square flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#ffd90f]/20 to-transparent rounded-full blur-3xl" />
+            <div className="absolute inset-0 bg-linear-to-tr from-[#ffd90f]/20 to-transparent rounded-full blur-3xl" />
             <img 
               src="/1.png" 
               alt="Nintendo Switch Cartridges" 
@@ -332,7 +331,7 @@ export default function HomePage() {
       </section>
 
       {/* Slanted Wrapper for Black Gap and Pink Section */}
-      <div className="relative z-0 w-full skew-y-2 -mt-16 mb-[-3rem]">
+      <div className="relative z-0 w-full skew-y-2 -mt-16 -mb-12">
         {/* Black Dotted Slanted Gap */}
         <div className="relative w-full h-24 md:h-32 bg-[#111311] bg-dots-light overflow-hidden">
         </div>
@@ -422,7 +421,7 @@ export default function HomePage() {
                     className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
                   >
                     {/* Image & Badges */}
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                    <div className="relative w-full aspect-4/3 overflow-hidden bg-zinc-800">
                       {game.background_image ? (
                         <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       ) : (
@@ -450,7 +449,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 flex flex-col flex-grow">
+                    <div className="p-4 flex flex-col grow">
                       <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
                         {game.name}
                       </h3>
@@ -494,17 +493,6 @@ export default function HomePage() {
             transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
             className="flex flex-col items-center mb-10 text-center"
           >
-            <span className="bg-[#ffd90f] text-zinc-900 font-extrabold text-xs md:text-sm uppercase tracking-widest px-4 py-1.5 rounded-full border-2 border-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mb-3 flex items-center gap-1.5">
-              {catalogCategory === 'popular' && <Flame className="w-4 h-4 text-orange-600 fill-orange-600" />}
-              {catalogCategory === 'estreno' && <Sparkles className="w-4 h-4 text-zinc-900" />}
-              {catalogCategory === 'mario' && <span className="text-sm">🍄</span>}
-              {catalogCategory === 'precio' && <span className="text-sm">🏷️</span>}
-              <span>
-                {catalogCategory === 'popular' ? 'Categoría: Populares' :
-                 catalogCategory === 'estreno' ? 'Categoría: Estrenos Recientes' :
-                 catalogCategory === 'mario' ? 'Categoría: Super Mario' : 'Categoría: Mejores Precios'}
-              </span>
-            </span>
             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-zinc-900">
               Catálogo de Videojuegos
             </h2>
@@ -550,7 +538,7 @@ export default function HomePage() {
                       key={game.id} 
                       className="bg-zinc-900 rounded-2xl border-4 border-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,217,15,1)] hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all flex flex-col overflow-hidden group relative"
                     >
-                      <div className="relative w-full aspect-[4/3] overflow-hidden bg-zinc-800">
+                      <div className="relative w-full aspect-4/3 overflow-hidden bg-zinc-800">
                         {game.background_image ? (
                           <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         ) : (
@@ -576,7 +564,7 @@ export default function HomePage() {
                         </button>
                       </div>
 
-                      <div className="p-4 flex flex-col flex-grow">
+                      <div className="p-4 flex flex-col grow">
                         <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
                           {game.name}
                         </h3>
@@ -616,7 +604,7 @@ export default function HomePage() {
                   >
                     <Gamepad2 className="w-6 h-6 text-zinc-900" />
                     <span>Ver más juegos</span>
-                    <ChevronRight className="w-6 h-6 text-zinc-900 stroke-[3]" />
+                    <ChevronRight className="w-6 h-6 text-zinc-900 stroke-3" />
                   </Button>
                 </Link>
               </div>
@@ -686,7 +674,7 @@ export default function HomePage() {
                 { bgSvg: "/svg/comentario5.svg", text: "Soy cliente frecuente y siempre tienen disponibilidad en los estrenos más esperados.", name: "SwitchMaster", rating: 5, color: "text-white", alignment: "pt-8 md:pt-12" },
                 { bgSvg: "/svg/comentario6.svg", text: "Tuve una duda con mi pedido y el soporte me respondió rapidísimo. Muy confiables.", name: "PikaTrainer", rating: 4, color: "text-zinc-900", alignment: "pb-10 md:pb-14" }
               ].map((comment, i) => (
-                <div key={i} className={`w-[320px] h-[190px] md:w-[480px] md:h-[260px] shrink-0 snap-center relative hover:-translate-y-2 transition-transform duration-300 group flex items-center justify-center px-6 md:px-12 ${comment.alignment}`}>
+                <div key={i} className={`w-[320px] h-47.5 md:w-120 md:h-65 shrink-0 snap-center relative hover:-translate-y-2 transition-transform duration-300 group flex items-center justify-center px-6 md:px-12 ${comment.alignment}`}>
                   <img src={comment.bgSvg} alt="Comentario" className="absolute inset-0 w-full h-full object-fill -z-10 drop-shadow-[8px_8px_0px_rgba(24,24,27,1)] group-hover:scale-[1.02] transition-transform duration-300" />
                   
                   <div className="flex flex-col items-center text-center max-w-[90%] relative z-10">
@@ -708,7 +696,7 @@ export default function HomePage() {
       </section>
 
       {/* Main Footer */}
-      <footer className="relative text-zinc-100 pt-24 pb-12 px-6 md:px-12 overflow-hidden border-t-[8px] border-white bg-zinc-900">
+      <footer className="relative text-zinc-100 pt-24 pb-12 px-6 md:px-12 overflow-hidden border-t-8 border-white bg-zinc-900">
         
         {/* Background SVG (Diagonal Tiled) */}
         <div 
@@ -734,10 +722,10 @@ export default function HomePage() {
             <Button 
               onClick={() => setIsCustomerServiceOpen(true)}
               size="lg" 
-              className="text-sm sm:text-lg md:text-xl font-extrabold px-5 py-2.5 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-gradient-to-r from-[#ffdf91] to-[#ff7a93] text-zinc-900 border-2 border-white hover:from-[#ffcf61] hover:to-[#ff607d] transition-all shadow-[0_4px_20px_rgba(255,122,147,0.3)] hover:shadow-[0_8px_30px_rgba(255,122,147,0.6)] hover:-translate-y-1 tracking-tight flex items-center gap-2 sm:gap-3"
+              className="text-sm sm:text-lg md:text-xl font-extrabold px-5 py-2.5 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-linear-to-r from-[#ffdf91] to-[#ff7a93] text-zinc-900 border-2 border-white hover:from-[#ffcf61] hover:to-[#ff607d] transition-all shadow-[0_4px_20px_rgba(255,122,147,0.3)] hover:shadow-[0_8px_30px_rgba(255,122,147,0.6)] hover:-translate-y-1 tracking-tight flex items-center gap-2 sm:gap-3"
             >
               <span>Servicio al cliente</span>
-              <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 stroke-[3] shrink-0" />
+              <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 stroke-3 shrink-0" />
             </Button>
           </div>
 
@@ -756,7 +744,7 @@ export default function HomePage() {
                 <a href="https://www.youtube.com/@JuegosDigitalesPika" className="w-12 h-12 p-2 rounded-xl transition-all duration-300 hover:scale-110 shadow-lg border-[3px] border-transparent hover:border-white bg-[#FF0000] flex items-center justify-center overflow-hidden">
                   <img src="/footer/youtube.svg" alt="YouTube" className="w-full h-full object-contain filter invert" style={{ filter: 'brightness(0) invert(1)' }} />
                 </a>
-                <a href="https://www.instagram.com/pika.switch" className="w-12 h-12 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-lg border-[3px] border-transparent hover:border-white bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center overflow-hidden text-white">
+                <a href="https://www.instagram.com/pika.switch" className="w-12 h-12 p-2.5 rounded-xl transition-all duration-300 hover:scale-110 shadow-lg border-[3px] border-transparent hover:border-white bg-linear-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center overflow-hidden text-white">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
@@ -809,7 +797,7 @@ export default function HomePage() {
       {/* Modal de Servicio al Cliente */}
       <AnimatePresence>
         {isCustomerServiceOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -964,7 +952,7 @@ export default function HomePage() {
       {/* Modal de Compra */}
       <AnimatePresence>
         {purchaseModal.isOpen && purchaseModal.game && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -983,7 +971,7 @@ export default function HomePage() {
                 {purchaseModal.game.background_image && (
                   <img src={purchaseModal.game.background_image} alt="Game background" className="w-full h-full object-cover opacity-50" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-zinc-900 to-transparent"></div>
                 <button 
                   onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
                   className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white border-2 border-zinc-900 hover:bg-[#ffd90f] flex items-center justify-center text-zinc-900 transition-colors z-20 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
@@ -1115,7 +1103,7 @@ export default function HomePage() {
       {/* Modal de Detalle del Videojuego ("Ver Videojuego") */}
       <AnimatePresence>
         {detailModal.isOpen && detailModal.game && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1142,7 +1130,7 @@ export default function HomePage() {
                     <Gamepad2 size={64} />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
                 
                 {/* Close Button */}
                 <button 
