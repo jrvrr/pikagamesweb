@@ -60,8 +60,8 @@ export function Comentarios() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          user_id: user.id,
-          nombre: `${user.nombre} ${user.apellidos || ""}`.trim(),
+          user_id: user.id || null,
+          nombre: `${user.nombre || ""} ${user.apellidos || ""}`.trim() || user.email || "Usuario",
           calificacion,
           mensaje
         })
@@ -73,8 +73,9 @@ export function Comentarios() {
         setSuccess("Comentario enviado con éxito y en espera de aprobación.");
         setMensaje("");
         setCalificacion(5);
+        fetchComentarios();
       } else {
-        setError(data.mensaje || "Error al enviar el comentario.");
+        setError(data.mensaje || data.message || data.error || "Error al enviar el comentario.");
       }
     } catch (err) {
       setError("Error de conexión al servidor.");

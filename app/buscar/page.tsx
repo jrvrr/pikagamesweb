@@ -252,7 +252,7 @@ function BuscarContent() {
                   return (
                     <div 
                       key={game.id} 
-                      className="bg-zinc-900 rounded-2xl border-2 border-zinc-800 hover:border-[#ffd90f] transition-all flex flex-col overflow-hidden group shadow-lg"
+                      className="bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-[#ffd90f] hover:-translate-y-1 transition-all flex flex-col overflow-hidden group shadow-lg"
                     >
                       <div className="relative w-full aspect-4/3 overflow-hidden bg-zinc-800">
                         {game.background_image ? (
@@ -302,22 +302,22 @@ function BuscarContent() {
                           {game.name}
                         </h3>
                         
-                        <div className="mt-auto pt-2 flex flex-col gap-2">
+                        <div className="mt-auto grid grid-cols-2 gap-2 pt-2">
                           <Button 
                             onClick={() => handleOpenDetailModal(game)}
                             variant="outline"
-                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                            className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-center gap-1 px-2"
                           >
                             <Eye className="w-4 h-4 text-[#ffd90f]" />
-                            Ver Videojuego
+                            ver detalles
                           </Button>
 
                           <Button 
                             onClick={() => router.push(`/comprar/${game.id}`)}
-                            className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5"
+                            className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                           >
                             <ShoppingCart className="w-4 h-4" />
-                            Comprar
+                            comprar
                           </Button>
                         </div>
                       </div>

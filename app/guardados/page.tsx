@@ -155,7 +155,7 @@ export default function GuardadosPage() {
             {savedGames.map((game) => (
               <div 
                 key={game.id} 
-                className="group bg-zinc-900 rounded-2xl border-2 border-zinc-800 overflow-hidden hover:border-[#ffd90f] transition-all flex flex-col relative shadow-lg"
+                className="group bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden hover:border-[#ffd90f] hover:-translate-y-1 transition-all flex flex-col relative shadow-lg"
               >
                 {/* Remove button */}
                 <button 
@@ -203,22 +203,22 @@ export default function GuardadosPage() {
                     {game.name}
                   </h3>
                   
-                  <div className="mt-auto flex flex-col gap-2">
+                  <div className="mt-auto grid grid-cols-2 gap-2">
                     <Button 
                       onClick={() => handleOpenDetailModal(game)}
                       variant="outline"
-                      className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5"
+                      className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-center gap-1 px-2"
                     >
                       <Eye className="w-4 h-4 text-[#ffd90f]" />
-                      Ver Videojuego
+                      ver detalles
                     </Button>
 
                     <Button 
                       onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
-                      className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black uppercase text-xs tracking-wide shadow-sm flex items-center justify-center gap-1.5"
+                      className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Comprar ($1,299)
+                      comprar ($1,299)
                     </Button>
                   </div>
                 </div>
