@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 import { AuthProvider } from "@/lib/AuthContext";
+import PayPalProviderWrapper from "@/components/PayPalProviderWrapper";
 
 export const metadata: Metadata = {
   title: "PIKAGAMES | Tienda de Videojuegos Nintendo Switch",
@@ -36,8 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-full flex flex-col bg-[#111311]" suppressHydrationWarning>
         <AuthProvider>
-          <Navigation />
-          {children}
+          <PayPalProviderWrapper>
+            <Navigation />
+            {children}
+          </PayPalProviderWrapper>
         </AuthProvider>
         <SpeedInsights />
       </body>
