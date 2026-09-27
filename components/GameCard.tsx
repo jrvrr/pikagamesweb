@@ -44,7 +44,7 @@ export function GameCard({
         )}
         <div className="absolute inset-0 bg-linear-to-t from-zinc-950/80 via-transparent to-transparent" />
 
-        <div className="absolute left-3 top-3 flex items-center gap-2">
+        <div className="absolute left-2 top-2 right-12 flex flex-wrap items-center gap-1 sm:left-3 sm:top-3 sm:right-auto sm:gap-2">
           <span className={`flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide backdrop-blur-md ${isSwitch2 ? "border-cyan-400/40 bg-cyan-950/80 text-cyan-200" : "border-white/10 bg-zinc-950/75 text-zinc-100"}`}>
             {platformLabel}
           </span>
@@ -80,7 +80,7 @@ export function GameCard({
         )}
       </div>
 
-      <div className="flex grow flex-col p-4">
+      <div className="flex grow flex-col p-3 sm:p-4">
         <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#ffd90f]">
           {game.genres?.[0]?.name || "Videojuego"}
         </span>
@@ -88,7 +88,7 @@ export function GameCard({
           {game.name}
         </h3>
 
-        <div className="mt-auto grid grid-cols-2 gap-2">
+        <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Button
             onClick={() => onView(game)}
             variant="outline"

@@ -451,7 +451,7 @@ export default function HomePage() {
                   transition: { staggerChildren: 0.08 }
                 }
               }}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 w-full"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8 w-full"
             >
               {upcomingGames.map((game) => {
                 const saved = isGameSaved(game.id);
@@ -490,7 +490,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 flex flex-col grow">
+                    <div className="p-3 sm:p-4 flex flex-col grow">
                       <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
                         {game.name}
                       </h3>
@@ -500,7 +500,7 @@ export default function HomePage() {
                         <Button 
                           onClick={() => handleOpenDetailModal(game)}
                           variant="outline"
-                          className="w-auto min-w-36 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold text-[10px] sm:text-xs tracking-wide flex items-center justify-center gap-1 px-3"
+                          className="w-full min-w-0 sm:w-auto sm:min-w-36 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold text-[10px] sm:text-xs tracking-wide flex items-center justify-center gap-1 px-3"
                         >
                           <Eye className="w-4 h-4 text-[#ffd90f]" />
                           ver detalles
@@ -559,7 +559,7 @@ export default function HomePage() {
                     transition: { staggerChildren: 0.08 }
                   }
                 }}
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 w-full"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8 w-full"
               >
                 {(catalogCategory === 'popular' ? games :
                   catalogCategory === 'estreno' ? newReleases :
@@ -598,12 +598,12 @@ export default function HomePage() {
                         </button>
                       </div>
 
-                      <div className="p-4 flex flex-col grow">
+                      <div className="p-3 sm:p-4 flex flex-col grow">
                         <h3 className="text-white font-bold text-lg mb-3 line-clamp-2 leading-tight group-hover:text-[#ffd90f] transition-colors">
                           {game.name}
                         </h3>
                         
-                        <div className="mt-auto grid grid-cols-2 gap-2 pt-2">
+                        <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                           {/* Botón Ver Videojuego */}
                           <Button 
                             onClick={() => handleOpenDetailModal(game)}
