@@ -183,3 +183,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Project analysis / internal documentation
+ANALISIS-PROYECTO.md
