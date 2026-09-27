@@ -1,3 +1,5 @@
+El backend está en `C:\Users\jerry\pikaweb\backend` (`..\backend` desde este repositorio).
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
