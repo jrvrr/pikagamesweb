@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
-import { User, Shield, Gamepad2, Settings, LogOut, Lock, Mail, Edit3, Save, CheckCircle, ChevronRight, Heart } from "lucide-react";
+import { User, Shield, LogOut, Lock, Mail, Edit3, Save, CheckCircle } from "lucide-react";
 
 export default function PerfilPage() {
   const { user, token, isLoading, updateUser, logout } = useAuth();
@@ -66,7 +65,7 @@ export default function PerfilPage() {
       } else {
         alert(data.message || "Error al actualizar la información.");
       }
-    } catch (error) {
+    } catch {
       alert("Error de conexión con el servidor.");
     }
 
@@ -101,7 +100,7 @@ export default function PerfilPage() {
       } else {
         alert(data.message || "Error al actualizar la contraseña.");
       }
-    } catch (error) {
+    } catch {
       alert("Error de conexión con el servidor.");
     }
     

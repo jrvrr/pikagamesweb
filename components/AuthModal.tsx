@@ -90,7 +90,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 : "Error al registrarse.")
         );
       }
-    } catch (err) {
+    } catch {
       if (typeof window !== "undefined" && !navigator.onLine) {
         setError("Sin conexión a Internet. Por favor verifica tu red.");
       } else {
@@ -154,7 +154,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <input
                       type="text"
                       required
-                      maxLength={15}
                       value={nombre}
                       onChange={(e) => setNombre(e.target.value)}
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all [&:-webkit-autofill]:bg-zinc-900 [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#18181b_inset] [&:-webkit-autofill]:transition-colors"
@@ -171,7 +170,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <input
                       type="text"
                       required
-                      maxLength={25}
                       value={apellidos}
                       onChange={(e) => setApellidos(e.target.value)}
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all [&:-webkit-autofill]:bg-zinc-900 [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#18181b_inset] [&:-webkit-autofill]:transition-colors"
@@ -190,7 +188,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <input
                   type="email"
                   required
-                  maxLength={40}
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -208,7 +205,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  maxLength={15}
                   autoComplete={isLogin ? "current-password" : "new-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
