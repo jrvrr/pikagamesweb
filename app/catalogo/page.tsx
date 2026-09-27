@@ -388,7 +388,7 @@ function CatalogoContent() {
           </div>
         ) : (
           <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {displayedGames.map((game) => {
                 const saved = isGameSaved(game.id);
                 const isSwitch2 = game.id >= 99900 || game.name.includes('Switch 2');
