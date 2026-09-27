@@ -16,7 +16,19 @@ interface PayPalCheckoutButtonProps {
   onError?: (err: unknown) => void;
 }
 
-export default function PayPalCheckoutButton({
+export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
+  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) {
+    return (
+      <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center text-xs text-amber-400">
+        PayPal no está disponible por el momento. Puedes pagar por OXXO o transferencia.
+      </div>
+    );
+  }
+
+  return <PayPalCheckout {...props} />;
+}
+
+function PayPalCheckout({
   amount,
   description,
   onSuccess,
