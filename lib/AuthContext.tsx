@@ -40,6 +40,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  sessionError: string | null;
   login: (token: string, userData: User) => void;
   logout: () => void;
   updateUser: (userData: User) => void;
@@ -49,6 +50,8 @@ interface AuthContextType {
   toggleSaveGame: (game: unknown) => void;
   isGameSaved: (gameId: number) => boolean;
   isFavoritesLoading: boolean;
+  favoritesError: string | null;
+  reloadFavorites: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,24 +73,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const [savedGames, setSavedGames] = useState<SavedGame[]>([]);
   const [isFavoritesLoading, setIsFavoritesLoading] = useState(false);
+  const [favoritesError, setFavoritesError] = useState<string | null>(null);
   const router = useRouter();
 
   // The signed-in account is the only source of saved games.
   const loadFavorites = useCallback(async (hasToken: boolean) => {
     if (hasToken) {
       setIsFavoritesLoading(true);
+      setFavoritesError(null);
+      setSavedGames([]);
       try {
         const data = await apiFetch("/favoritos");
-        const rawFavorites = data?.favoritos || (Array.isArray(data) ? data : []);
-        if (Array.isArray(rawFavorites)) {
-          const serverGames: SavedGame[] = rawFavorites.map(normalizeSavedGame);
-          setSavedGames(serverGames);
-          return serverGames;
-        }
+        const rawFavorites = data?.favoritos ?? data?.data?.favoritos ?? data;
+        if (!Array.isArray(rawFavorites)) throw new Error("Respuesta de favoritos no válida.");
+        const serverGames: SavedGame[] = rawFavorites.map(normalizeSavedGame);
+        setSavedGames(serverGames);
+        return serverGames;
       } catch (error) {
-        setSavedGames([]);
+        const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : undefined;
+        if (status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+          setToken(null);
+          setSavedGames([]);
+          setFavoritesError("Tu sesión dejó de ser válida. Inicia sesión para cargar tus guardados.");
+        } else {
+          setFavoritesError(status && status >= 500
+            ? "El servicio de guardados no está disponible temporalmente. Intenta de nuevo."
+            : "No se pudieron cargar tus guardados. Revisa tu conexión e intenta de nuevo.");
+        }
         console.warn("No se pudieron cargar los favoritos de la cuenta.", error);
         return [];
       } finally {
@@ -95,52 +113,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       setSavedGames([]);
+      setFavoritesError(null);
       return [];
     }
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     setIsLoading(true);
+    setSessionError(null);
     localStorage.removeItem("savedGames");
     const storedToken = localStorage.getItem("token");
     
     if (storedToken) {
+      setToken(storedToken);
+      const cachedUser = localStorage.getItem("user");
+      if (cachedUser) {
+        try {
+          setUser(normalizeUser(JSON.parse(cachedUser)));
+        } catch {
+          localStorage.removeItem("user");
+        }
+      }
       try {
         const userData = await apiFetch("/auth/me");
         const userObj = userData?.usuario || userData?.user || userData?.data?.usuario || userData?.data?.user || userData;
-        setUser(normalizeUser(userObj));
+        const normalizedUser = normalizeUser(userObj);
+        setUser(normalizedUser);
         setToken(storedToken);
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
         await loadFavorites(true);
       } catch (error) {
         const status = typeof error === "object" && error !== null && "status" in error ? error.status : undefined;
         if (status === 401) {
           localStorage.removeItem("token");
+          localStorage.removeItem("user");
           setUser(null);
           setToken(null);
           setSavedGames([]);
+          setFavoritesError(null);
         } else {
-          setToken(storedToken);
+          setSessionError(status && Number(status) >= 500
+            ? "El servidor no pudo verificar tu sesión temporalmente. Conservamos tu sesión; vuelve a intentarlo más tarde."
+            : "No se pudo verificar tu sesión por un problema de conexión. Conservamos tu sesión.");
         }
         console.error("Error al verificar sesión:", error);
       }
     } else {
+      localStorage.removeItem("user");
       setUser(null);
       setToken(null);
       setSavedGames([]);
+      setFavoritesError(null);
     }
     
     setIsLoading(false);
-  };
+  }, [loadFavorites]);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   const login = async (newToken: string, userData: User) => {
     const normalizedUser = normalizeUser(userData);
     localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
     setToken(newToken);
     setUser(normalizedUser);
+    setSessionError(null);
 
     await loadFavorites(true);
     router.push("/perfil");
@@ -148,14 +187,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
     setUser(null);
     setSavedGames([]);
+    setFavoritesError(null);
+    setSessionError(null);
     router.push("/");
   };
 
   const updateUser = (userData: User) => {
-    setUser(normalizeUser(userData));
+    const normalizedUser = normalizeUser(userData);
+    setUser(normalizedUser);
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
   };
 
   const toggleSaveGame = async (game: unknown) => {
@@ -188,10 +232,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return savedGames.some((g) => Number(g.id) === Number(gameId));
   };
 
+  const reloadFavorites = useCallback(async () => {
+    await loadFavorites(Boolean(token));
+  }, [loadFavorites, token]);
+
   return (
     <AuthContext.Provider value={{ 
-      user, token, isLoading, login, logout, updateUser, checkAuth,
-      savedGames, toggleSaveGame, isGameSaved, isFavoritesLoading
+      user, token, isLoading, sessionError, login, logout, updateUser, checkAuth,
+      savedGames, toggleSaveGame, isGameSaved, isFavoritesLoading, favoritesError, reloadFavorites
     }}>
       {children}
     </AuthContext.Provider>

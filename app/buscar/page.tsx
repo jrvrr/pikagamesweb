@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -35,6 +35,8 @@ function BuscarContent() {
   const [results, setResults] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const searchRequestId = useRef(0);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   const { isGameSaved, toggleSaveGame } = useAuth();
@@ -63,7 +65,7 @@ function BuscarContent() {
     }
   }, []);
 
-  const saveRecentSearch = (term: string) => {
+  const saveRecentSearch = useCallback((term: string) => {
     if (!term.trim()) return;
     const clean = term.trim();
     const updated = [clean, ...recentSearches.filter((s) => s.toLowerCase() !== clean.toLowerCase())].slice(0, 6);
@@ -73,52 +75,80 @@ function BuscarContent() {
     } catch {
       // ignore
     }
+  }, [recentSearches]);
+
+  const clearSearch = () => {
+    searchRequestId.current += 1;
+    setQuery("");
+    setResults([]);
+    setSearchError("");
+    setHasSearched(false);
+    setIsLoading(false);
   };
 
   // Perform search
-  const performSearch = async (searchTerm: string) => {
+  const performSearch = useCallback(async (searchTerm: string) => {
+    const requestId = ++searchRequestId.current;
     if (!searchTerm.trim()) {
       setResults([]);
       setHasSearched(false);
+      setSearchError("");
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     setHasSearched(true);
+    setSearchError("");
     saveRecentSearch(searchTerm);
 
-    const data = await searchGames(searchTerm.trim(), 1, 20);
-    setResults(data);
-    setIsLoading(false);
-  };
-
-  // Trigger search on mount if initialQuery is set
-  useEffect(() => {
-    if (initialQuery) {
-      setQuery(initialQuery);
-      performSearch(initialQuery);
+    try {
+      const data = await searchGames(searchTerm.trim(), 1, 20, { throwOnError: true });
+      if (requestId === searchRequestId.current) setResults(data);
+    } catch (error) {
+      if (requestId === searchRequestId.current) {
+        const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : undefined;
+        setSearchError(status && status >= 500
+          ? "El servicio de búsqueda no está disponible temporalmente. Intenta de nuevo."
+          : "No se pudo completar la búsqueda. Revisa tu conexión e intenta de nuevo.");
+        setResults([]);
+      }
+    } finally {
+      if (requestId === searchRequestId.current) setIsLoading(false);
     }
+  }, [saveRecentSearch]);
+
+  // Keep the input in sync with search links; the debounced effect runs the request.
+  useEffect(() => {
+    setQuery(initialQuery);
   }, [initialQuery]);
 
   // Debounced live search
   useEffect(() => {
+    searchRequestId.current += 1;
     if (!query.trim()) {
       setResults([]);
+      setSearchError("");
       setHasSearched(false);
+      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
+    setHasSearched(true);
+    setSearchError("");
 
     const timer = setTimeout(() => {
       performSearch(query);
     }, 450);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [performSearch, query]);
 
   const handleSelectSearch = (term: string) => {
     setQuery(term);
     router.replace(`/buscar?q=${encodeURIComponent(term)}`);
-    performSearch(term);
+    setSearchError("");
   };
 
   const handleOpenDetailModal = async (game: Game) => {
@@ -155,6 +185,7 @@ function BuscarContent() {
           <div className="relative w-full">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 text-[#ffd90f]" />
             <input 
+              aria-label="Buscar videojuegos"
               type="text" 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -164,9 +195,9 @@ function BuscarContent() {
             />
             {query && (
               <button 
-                onClick={() => { setQuery(""); setResults([]); setHasSearched(false); }}
-                className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                title="Limpiar búsqueda"
+              onClick={clearSearch}
+              className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+              aria-label="Limpiar búsqueda"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -199,7 +230,7 @@ function BuscarContent() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Loader2 className="w-12 h-12 text-[#ffd90f] animate-spin mb-4" />
             <h2 className="text-xl font-black text-white">Buscando &quot;{query}&quot;...</h2>
-            <p className="text-zinc-400 text-sm mt-1">Explorando el catálogo de Nintendo Switch</p>
+            <p role="status" className="text-zinc-400 text-sm mt-1">Explorando el catálogo de Nintendo Switch</p>
           </div>
         ) : hasSearched ? (
           <div>
@@ -208,11 +239,16 @@ function BuscarContent() {
                 Resultados para <span className="text-[#ffd90f]">&quot;{query}&quot;</span>
               </h2>
               <span className="bg-zinc-900 px-3 py-1 rounded-full text-xs font-bold text-zinc-400 border border-zinc-800">
-                {results.length} {results.length === 1 ? "juego encontrado" : "juegos encontrados"}
-              </span>
-            </div>
+              <span role="status" aria-live="polite">{searchError ? "Resultados no disponibles" : `${results.length} ${results.length === 1 ? "juego encontrado" : "juegos encontrados"}`}</span>
+            </span>
+          </div>
 
-            {results.length === 0 ? (
+            {searchError ? (
+              <div role="alert" className="flex flex-col items-center justify-center rounded-3xl border border-amber-500/40 bg-zinc-900/50 p-8 text-center">
+                <p className="mb-5 text-zinc-200">{searchError}</p>
+                <Button onClick={() => performSearch(query)} className="bg-[#ffd90f] font-black text-zinc-900 hover:bg-[#e5c30d]">Reintentar búsqueda</Button>
+              </div>
+            ) : results.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center bg-zinc-900/50 rounded-3xl border border-zinc-800 p-8">
                 <Search className="w-16 h-16 text-zinc-700 mb-4" />
                 <h3 className="text-2xl font-black text-white mb-2">No se encontraron títulos</h3>

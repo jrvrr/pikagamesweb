@@ -13,43 +13,47 @@ export interface Game {
 
 const API_KEY = process.env.NEXT_PUBLIC_RAWG_API_KEY;
 const BASE_URL = 'https://api.rawg.io/api';
+type FetchOptions = { throwOnError?: boolean };
 
-export async function getPopularGames(page = 1, pageSize = 12): Promise<Game[]> {
+export async function getPopularGames(page = 1, pageSize = 12, options: FetchOptions = {}): Promise<Game[]> {
   try {
     const res = await fetch(`${BASE_URL}/games?key=${API_KEY}&page=${page}&page_size=${pageSize}&ordering=-rating&platforms=7`); // Platforms=7 is Nintendo Switch
-    if (!res.ok) throw new Error('Failed to fetch popular games');
+    if (!res.ok) throw Object.assign(new Error('Failed to fetch popular games'), { status: res.status });
     const data = await res.json();
     return data.results || [];
   } catch (error) {
     console.error('Error fetching popular games:', error);
+    if (options.throwOnError) throw error;
     return [];
   }
 }
 
-export async function getUpcomingGames(page = 1, pageSize = 8): Promise<Game[]> {
+export async function getUpcomingGames(page = 1, pageSize = 8, options: FetchOptions = {}): Promise<Game[]> {
   try {
     const today = new Date().toISOString().split('T')[0];
     const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const res = await fetch(`${BASE_URL}/games?key=${API_KEY}&dates=${today},${nextYear}&ordering=released&page=${page}&page_size=${pageSize}&platforms=7`);
-    if (!res.ok) throw new Error('Failed to fetch upcoming games');
+    if (!res.ok) throw Object.assign(new Error('Failed to fetch upcoming games'), { status: res.status });
     const data = await res.json();
     return data.results || [];
   } catch (error) {
     console.error('Error fetching upcoming games:', error);
+    if (options.throwOnError) throw error;
     return [];
   }
 }
 
-export async function getNewReleases(page = 1, pageSize = 8): Promise<Game[]> {
+export async function getNewReleases(page = 1, pageSize = 8, options: FetchOptions = {}): Promise<Game[]> {
   try {
     const today = new Date().toISOString().split('T')[0];
     const pastSixMonths = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const res = await fetch(`${BASE_URL}/games?key=${API_KEY}&dates=${pastSixMonths},${today}&ordering=-released&page=${page}&page_size=${pageSize}&platforms=7`);
-    if (!res.ok) throw new Error('Failed to fetch new releases');
+    if (!res.ok) throw Object.assign(new Error('Failed to fetch new releases'), { status: res.status });
     const data = await res.json();
     return data.results || [];
   } catch (error) {
     console.error('Error fetching new releases:', error);
+    if (options.throwOnError) throw error;
     return [];
   }
 }
@@ -66,15 +70,15 @@ export async function getGameDetails(id: number | string): Promise<Game | null> 
   }
 }
 
-export async function searchGames(query: string, page = 1, pageSize = 12): Promise<Game[]> {
+export async function searchGames(query: string, page = 1, pageSize = 12, options: { throwOnError?: boolean } = {}): Promise<Game[]> {
   try {
-    const res = await fetch(`${BASE_URL}/games?key=${API_KEY}&search=${query}&page=${page}&page_size=${pageSize}&platforms=7`); // Platforms=7 is Nintendo Switch
-    if (!res.ok) throw new Error('Failed to search games');
+    const res = await fetch(`${BASE_URL}/games?key=${API_KEY}&search=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}&platforms=7`);
+    if (!res.ok) throw Object.assign(new Error('Failed to search games'), { status: res.status });
     const data = await res.json();
     return data.results || [];
   } catch (error) {
     console.error('Error searching games:', error);
+    if (options.throwOnError) throw error;
     return [];
   }
 }
-

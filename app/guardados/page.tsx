@@ -19,9 +19,10 @@ import {
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { useAuth, type SavedGame } from "@/lib/AuthContext";
 import { getGameDetails, type Game } from "@/lib/rawg";
+import { isDemoGameId } from "@/lib/demoGames";
 
 export default function GuardadosPage() {
-  const { savedGames, toggleSaveGame, isFavoritesLoading } = useAuth();
+  const { savedGames, toggleSaveGame, isFavoritesLoading, favoritesError, reloadFavorites } = useAuth();
   const router = useRouter();
 
   // Detail Modal State
@@ -100,10 +101,21 @@ export default function GuardadosPage() {
           </div>
         </div>
 
+        {favoritesError && (
+          <div role="alert" className="mb-6 flex flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+            <p>{favoritesError}</p>
+            <Button type="button" onClick={reloadFavorites} className="bg-[#ffd90f] font-bold text-zinc-900 hover:bg-[#e5c30d]">Reintentar</Button>
+          </div>
+        )}
+
         {isFavoritesLoading && savedGames.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Loader2 className="w-12 h-12 text-[#ffd90f] animate-spin mb-4" />
-            <p className="text-zinc-400 font-bold">Cargando tus tÃ­tulos guardados...</p>
+            <p role="status" className="text-zinc-400 font-bold">Cargando tus títulos guardados...</p>
+          </div>
+        ) : favoritesError && savedGames.length === 0 ? (
+          <div className="rounded-3xl border-2 border-zinc-800 bg-zinc-900/50 p-8 text-center text-zinc-300">
+            No se puede mostrar la lista hasta recuperar la conexión.
           </div>
         ) : savedGames.length === 0 ? (
           /* Empty State */
@@ -180,7 +192,7 @@ export default function GuardadosPage() {
                 {/* Content */}
                 <div className="flex flex-col grow p-4 bg-zinc-900">
                   <span className="text-[#ffd90f] text-[11px] font-bold uppercase tracking-wider mb-1">
-                    {game.id >= 99900 ? "Demostración · no disponible" : "Nintendo Switch"}
+                    {isDemoGameId(game.id) ? "Demostración · no disponible" : "Nintendo Switch"}
                   </span>
                   <h3 className="text-base font-black text-white mb-4 leading-tight group-hover:text-[#ffd90f] transition-colors line-clamp-2">
                     {game.name}
@@ -196,7 +208,7 @@ export default function GuardadosPage() {
                       ver detalles
                     </Button>
 
-                    {game.id < 99900 && <Button
+                    {!isDemoGameId(game.id) && <Button
                       onClick={() => router.push(`/comprar/${game.id}`)}
                       className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black lowercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                     >
@@ -272,7 +284,7 @@ export default function GuardadosPage() {
                     <Trash2 className="w-4 h-4 mr-2" />
                     Quitar de Guardados
                   </Button>
-                  {detailModal.game.id < 99900 && <Button
+                  {!isDemoGameId(detailModal.game.id) && <Button
                     onClick={() => router.push(`/comprar/${detailModal.game!.id}`)}
                     className="flex-1 py-5 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-xl text-sm"
                   >

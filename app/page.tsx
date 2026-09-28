@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -47,6 +47,8 @@ interface ApiComment {
   mensaje: string;
   fecha_creacion?: string;
 }
+
+type GameListKey = "popular" | "upcoming" | "releases" | "mario" | "price";
 
 export default function HomePage() {
   const router = useRouter();
@@ -110,36 +112,44 @@ export default function HomePage() {
   // Upcoming games state
   const [upcomingGames, setUpcomingGames] = useState<Game[]>([]);
   const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(true);
+  const [gameListErrors, setGameListErrors] = useState<Partial<Record<GameListKey, string>>>({});
+
+  const loadGameList = useCallback(async (
+    key: GameListKey,
+    request: () => Promise<Game[]>,
+    save: (games: Game[]) => void,
+    finish: () => void,
+  ) => {
+    setGameListErrors((errors) => ({ ...errors, [key]: undefined }));
+    try {
+      save(await request());
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : undefined;
+      setGameListErrors((errors) => ({
+        ...errors,
+        [key]: status && status >= 500
+          ? "Este listado no está disponible temporalmente. Intenta de nuevo."
+          : "No se pudo cargar este listado. Revisa tu conexión e intenta de nuevo.",
+      }));
+    } finally {
+      finish();
+    }
+  }, []);
 
   // Load Popular Games
   useEffect(() => {
-    async function loadGames() {
-      const data = await getPopularGames(1, 8);
-      setGames(data);
-      setIsLoadingGames(false);
-    }
-    loadGames();
-  }, []);
+    loadGameList("popular", () => getPopularGames(1, 8, { throwOnError: true }), setGames, () => setIsLoadingGames(false));
+  }, [loadGameList]);
 
   // Load Upcoming Games from RAWG
   useEffect(() => {
-    async function loadUpcoming() {
-      const data = await getUpcomingGames(1, 8);
-      setUpcomingGames(data);
-      setIsLoadingUpcoming(false);
-    }
-    loadUpcoming();
-  }, []);
+    loadGameList("upcoming", () => getUpcomingGames(1, 8, { throwOnError: true }), setUpcomingGames, () => setIsLoadingUpcoming(false));
+  }, [loadGameList]);
 
   // Load New Releases from RAWG
   useEffect(() => {
-    async function loadReleases() {
-      const data = await getNewReleases(1, 8);
-      setNewReleases(data);
-      setIsLoadingNewReleases(false);
-    }
-    loadReleases();
-  }, []);
+    loadGameList("releases", () => getNewReleases(1, 8, { throwOnError: true }), setNewReleases, () => setIsLoadingNewReleases(false));
+  }, [loadGameList]);
 
   // Helper to open game detail modal ("Ver videojuego")
   const handleOpenDetailModal = async (game: Game) => {
@@ -157,20 +167,40 @@ export default function HomePage() {
     setCatalogCategory(category);
     if (category === 'mario' && marioGames.length === 0) {
       setIsLoadingMario(true);
-      const data = await searchGames('Mario', 1, 8);
-      setMarioGames(data);
-      setIsLoadingMario(false);
+      await loadGameList("mario", () => searchGames('Mario', 1, 8, { throwOnError: true }), setMarioGames, () => setIsLoadingMario(false));
     } else if (category === 'precio' && priceGames.length === 0) {
       setIsLoadingPrice(true);
-      const data = await getPopularGames(2, 8);
-      setPriceGames(data);
-      setIsLoadingPrice(false);
+      await loadGameList("price", () => getPopularGames(2, 8, { throwOnError: true }), setPriceGames, () => setIsLoadingPrice(false));
     }
     const catalogoElement = document.getElementById('catalogo');
     if (catalogoElement) {
       catalogoElement.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const retryCatalogList = () => {
+    if (catalogCategory === "popular") {
+      setIsLoadingGames(true);
+      void loadGameList("popular", () => getPopularGames(1, 8, { throwOnError: true }), setGames, () => setIsLoadingGames(false));
+    } else if (catalogCategory === "estreno") {
+      setIsLoadingNewReleases(true);
+      void loadGameList("releases", () => getNewReleases(1, 8, { throwOnError: true }), setNewReleases, () => setIsLoadingNewReleases(false));
+    } else if (catalogCategory === "mario") {
+      setIsLoadingMario(true);
+      void loadGameList("mario", () => searchGames("Mario", 1, 8, { throwOnError: true }), setMarioGames, () => setIsLoadingMario(false));
+    } else {
+      setIsLoadingPrice(true);
+      void loadGameList("price", () => getPopularGames(2, 8, { throwOnError: true }), setPriceGames, () => setIsLoadingPrice(false));
+    }
+  };
+
+  const catalogGames = catalogCategory === "popular" ? games
+    : catalogCategory === "estreno" ? newReleases
+    : catalogCategory === "mario" ? (marioGames.length ? marioGames : games)
+    : (priceGames.length ? priceGames : games);
+  const catalogErrorKey: GameListKey = catalogCategory === "estreno" ? "releases"
+    : catalogCategory === "precio" ? "price"
+    : catalogCategory;
 
 
   const handleSubmitComentario = async () => {
@@ -423,6 +453,10 @@ export default function HomePage() {
               <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
               <p className="font-bold text-lg text-zinc-800">Cargando próximos estrenos...</p>
             </div>
+          ) : gameListErrors.upcoming ? (
+            <p role="alert" className="py-10 text-center font-medium text-amber-700">{gameListErrors.upcoming}</p>
+          ) : upcomingGames.length === 0 ? (
+            <p className="py-10 text-center font-medium text-zinc-600">No hay próximos estrenos disponibles ahora.</p>
           ) : (
             <motion.div 
               initial="hidden"
@@ -530,6 +564,13 @@ export default function HomePage() {
               <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#ffd90f]" />
               <p className="font-bold text-lg text-zinc-800">Cargando videojuegos...</p>
             </div>
+          ) : gameListErrors[catalogErrorKey] ? (
+            <div role="alert" className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-amber-500/40 bg-zinc-900/5 p-8 text-center text-zinc-800">
+              <p>{gameListErrors[catalogErrorKey]}</p>
+              <Button onClick={retryCatalogList} className="bg-[#ffd90f] font-bold text-zinc-900 hover:bg-[#e5c30d]">Reintentar</Button>
+            </div>
+          ) : catalogGames.length === 0 ? (
+            <p className="py-10 text-center font-medium text-zinc-600">No hay videojuegos para mostrar en esta lista.</p>
           ) : (
             <>
               <motion.div 
@@ -545,10 +586,7 @@ export default function HomePage() {
                 }}
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8 w-full"
               >
-                {(catalogCategory === 'popular' ? games :
-                  catalogCategory === 'estreno' ? newReleases :
-                  catalogCategory === 'mario' ? (marioGames.length > 0 ? marioGames : games) :
-                  (priceGames.length > 0 ? priceGames : games)).map((game) => {
+                {catalogGames.map((game) => {
                   const saved = isGameSaved(game.id);
                   return (
                     <motion.div 
