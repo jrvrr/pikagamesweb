@@ -28,9 +28,6 @@ import {
   Star,
   ChevronLeft,
   X,
-  CreditCard,
-  Landmark,
-  Send,
   Loader2,
   Eye,
   Sparkles,
@@ -102,13 +99,6 @@ export default function HomePage() {
 
   // Active category selected from '¿Qué buscas?' folders
   const [catalogCategory, setCatalogCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario'>('popular');
-
-  // Purchase Modal State
-  const [purchaseModal, setPurchaseModal] = useState<{isOpen: boolean; game: Game | null; step: 'method' | 'paypal' | 'transferencia'}>({
-    isOpen: false,
-    game: null,
-    step: 'method'
-  });
 
   // Game Detail Modal ("Ver Videojuego") State
   const [detailModal, setDetailModal] = useState<{isOpen: boolean; game: Game | null; isLoading: boolean}>({
@@ -182,12 +172,6 @@ export default function HomePage() {
     }
   };
 
-
-  const handleWhatsAppRedirect = (gameName: string) => {
-    const message = `Hola Pikagames, acabo de realizar una transferencia para comprar el juego "${gameName}". Aquí envío mi comprobante:`;
-    const whatsappUrl = `https://wa.me/528136975487?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
 
   const handleSubmitComentario = async () => {
     if (rating === 0 || mensaje.trim() === "") {
@@ -979,157 +963,6 @@ export default function HomePage() {
                           Enviar Correo
                         </Button>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Modal de Compra */}
-      <AnimatePresence>
-        {purchaseModal.isOpen && purchaseModal.game && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white border-4 border-zinc-900 rounded-3xl shadow-[8px_8px_0px_0px_rgba(255,217,15,1)] overflow-hidden z-10 flex flex-col my-auto"
-            >
-              {/* Header */}
-              <div className="relative h-40 bg-zinc-900 overflow-hidden border-b-4 border-zinc-900">
-                {purchaseModal.game.background_image && (
-                  <img src={purchaseModal.game.background_image} alt="Game background" className="w-full h-full object-cover opacity-50" />
-                )}
-                <div className="absolute inset-0 bg-linear-to-t from-zinc-900 to-transparent"></div>
-                <button 
-                  onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white border-2 border-zinc-900 hover:bg-[#ffd90f] flex items-center justify-center text-zinc-900 transition-colors z-20 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                >
-                  <X className="w-5 h-5 font-bold" />
-                </button>
-                <div className="absolute bottom-4 left-4 right-4 z-20">
-                  <span className="bg-[#ff7a93] text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded border-2 border-zinc-900 mb-2 inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Comprar Juego</span>
-                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] line-clamp-1">{purchaseModal.game.name}</h3>
-                </div>
-              </div>
-
-              {/* Contenido */}
-              <div className="p-6">
-                <AnimatePresence mode="wait">
-                  {purchaseModal.step === 'method' && (
-                    <motion.div 
-                      key="method"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="flex flex-col gap-4"
-                    >
-                      <h4 className="font-black text-zinc-900 text-lg uppercase tracking-tight text-center mb-2">Selecciona un método de pago</h4>
-                      
-                      <button 
-                        onClick={() => setPurchaseModal({ ...purchaseModal, step: 'paypal' })}
-                        className="group relative w-full bg-blue-50 border-4 border-blue-900 hover:bg-blue-100 rounded-2xl p-4 flex items-center gap-4 transition-all hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(30,58,138,1)] active:translate-y-0 active:shadow-none"
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0">
-                          <CreditCard className="w-6 h-6" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-black text-blue-900 text-lg">PayPal</div>
-                          <div className="text-blue-800/70 font-medium text-sm">Pago rápido y seguro</div>
-                        </div>
-                      </button>
-
-                      <button 
-                        onClick={() => setPurchaseModal({ ...purchaseModal, step: 'transferencia' })}
-                        className="group relative w-full bg-emerald-50 border-4 border-emerald-900 hover:bg-emerald-100 rounded-2xl p-4 flex items-center gap-4 transition-all hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(6,78,59,1)] active:translate-y-0 active:shadow-none"
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-emerald-900 text-white flex items-center justify-center shrink-0">
-                          <Landmark className="w-6 h-6" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-black text-emerald-900 text-lg">Transferencia Bancaria</div>
-                          <div className="text-emerald-800/70 font-medium text-sm">Envía tu comprobante por WhatsApp</div>
-                        </div>
-                      </button>
-                    </motion.div>
-                  )}
-
-                  {purchaseModal.step === 'paypal' && (
-                    <motion.div 
-                      key="paypal"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="flex flex-col items-center text-center"
-                    >
-                      <button onClick={() => setPurchaseModal({ ...purchaseModal, step: 'method' })} className="text-zinc-500 hover:text-zinc-900 mb-4 flex items-center gap-1 self-start font-bold transition-colors">
-                        <ChevronLeft className="w-4 h-4" /> Volver
-                      </button>
-                      
-                      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 border-4 border-blue-900">
-                         <CreditCard className="w-10 h-10 text-blue-900" />
-                      </div>
-                      <h4 className="font-black text-2xl text-zinc-900 mb-2">Pago con PayPal</h4>
-                      <p className="text-zinc-600 font-medium mb-6">Serás redirigido a PayPal para completar tu compra de forma segura.</p>
-                      
-                      <Button className="w-full bg-[#ffc439] hover:bg-[#f4b828] text-blue-900 font-black text-lg py-6 rounded-xl border-4 border-blue-900 shadow-[4px_4px_0px_0px_rgba(30,58,138,1)]">
-                        Pagar con PayPal
-                      </Button>
-                    </motion.div>
-                  )}
-
-                  {purchaseModal.step === 'transferencia' && (
-                    <motion.div 
-                      key="transferencia"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="flex flex-col"
-                    >
-                      <button onClick={() => setPurchaseModal({ ...purchaseModal, step: 'method' })} className="text-zinc-500 hover:text-zinc-900 mb-4 flex items-center gap-1 self-start font-bold transition-colors">
-                        <ChevronLeft className="w-4 h-4" /> Volver
-                      </button>
-                      
-                      <h4 className="font-black text-xl text-zinc-900 mb-4 uppercase text-center border-b-4 border-dashed border-zinc-200 pb-4">Datos Bancarios</h4>
-                      
-                      <div className="bg-zinc-100 p-4 rounded-xl border-2 border-zinc-300 mb-6 font-medium text-zinc-800 space-y-3 shadow-inner">
-                        <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-                           <span className="text-zinc-500 text-sm">Banco:</span>
-                           <span className="font-black text-zinc-900">Banorte</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-                           <span className="text-zinc-500 text-sm">Titular:</span>
-                           <span className="font-black text-zinc-900">Pikagames S.A de C.V</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                           <span className="text-zinc-500 text-sm">CLABE / Cuenta:</span>
-                           <span className="font-black text-zinc-900 text-lg tracking-wider">072 580 1234567890 1</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#ffd90f]/20 border-2 border-[#ffd90f] p-4 rounded-xl mb-6">
-                        <p className="text-sm font-bold text-zinc-800 text-center">
-                          ⚠️ Instrucciones: Realiza la transferencia y luego envíanos el comprobante por WhatsApp presionando el botón de abajo.
-                        </p>
-                      </div>
-
-                      <Button 
-                        onClick={() => handleWhatsAppRedirect(purchaseModal.game?.name || "Juego")}
-                        className="w-full bg-[#ffd90f] hover:bg-[#20bd5a] text-white font-black text-lg py-6 rounded-xl border-4 border-zinc-900 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] flex items-center justify-center gap-2"
-                      >
-                        <Send className="w-5 h-5" />
-                        Enviar recibo a WhatsApp
-                      </Button>
                     </motion.div>
                   )}
                 </AnimatePresence>

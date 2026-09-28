@@ -16,10 +16,7 @@ import {
   ArrowLeft, 
   Loader2, 
   ChevronDown, 
-  X, 
-  CreditCard, 
-  Landmark, 
-  Send
+  X
 } from "lucide-react";
 import { getPopularGames, getNewReleases, searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -121,16 +118,6 @@ function CatalogoContent() {
     isLoading: false,
   });
 
-  const [purchaseModal, setPurchaseModal] = useState<{
-    isOpen: boolean;
-    game: Game | null;
-    step: 'method' | 'paypal' | 'transferencia';
-  }>({
-    isOpen: false,
-    game: null,
-    step: 'method',
-  });
-
   // Load initial games
   const loadGames = async (pageNum = 1, isInitial = false) => {
     if (isInitial) setIsLoading(true);
@@ -193,24 +180,13 @@ function CatalogoContent() {
     }
   };
 
-  const handleWhatsAppRedirect = (gameName: string) => {
-    const message = `Hola Pikagames, deseo comprar el videojuego "${gameName}" para Nintendo Switch. ¿Tienen disponibilidad y entrega inmediata?`;
-    const whatsappUrl = `https://wa.me/528136975487?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  // Filter display based on consoleTab
   const displayedGames = (() => {
     if (consoleTab === 'switch2') {
-      if (searchQuery.trim()) {
-        return switch2Games.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      }
-      return switch2Games;
+      return searchQuery.trim()
+        ? switch2Games.filter((game) => game.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        : switch2Games;
     }
-    if (consoleTab === 'switch1') {
-      return games;
-    }
-    // 'all' -> Combine Switch 2 featured on top or alongside Switch 1 games
+    if (consoleTab === 'switch1') return games;
     if (page === 1 && !searchQuery.trim() && genreFilter === 'todos') {
       return [...switch2Games.slice(0, 2), ...games];
     }
@@ -356,7 +332,7 @@ function CatalogoContent() {
               <div>
                 <h3 className="text-xl font-black text-white">Línea de Títulos Nintendo Switch 2 (Próxima Generación)</h3>
                 <p className="text-sm text-cyan-200/80 mt-1">
-                  Reserva con anticipación los títulos optimizados con gráficos 4K, 60 FPS y trazado de rayos.
+                  Estos títulos son datos de demostración; no representan inventario ni se pueden comprar.
                 </p>
               </div>
             </div>
@@ -391,7 +367,8 @@ function CatalogoContent() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {displayedGames.map((game) => {
                 const saved = isGameSaved(game.id);
-                const isSwitch2 = game.id >= 99900 || game.name.includes('Switch 2');
+                const isDemo = game.id >= 99900;
+                const isSwitch2 = isDemo || game.name.includes('Switch 2');
                 
                 return (
                   <GameCard
@@ -402,7 +379,8 @@ function CatalogoContent() {
                     onView={handleOpenDetailModal}
                     onBuy={(selectedGame) => router.push(`/comprar/${selectedGame.id}`)}
                     isSwitch2={isSwitch2}
-                    buyLabel={isSwitch2 ? "Reservar" : "Comprar"}
+                    isDemo={isDemo}
+                    buyLabel="Comprar"
                   />
                 );
               })}
@@ -523,128 +501,6 @@ function CatalogoContent() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* PURCHASE MODAL */}
-      {purchaseModal.isOpen && purchaseModal.game && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative">
-            <button 
-              onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-800 p-2 rounded-full"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-4 mb-6">
-              <img 
-                src={purchaseModal.game.background_image || '/1.png'} 
-                alt={purchaseModal.game.name} 
-                className="w-16 h-16 rounded-xl object-cover border border-zinc-700"
-              />
-              <div>
-                <span className="text-[#ffd90f] text-xs font-bold uppercase tracking-wider">Finalizar Pedido</span>
-                <h3 className="text-lg font-black text-white leading-tight">{purchaseModal.game.name}</h3>
-                <span className="text-xl font-black text-white">$1,299 MXN</span>
-              </div>
-            </div>
-
-            {purchaseModal.step === 'method' && (
-              <div className="flex flex-col gap-3">
-                <p className="text-zinc-400 text-sm mb-2">Selecciona tu método de pago preferido:</p>
-                
-                <button 
-                  onClick={() => setPurchaseModal(prev => ({ ...prev, step: 'transferencia' }))}
-                  className="w-full flex items-center justify-between p-4 bg-zinc-800/80 hover:bg-zinc-800 rounded-2xl border border-zinc-700 hover:border-[#ffd90f] transition-all text-left group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-zinc-700 group-hover:bg-[#ffd90f] rounded-xl transition-colors">
-                      <Landmark className="w-5 h-5 text-white group-hover:text-zinc-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">Transferencia SPEI / OXXO</h4>
-                      <p className="text-xs text-zinc-400">Sin comisiones adicionales</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => setPurchaseModal(prev => ({ ...prev, step: 'paypal' }))}
-                  className="w-full flex items-center justify-between p-4 bg-zinc-800/80 hover:bg-zinc-800 rounded-2xl border border-zinc-700 hover:border-[#ffd90f] transition-all text-left group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-zinc-700 group-hover:bg-[#ffd90f] rounded-xl transition-colors">
-                      <CreditCard className="w-5 h-5 text-white group-hover:text-zinc-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">PayPal / Tarjeta de Débito o Crédito</h4>
-                      <p className="text-xs text-zinc-400">Pago seguro con protección al comprador</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => handleWhatsAppRedirect(purchaseModal.game!.name)}
-                  className="w-full flex items-center justify-between p-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 rounded-2xl border border-[#25D366]/30 transition-all text-left mt-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-[#25D366] rounded-xl text-white">
-                      <Send className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">Comprar por WhatsApp</h4>
-                      <p className="text-xs text-[#25D366]">Atención inmediata con un asesor</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            )}
-
-            {purchaseModal.step === 'transferencia' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-zinc-800/80 rounded-2xl border border-zinc-700 space-y-2">
-                  <h4 className="font-bold text-sm text-[#ffd90f]">Datos Bancarios para Transferencia (SPEI)</h4>
-                  <div className="text-xs text-zinc-300 space-y-1">
-                    <p><span className="text-zinc-400">Banco:</span> BBVA Bancomer</p>
-                    <p><span className="text-zinc-400">CLABE:</span> <span className="font-mono text-white bg-zinc-900 px-2 py-0.5 rounded">012580015987463210</span></p>
-                    <p><span className="text-zinc-400">Beneficiario:</span> PIKAGAMES STORE S.A. DE C.V.</p>
-                    <p><span className="text-zinc-400">Concepto:</span> {purchaseModal.game.name.slice(0, 20)}</p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-zinc-400">
-                  Una vez realizada la transferencia, presiona el botón de abajo para enviar tu comprobante vía WhatsApp y recibir tu juego.
-                </p>
-
-                <Button 
-                  onClick={() => handleWhatsAppRedirect(purchaseModal.game!.name)}
-                  className="w-full py-5 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold rounded-xl flex items-center justify-center gap-2"
-                >
-                  <Send className="w-4 h-4" />
-                  Enviar Comprobante por WhatsApp
-                </Button>
-              </div>
-            )}
-
-            {purchaseModal.step === 'paypal' && (
-              <div className="space-y-4 text-center py-4">
-                <p className="text-sm text-zinc-300">
-                  Haz clic en el siguiente botón para continuar el pago de <span className="text-[#ffd90f] font-bold">$1,299 MXN</span> de forma segura mediante PayPal:
-                </p>
-                <Button 
-                  onClick={() => window.open(`https://paypal.me/pikagames/${1299}`, '_blank')}
-                  className="w-full py-6 bg-[#0070ba] hover:bg-[#005ea6] text-white font-black text-base rounded-xl"
-                >
-                  Pagar con PayPal
-                </Button>
-                <p className="text-xs text-zinc-500">
-                  Al completar el pago, tu código o envío físico será despachado de inmediato a tu correo registrado.
-                </p>
-              </div>
-            )}
-
           </div>
         </div>
       )}
