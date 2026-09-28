@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
 
 export default function PayPalProviderWrapper({ children }: { children: ReactNode }) {
-  if (!PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_ENV !== "sandbox") {
+  if (!PAYPAL_CLIENT_ID) {
     // Render children without PayPal context when no client ID is set.
     // PayPalCheckoutButton handles the missing client ID before using the context.
     return <>{children}</>;

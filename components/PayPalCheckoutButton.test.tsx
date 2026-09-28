@@ -12,7 +12,7 @@ vi.mock("@paypal/react-paypal-js", () => ({
   PayPalButtons: (props: ComponentProps<typeof PayPalButtons>) => { callbacks = props; return null; },
 }));
 const api = vi.mocked(apiFetch);
-const confirmation = { confirmed: true, status: "COMPLETED", pagoEstado: "completado", pedidoId: "7",
+const confirmation = { confirmed: true, status: "COMPLETED", pagoEstado: "aprobado", pedidoId: "7",
   paypalOrderId: "ORDER1", captureId: "CAPTURE1", total: "650.00", currency: "MXN" };
 const create = () => callbacks.createOrder!({} as never, {} as never);
 const approve = () => callbacks.onApprove!({ orderID: "ORDER1" } as never, {} as never);
@@ -30,10 +30,10 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
-it("no habilita PayPal sin cliente o fuera de Sandbox", () => {
-  vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "production");
-  expect(renderToString(<Button productId="3" userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
-  vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "sandbox"); vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "");
+it("acepta modo Live y bloquea PayPal sin client ID", () => {
+  vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "live");
+  expect(renderToString(<Button productId="3" userId="user1" onSuccess={() => {}} />)).not.toContain("PayPal no");
+  vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "");
   expect(renderToString(<Button productId="3" userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
 });
 

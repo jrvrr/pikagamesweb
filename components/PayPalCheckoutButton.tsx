@@ -8,7 +8,7 @@ import { apiFetch } from "@/lib/api";
 export interface PayPalConfirmation {
   confirmed: true;
   status: "COMPLETED";
-  pagoEstado: "completado";
+  pagoEstado: "aprobado";
   pedidoId: string;
   paypalOrderId: string;
   captureId: string;
@@ -29,7 +29,7 @@ interface PayPalCheckoutButtonProps {
 }
 
 export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
-  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_ENV !== "sandbox") {
+  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) {
     return (
       <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center text-xs text-amber-400">
         PayPal no está disponible por el momento. Puedes pagar por OXXO o transferencia.
@@ -55,7 +55,8 @@ function PayPalCheckout({
   const [recoverable, setRecoverable] = useState(false);
   const session = useRef<{ pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
-  const storageKey = `paypal-sandbox:${userId}:${productId}`;
+  const paypalEnv = process.env.NEXT_PUBLIC_PAYPAL_ENV === "sandbox" ? "sandbox" : "live";
+  const storageKey = `paypal-${paypalEnv}:${userId}:${productId}`;
 
   useEffect(() => {
     try {
@@ -77,7 +78,7 @@ function PayPalCheckout({
     onError?.(error);
   };
   const confirm = (result: PayPalConfirmation) => {
-    if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "completado" ||
+    if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
         result.pedidoId !== session.current.pedidoId || result.paypalOrderId !== session.current.orderId ||
         typeof result.captureId !== "string" || !result.captureId || result.currency !== "MXN" ||
         typeof result.total !== "string" || !/^\d+\.\d{2}$/.test(result.total)) {
@@ -104,7 +105,7 @@ function PayPalCheckout({
       if (!order?.id || order.pedidoId !== session.current.pedidoId) throw new Error("Orden inválida");
       session.current.orderId = order.id;
       save();
-      setMessage("Esperando aprobación en PayPal Sandbox...");
+      setMessage(`Esperando aprobación en PayPal ${paypalEnv === "live" ? "Live" : "Sandbox"}...`);
       return order.id as string;
     })().catch((error) => { failed(error); throw error; }).finally(() => { creating.current = null; });
     return creating.current;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { 
   Heart, 
@@ -13,17 +14,15 @@ import {
   Calendar, 
   Eye, 
   X, 
-  CreditCard, 
-  Landmark, 
-  Send,
   Loader2 
 } from "lucide-react";
 import { ShapeGrid } from "@/components/ShapeGrid";
-import { useAuth } from "@/lib/AuthContext";
-import { getGameDetails, Game } from "@/lib/rawg";
+import { useAuth, type SavedGame } from "@/lib/AuthContext";
+import { getGameDetails, type Game } from "@/lib/rawg";
 
 export default function GuardadosPage() {
   const { savedGames, toggleSaveGame, isFavoritesLoading } = useAuth();
+  const router = useRouter();
 
   // Detail Modal State
   const [detailModal, setDetailModal] = useState<{
@@ -36,18 +35,7 @@ export default function GuardadosPage() {
     isLoading: false,
   });
 
-  // Purchase Modal State
-  const [purchaseModal, setPurchaseModal] = useState<{
-    isOpen: boolean;
-    game: any | null;
-    step: 'method' | 'paypal' | 'transferencia';
-  }>({
-    isOpen: false,
-    game: null,
-    step: 'method',
-  });
-
-  const handleOpenDetailModal = async (savedGame: any) => {
+  const handleOpenDetailModal = async (savedGame: SavedGame) => {
     setDetailModal({ 
       isOpen: true, 
       game: { 
@@ -70,11 +58,6 @@ export default function GuardadosPage() {
     }
   };
 
-  const handleWhatsAppRedirect = (gameName: string) => {
-    const message = `Hola Pikagames, me interesa comprar el juego "${gameName}" de mi lista de guardados. ¿Tienen entrega inmediata?`;
-    const whatsappUrl = `https://wa.me/528136975487?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
 
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 pb-20 md:pb-12">
@@ -106,7 +89,7 @@ export default function GuardadosPage() {
               Tus Guardados
             </h1>
             <p className="text-zinc-400 mt-2 font-medium text-sm md:text-base">
-              Los títulos que guardaste para tu Nintendo Switch, siempre disponibles.
+              Los tÃ­tulos que guardaste para tu Nintendo Switch, siempre disponibles.
             </p>
           </div>
           <div className="mt-4 md:mt-0 bg-zinc-900 px-5 md:px-6 py-2 md:py-3 rounded-full border-2 border-zinc-800 flex items-center gap-3">
@@ -120,7 +103,7 @@ export default function GuardadosPage() {
         {isFavoritesLoading && savedGames.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Loader2 className="w-12 h-12 text-[#ffd90f] animate-spin mb-4" />
-            <p className="text-zinc-400 font-bold">Cargando tus títulos guardados...</p>
+            <p className="text-zinc-400 font-bold">Cargando tus tÃ­tulos guardados...</p>
           </div>
         ) : savedGames.length === 0 ? (
           /* Empty State */
@@ -131,15 +114,15 @@ export default function GuardadosPage() {
                 !
               </div>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-3 uppercase tracking-tight">Tu lista de guardados está vacía</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-3 uppercase tracking-tight">Tu lista de guardados estÃ¡ vacÃ­a</h2>
             <p className="text-zinc-400 max-w-md mb-8 text-sm md:text-base font-medium">
-              Aún no has guardado ningún juego. Explora nuestro catálogo y presiona el corazón en los títulos que más te gusten.
+              AÃºn no has guardado ningÃºn juego. Explora nuestro catÃ¡logo y presiona el corazÃ³n en los tÃ­tulos que mÃ¡s te gusten.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/catalogo">
                 <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 rounded-full font-black px-8 py-6 text-base shadow-lg transition-all hover:scale-105">
                   <Gamepad2 className="w-5 h-5 mr-2" />
-                  Explorar Catálogo Switch
+                  Explorar CatÃ¡logo Switch
                 </Button>
               </Link>
               <Link href="/buscar">
@@ -214,11 +197,11 @@ export default function GuardadosPage() {
                     </Button>
 
                     <Button 
-                      onClick={() => setPurchaseModal({ isOpen: true, game, step: 'method' })}
+                      onClick={() => router.push(`/comprar/${game.id}`)}
                       className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      comprar ($1,299)
+                      Comprar ahora
                     </Button>
                   </div>
                 </div>
@@ -242,7 +225,7 @@ export default function GuardadosPage() {
             {detailModal.isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
                 <Loader2 className="w-10 h-10 animate-spin text-[#ffd90f] mb-3" />
-                <p>Cargando información del juego...</p>
+                <p>Cargando informaciÃ³n del juego...</p>
               </div>
             ) : (
               <div>
@@ -272,9 +255,9 @@ export default function GuardadosPage() {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Descripción</h3>
+                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">DescripciÃ³n</h3>
                   <p className="text-zinc-300 text-sm leading-relaxed max-h-48 overflow-y-auto pr-2">
-                    {detailModal.game.description_raw || "Sumérgete en esta aventura épica diseñada para Nintendo Switch con gráficos optimizados, controles fluidos y horas de entretenimiento garantizado."}
+                    {detailModal.game.description_raw || "SumÃ©rgete en esta aventura Ã©pica diseÃ±ada para Nintendo Switch con grÃ¡ficos optimizados, controles fluidos y horas de entretenimiento garantizado."}
                   </p>
                 </div>
 
@@ -290,15 +273,11 @@ export default function GuardadosPage() {
                     Quitar de Guardados
                   </Button>
                   <Button 
-                    onClick={() => {
-                      const g = detailModal.game;
-                      setDetailModal({ isOpen: false, game: null, isLoading: false });
-                      setPurchaseModal({ isOpen: true, game: g, step: 'method' });
-                    }}
+                    onClick={() => router.push(`/comprar/${detailModal.game!.id}`)}
                     className="flex-1 py-5 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-xl text-sm"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    Comprar Ahora ($1,299)
+                    Comprar ahora
                   </Button>
                 </div>
               </div>
@@ -307,127 +286,6 @@ export default function GuardadosPage() {
         </div>
       )}
 
-      {/* PURCHASE MODAL */}
-      {purchaseModal.isOpen && purchaseModal.game && (
-        <div className="fixed inset-0 flex items-center justify-center z-100 p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative">
-            <button 
-              onClick={() => setPurchaseModal({ isOpen: false, game: null, step: 'method' })}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-800 p-2 rounded-full"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-4 mb-6">
-              <img 
-                src={purchaseModal.game.background_image || '/1.png'} 
-                alt={purchaseModal.game.name} 
-                className="w-16 h-16 rounded-xl object-cover border border-zinc-700"
-              />
-              <div>
-                <span className="text-[#ffd90f] text-xs font-bold uppercase tracking-wider">Finalizar Pedido</span>
-                <h3 className="text-lg font-black text-white leading-tight">{purchaseModal.game.name}</h3>
-                <span className="text-xl font-black text-white">$1,299 MXN</span>
-              </div>
-            </div>
-
-            {purchaseModal.step === 'method' && (
-              <div className="flex flex-col gap-3">
-                <p className="text-zinc-400 text-sm mb-2">Selecciona tu método de pago preferido:</p>
-                
-                <button 
-                  onClick={() => setPurchaseModal(prev => ({ ...prev, step: 'transferencia' }))}
-                  className="w-full flex items-center justify-between p-4 bg-zinc-800/80 hover:bg-zinc-800 rounded-2xl border border-zinc-700 hover:border-[#ffd90f] transition-all text-left group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-zinc-700 group-hover:bg-[#ffd90f] rounded-xl transition-colors">
-                      <Landmark className="w-5 h-5 text-white group-hover:text-zinc-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">Transferencia SPEI / OXXO</h4>
-                      <p className="text-xs text-zinc-400">Sin comisiones adicionales</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => setPurchaseModal(prev => ({ ...prev, step: 'paypal' }))}
-                  className="w-full flex items-center justify-between p-4 bg-zinc-800/80 hover:bg-zinc-800 rounded-2xl border border-zinc-700 hover:border-[#ffd90f] transition-all text-left group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-zinc-700 group-hover:bg-[#ffd90f] rounded-xl transition-colors">
-                      <CreditCard className="w-5 h-5 text-white group-hover:text-zinc-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">PayPal / Tarjeta de Débito o Crédito</h4>
-                      <p className="text-xs text-zinc-400">Pago seguro con protección al comprador</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => handleWhatsAppRedirect(purchaseModal.game!.name)}
-                  className="w-full flex items-center justify-between p-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 rounded-2xl border border-[#25D366]/30 transition-all text-left mt-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-[#25D366] rounded-xl text-white">
-                      <Send className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">Comprar por WhatsApp</h4>
-                      <p className="text-xs text-[#25D366]">Atención inmediata con un asesor</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            )}
-
-            {purchaseModal.step === 'transferencia' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-zinc-800/80 rounded-2xl border border-zinc-700 space-y-2">
-                  <h4 className="font-bold text-sm text-[#ffd90f]">Datos Bancarios para Transferencia (SPEI)</h4>
-                  <div className="text-xs text-zinc-300 space-y-1">
-                    <p><span className="text-zinc-400">Banco:</span> BBVA Bancomer</p>
-                    <p><span className="text-zinc-400">CLABE:</span> <span className="font-mono text-white bg-zinc-900 px-2 py-0.5 rounded">012580015987463210</span></p>
-                    <p><span className="text-zinc-400">Beneficiario:</span> PIKAGAMES STORE S.A. DE C.V.</p>
-                    <p><span className="text-zinc-400">Concepto:</span> {purchaseModal.game.name.slice(0, 20)}</p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-zinc-400">
-                  Una vez realizada la transferencia, presiona el botón de abajo para enviar tu comprobante vía WhatsApp y recibir tu juego.
-                </p>
-
-                <Button 
-                  onClick={() => handleWhatsAppRedirect(purchaseModal.game!.name)}
-                  className="w-full py-5 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold rounded-xl flex items-center justify-center gap-2"
-                >
-                  <Send className="w-4 h-4" />
-                  Enviar Comprobante por WhatsApp
-                </Button>
-              </div>
-            )}
-
-            {purchaseModal.step === 'paypal' && (
-              <div className="space-y-4 text-center py-4">
-                <p className="text-sm text-zinc-300">
-                  Haz clic en el siguiente botón para continuar el pago de <span className="text-[#ffd90f] font-bold">$1,299 MXN</span> de forma segura mediante PayPal:
-                </p>
-                <Button 
-                  onClick={() => window.open(`https://paypal.me/pikagames/${1299}`, '_blank')}
-                  className="w-full py-6 bg-[#0070ba] hover:bg-[#005ea6] text-white font-black text-base rounded-xl"
-                >
-                  Pagar con PayPal
-                </Button>
-                <p className="text-xs text-zinc-500">
-                  Al completar el pago, tu código o envío físico será despachado de inmediato a tu correo registrado.
-                </p>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
 
     </div>
   );

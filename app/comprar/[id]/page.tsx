@@ -56,6 +56,7 @@ const switch2FallbackNames: Record<string, string> = {
 export default function ComprarJuegoPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
   const [products, setProducts] = useState<CheckoutProduct[]>([]);
+  const [catalogError, setCatalogError] = useState(false);
   const [paypalBusy, setPaypalBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<PayPalConfirmation | null>(null);
   const [game, setGame] = useState<Game | null>(null);
@@ -72,12 +73,15 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
     async function loadGame() {
       const { id } = await params;
-      const [gameDetails, catalog] = await Promise.all([
-        getGameDetails(id), apiFetch("/productos").catch(() => []),
+      const [gameDetails, catalogResult] = await Promise.all([
+        getGameDetails(id),
+        apiFetch("/productos").then((catalog) => ({ catalog, failed: false }))
+          .catch(() => ({ catalog: [], failed: true })),
       ]);
       const fallbackName = switch2FallbackNames[id];
       if (active) {
-        setProducts(Array.isArray(catalog) ? catalog : []);
+        setProducts(Array.isArray(catalogResult.catalog) ? catalogResult.catalog : []);
+        setCatalogError(catalogResult.failed);
         setGame(gameDetails || (fallbackName ? {
           id: Number(id),
           slug: id,
@@ -310,12 +314,12 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               {paymentMethod === "paypal" && (
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-400">Pago Directo</span>
-                    <span className="text-[10px] font-black uppercase text-[#ffd90f]">Sin Caducidad</span>
+                    <span className="text-xs font-bold text-zinc-400">PayPal / Tarjeta</span>
+                    <span className="text-[10px] font-black uppercase text-[#ffd90f]">Pago único</span>
                   </div>
 
                   <p className="text-xs text-zinc-300 leading-relaxed">
-                    PayPal Sandbox: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
+                    PayPal {process.env.NEXT_PUBLIC_PAYPAL_ENV === "sandbox" ? "Sandbox" : "Live"}: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
                   </p>
 
                   {/* Botones oficiales de PayPal SDK */}
@@ -323,7 +327,13 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     {!user ? (
                       <p role="status" className="text-xs text-amber-400">Inicia sesión para pagar tu pedido.</p>
                     ) : !selectedProduct ? (
-                      <p role="status" className="text-xs text-amber-400">Este juego no tiene un producto disponible vinculado para PayPal.</p>
+                      <p role="status" className="text-xs text-amber-400">
+                        {catalogError
+                          ? "No se pudo cargar el catálogo de productos. Intenta de nuevo más tarde."
+                          : matchingProducts.length > 1
+                            ? "Hay productos duplicados para este juego y tipo de cuenta. Contacta a soporte."
+                            : "Este juego y tipo de cuenta no tienen inventario disponible para comprar."}
+                      </p>
                     ) : (
                       <PayPalCheckoutButton
                         key={`${user.id}:${selectedProduct.id}`}
