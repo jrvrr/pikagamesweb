@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -190,7 +190,7 @@ export default function GuardadosPage() {
                     <Button 
                       onClick={() => handleOpenDetailModal(game)}
                       variant="outline"
-                      className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-[10px] sm:text-xs uppercase tracking-wide flex items-center justify-center gap-1 px-2"
+                      className="min-w-0 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 font-bold text-[10px] sm:text-xs lowercase tracking-wide flex items-center justify-center gap-1 px-2"
                     >
                       <Eye className="w-4 h-4 text-[#ffd90f]" />
                       ver detalles
@@ -198,10 +198,10 @@ export default function GuardadosPage() {
 
                     <Button 
                       onClick={() => router.push(`/comprar/${game.id}`)}
-                      className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
+                      className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black lowercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Comprar ahora
+                      Comprar
                     </Button>
                   </div>
                 </div>
