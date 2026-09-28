@@ -4,11 +4,12 @@ import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { usePayPalConfig } from "@/components/PayPalProviderWrapper";
 
 export interface PayPalConfirmation {
   confirmed: true;
   status: "COMPLETED";
-  pagoEstado: "completado";
+  pagoEstado: "aprobado";
   pedidoId: string;
   paypalOrderId: string;
   captureId: string;
@@ -17,7 +18,7 @@ export interface PayPalConfirmation {
 }
 
 interface PayPalCheckoutButtonProps {
-  productId: string;
+  game: { rawg_id: number; titulo: string; tipo_cuenta: "principal" | "secundaria" };
   userId: string;
   /** Called when payment is successfully captured */
   onSuccess: (details: PayPalConfirmation) => void;
@@ -29,7 +30,9 @@ interface PayPalCheckoutButtonProps {
 }
 
 export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
-  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_ENV !== "sandbox") {
+  const config = usePayPalConfig();
+  if (!config.ready) return <p role="status" className="text-center text-xs text-zinc-400">Cargando PayPal...</p>;
+  if (!config.clientId) {
     return (
       <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center text-xs text-amber-400">
         PayPal no está disponible por el momento. Puedes pagar por OXXO o transferencia.
@@ -37,17 +40,18 @@ export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
     );
   }
 
-  return <PayPalCheckout {...props} />;
+  return <PayPalCheckout {...props} paypalEnv={config.env} />;
 }
 
 function PayPalCheckout({
-  productId,
+  game,
   userId,
+  paypalEnv,
   onSuccess,
   onBusy,
   onCancel,
   onError,
-}: PayPalCheckoutButtonProps) {
+}: PayPalCheckoutButtonProps & { paypalEnv: "live" | "sandbox" }) {
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
   const [busy, setBusy] = useState(false);
   const [paid, setPaid] = useState(false);
@@ -55,7 +59,7 @@ function PayPalCheckout({
   const [recoverable, setRecoverable] = useState(false);
   const session = useRef<{ pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
-  const storageKey = `paypal-sandbox:${userId}:${productId}`;
+  const storageKey = `paypal-${paypalEnv}:${userId}:rawg:${game.rawg_id}:${game.tipo_cuenta}`;
 
   useEffect(() => {
     try {
@@ -77,7 +81,7 @@ function PayPalCheckout({
     onError?.(error);
   };
   const confirm = (result: PayPalConfirmation) => {
-    if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "completado" ||
+    if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
         result.pedidoId !== session.current.pedidoId || result.paypalOrderId !== session.current.orderId ||
         typeof result.captureId !== "string" || !result.captureId || result.currency !== "MXN" ||
         typeof result.total !== "string" || !/^\d+\.\d{2}$/.test(result.total)) {
@@ -94,7 +98,7 @@ function PayPalCheckout({
     creating.current = (async () => {
       if (!session.current.pedidoId) {
         const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
-          productos: [{ producto_id: productId, cantidad: 1 }],
+          juego: game,
         }) });
         if (!pedido?.id || pedido.estado !== "pendiente_pago") throw new Error("Pedido inválido");
         session.current.pedidoId = String(pedido.id);
@@ -104,7 +108,7 @@ function PayPalCheckout({
       if (!order?.id || order.pedidoId !== session.current.pedidoId) throw new Error("Orden inválida");
       session.current.orderId = order.id;
       save();
-      setMessage("Esperando aprobación en PayPal Sandbox...");
+      setMessage(`Esperando aprobación en PayPal ${paypalEnv === "live" ? "Live" : "Sandbox"}...`);
       return order.id as string;
     })().catch((error) => { failed(error); throw error; }).finally(() => { creating.current = null; });
     return creating.current;

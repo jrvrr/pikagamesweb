@@ -12,13 +12,13 @@ vi.mock("@paypal/react-paypal-js", () => ({
   PayPalButtons: (props: ComponentProps<typeof PayPalButtons>) => { callbacks = props; return null; },
 }));
 const api = vi.mocked(apiFetch);
-const confirmation = { confirmed: true, status: "COMPLETED", pagoEstado: "completado", pedidoId: "7",
+const confirmation = { confirmed: true, status: "COMPLETED", pagoEstado: "aprobado", pedidoId: "7",
   paypalOrderId: "ORDER1", captureId: "CAPTURE1", total: "650.00", currency: "MXN" };
 const create = () => callbacks.createOrder!({} as never, {} as never);
 const approve = () => callbacks.onApprove!({ orderID: "ORDER1" } as never, {} as never);
 const render = () => {
   const onSuccess = vi.fn(); const onError = vi.fn();
-  renderToString(<Button productId="3" userId="user1" onSuccess={onSuccess} onError={onError} />);
+  renderToString(<Button game={{ rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" }} userId="user1" onSuccess={onSuccess} onError={onError} />);
   return { onSuccess, onError };
 };
 
@@ -30,11 +30,11 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
-it("no habilita PayPal sin cliente o fuera de Sandbox", () => {
-  vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "production");
-  expect(renderToString(<Button productId="3" userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
-  vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "sandbox"); vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "");
-  expect(renderToString(<Button productId="3" userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
+it("acepta modo Live y bloquea PayPal sin client ID", () => {
+  vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "live");
+  expect(renderToString(<Button game={{ rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" }} userId="user1" onSuccess={() => {}} />)).not.toContain("PayPal no");
+  vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "");
+  expect(renderToString(<Button game={{ rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" }} userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
 });
 
 it("crea pedido antes de orden backend, sin precios ni compra SDK", async () => {
@@ -42,7 +42,7 @@ it("crea pedido antes de orden backend, sin precios ni compra SDK", async () => 
   api.mockResolvedValueOnce({ id: "7", estado: "pendiente_pago" }).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
   expect(await create()).toBe("ORDER1");
   expect(api.mock.calls).toEqual([
-    ["/pedidos", { method: "POST", body: JSON.stringify({ productos: [{ producto_id: "3", cantidad: 1 }] }) }],
+    ["/pedidos", { method: "POST", body: JSON.stringify({ juego: { rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" } }) }],
     ["/paypal/crear-orden", { method: "POST", body: JSON.stringify({ pedidoId: "7" }) }],
   ]);
   expect(onSuccess).not.toHaveBeenCalled();

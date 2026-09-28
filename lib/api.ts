@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
 
 /**
  * Función centralizada para realizar peticiones a la API.
@@ -36,7 +36,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     } catch (e) {
       // Si no es JSON, mantenemos el mensaje de estado por defecto
     }
-    throw new Error(errorMessage);
+    throw Object.assign(new Error(errorMessage), { status: response.status });
   }
 
   // Si la respuesta es 204 (No Content), no intentamos parsear JSON
