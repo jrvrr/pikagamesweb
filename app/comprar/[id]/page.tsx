@@ -23,6 +23,7 @@ import { getGameDetails, type Game } from "@/lib/rawg";
 import { motion, AnimatePresence } from "framer-motion";
 import PayPalCheckoutButton, { type PayPalConfirmation } from "@/components/PayPalCheckoutButton";
 import { useAuth } from "@/lib/AuthContext";
+import { isDemoGameId } from "@/lib/demoGames";
 
 type AccountType = "principal" | "secundaria";
 type PaymentMethod = "paypal" | "oxxo" | "transferencia";
@@ -56,6 +57,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
     async function loadGame() {
       const { id } = await params;
+      if (isDemoGameId(id)) {
+        if (active) setIsLoading(false);
+        return;
+      }
       const gameDetails = await getGameDetails(id);
       if (active) {
         setGame(gameDetails);
@@ -562,5 +567,4 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     </main>
   );
 }
-
 

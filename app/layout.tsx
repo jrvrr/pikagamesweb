@@ -17,13 +17,21 @@ import { AuthProvider } from "@/lib/AuthContext";
 import PayPalProviderWrapper from "@/components/PayPalProviderWrapper";
 
 export const metadata: Metadata = {
-  title: "PIKAGAMES | Tienda de Videojuegos Nintendo Switch",
-  description: "El catálogo definitivo de videojuegos para tu Nintendo Switch",
-  icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+  metadataBase: new URL("https://www.pikagames.shop"),
+  title: { default: "PikaGames | Juegos para Nintendo Switch", template: "%s | PikaGames" },
+  description: "Explora informaci\u00f3n, novedades y t\u00edtulos para Nintendo Switch en PikaGames.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    siteName: "PikaGames",
+    title: "PikaGames | Juegos para Nintendo Switch",
+    description: "Explora informaci\u00f3n, novedades y t\u00edtulos para Nintendo Switch en PikaGames.",
+    url: "/",
+    images: [{ url: "/icon.png", alt: "PikaGames" }],
   },
+  twitter: { card: "summary", title: "PikaGames | Juegos para Nintendo Switch", description: "Explora informaci\u00f3n, novedades y t\u00edtulos para Nintendo Switch en PikaGames." },
+  icons: { icon: "/icon.png", shortcut: "/icon.png", apple: "/icon.png" },
 };
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -31,7 +39,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="es-MX"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >

@@ -26,7 +26,7 @@ export function Navigation() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchQuery, setMobileSearchQuery] = useState("");
-  const { user, isLoading, savedGames } = useAuth();
+  const { user, token, isLoading, savedGames, sessionError, checkAuth } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   
@@ -73,6 +73,16 @@ export function Navigation() {
 
   return (
     <>
+      {sessionError && (
+        <div role="status" aria-live="polite" className="fixed left-0 right-0 top-14 z-[60] px-3 md:top-16">
+          <p className="mx-auto max-w-3xl rounded-b-xl border border-amber-500/40 bg-zinc-950 px-4 py-3 text-center text-sm text-amber-100 shadow-lg">
+            {sessionError}{" "}
+            <button type="button" onClick={checkAuth} className="font-bold underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#ffd90f]">
+              Reintentar
+            </button>
+          </p>
+        </div>
+      )}
       {/* Top Navbar (Dark Theme) - Hidden on mobile */}
       <div className="fixed top-0 left-0 w-full z-50 bg-[#18181b] border-b border-zinc-800 hidden md:block transition-all">
         <header className="w-full flex items-stretch h-16">
@@ -107,10 +117,11 @@ export function Navigation() {
           <div className="flex items-center h-full mr-4 space-x-2 font-bold text-sm text-zinc-300">
             <div className="flex items-center px-4 h-full">
               <form onSubmit={handleDesktopSearch} className="relative flex items-center">
-                <button type="submit" className="absolute left-3 text-zinc-500 hover:text-[#ffd90f] transition-colors" title="Buscar">
+                <button type="submit" aria-label="Buscar juegos" className="absolute left-3 text-zinc-500 hover:text-[#ffd90f] transition-colors" title="Buscar">
                   <Search className="w-4 h-4" />
                 </button>
                 <input 
+                  aria-label="Buscar juegos"
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -119,7 +130,7 @@ export function Navigation() {
                 />
               </form>
             </div>
-            <Link href="/guardados" className="relative flex items-center px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors" title="Ver guardados">
+            <Link href="/guardados" aria-label="Ver guardados" className="relative flex items-center px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors" title="Ver guardados">
               <Heart className={`w-5 h-5 ${savedGames.length > 0 ? "text-[#ff7a93] fill-[#ff7a93]" : ""}`} />
               {savedGames.length > 0 && (
                 <span className="absolute top-3 right-2 bg-[#ffd90f] text-zinc-900 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
@@ -135,6 +146,10 @@ export function Navigation() {
                   <User className="w-5 h-5" />
                   <span className="max-w-30 truncate font-bold">{user.nombre.split(" ")[0]}</span>
                 </Link>
+              ) : token && sessionError ? (
+                <button type="button" onClick={checkAuth} className="rounded-full border border-amber-500/50 px-5 py-2 font-bold text-amber-100 hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-[#ffd90f]">
+                  Reintentar sesión
+                </button>
               ) : (
                 <button onClick={() => setIsAuthModalOpen(true)} className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm focus:outline-none">
                   <User className="w-5 h-5" />
@@ -147,7 +162,7 @@ export function Navigation() {
       </div>
 
       {/* Backdrop Overlay */}
-      <div onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 md:top-16 bg-black/70 backdrop-blur-sm z-50 transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}></div>
+      <button type="button" aria-label="Cerrar menú de navegación" onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 md:top-16 z-50 border-0 bg-black/70 p-0 backdrop-blur-sm transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "pointer-events-none opacity-0 invisible"}`} />
 
       {/* Mega Menu (Dropdown) */}
       <div className={`fixed top-14 md:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-60 cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] md:max-h-[calc(100vh-4rem)] pb-28 md:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
@@ -218,10 +233,11 @@ export function Navigation() {
         
         {isMobileSearchOpen ? (
           <form onSubmit={handleMobileSearch} className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">
-            <button type="submit" className="shrink-0 ml-2" title="Buscar">
+            <button type="submit" aria-label="Buscar juegos" className="shrink-0 ml-2" title="Buscar">
               <Search className="w-5 h-5 text-[#ffd90f]" />
             </button>
             <input 
+              aria-label="Buscar juegos"
               type="text" 
               value={mobileSearchQuery}
               onChange={(e) => setMobileSearchQuery(e.target.value)}
@@ -231,6 +247,7 @@ export function Navigation() {
             />
             <button 
               type="button"
+              aria-label="Cerrar búsqueda"
               onClick={() => setIsMobileSearchOpen(false)}
               className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 ml-1"
             >
@@ -239,22 +256,22 @@ export function Navigation() {
           </form>
         ) : (
           <div className="flex justify-around items-center w-full h-full animate-in fade-in zoom-in duration-200">
-            <button onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={isMenuOpen} onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Menu className="w-6 h-6" />
               </div>
             </button>
-            <button onClick={() => handleTabClick("guardados", "/guardados")} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label="Ver guardados" onClick={() => handleTabClick("guardados", "/guardados")} className="flex items-center justify-center w-full h-full">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "guardados" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Heart className="w-6 h-6" />
               </div>
             </button>
-            <button onClick={() => setIsMobileSearchOpen(true)} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label="Buscar juegos" aria-expanded={isMobileSearchOpen} onClick={() => setIsMobileSearchOpen(true)} className="flex items-center justify-center w-full h-full">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMobileSearchOpen && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Search className="w-6 h-6" />
               </div>
             </button>
-            <button onClick={() => handleTabClick("inicio", "/")} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label="Ir al inicio" onClick={() => handleTabClick("inicio", "/")} className="flex items-center justify-center w-full h-full">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "inicio" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Gamepad2 className="w-6 h-6" />
               </div>
@@ -263,11 +280,14 @@ export function Navigation() {
               onClick={() => {
                 if (user) {
                   handleTabClick("perfil", "/perfil");
+                } else if (token && sessionError) {
+                  void checkAuth();
                 } else {
                   setIsMenuOpen(false);
                   setIsAuthModalOpen(true);
                 }
               }} 
+              aria-label={user ? "Abrir mi perfil" : token && sessionError ? "Reintentar sesión" : "Iniciar sesión"}
               className="flex items-center justify-center w-full h-full"
             >
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "perfil" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>

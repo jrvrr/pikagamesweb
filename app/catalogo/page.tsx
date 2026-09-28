@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { getPopularGames, getNewReleases, searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
+import { isDemoGameId } from "@/lib/demoGames";
 
 // Special curated Nintendo Switch 2 upcoming and enhanced titles
 const switch2Games: Game[] = [
@@ -108,6 +109,7 @@ function CatalogoContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [gamesError, setGamesError] = useState("");
 
   const { savedGames, toggleSaveGame, isGameSaved } = useAuth();
 
@@ -122,36 +124,38 @@ function CatalogoContent() {
   const loadGames = async (pageNum = 1, isInitial = false) => {
     if (isInitial) setIsLoading(true);
     else setIsLoadingMore(true);
+    setGamesError("");
 
-    let fetched: Game[] = [];
-    if (searchQuery.trim()) {
-      fetched = await searchGames(searchQuery.trim(), pageNum, 12);
-    } else if (genreFilter === 'mario') {
-      fetched = await searchGames('Mario', pageNum, 12);
-    } else if (genreFilter === 'zelda') {
-      fetched = await searchGames('Zelda', pageNum, 12);
-    } else if (genreFilter === 'pokemon') {
-      fetched = await searchGames('Pokemon', pageNum, 12);
-    } else if (genreFilter === 'estrenos') {
-      fetched = await getNewReleases(pageNum, 12);
-    } else {
-      fetched = await getPopularGames(pageNum, 12);
+    try {
+      let fetched: Game[] = [];
+      if (searchQuery.trim()) {
+        fetched = await searchGames(searchQuery.trim(), pageNum, 12, { throwOnError: true });
+      } else if (genreFilter === 'mario') {
+        fetched = await searchGames('Mario', pageNum, 12, { throwOnError: true });
+      } else if (genreFilter === 'zelda') {
+        fetched = await searchGames('Zelda', pageNum, 12, { throwOnError: true });
+      } else if (genreFilter === 'pokemon') {
+        fetched = await searchGames('Pokemon', pageNum, 12, { throwOnError: true });
+      } else if (genreFilter === 'estrenos') {
+        fetched = await getNewReleases(pageNum, 12, { throwOnError: true });
+      } else {
+        fetched = await getPopularGames(pageNum, 12, { throwOnError: true });
+      }
+
+      if (pageNum === 1) setGames(fetched);
+      else setGames((prev) => [...prev, ...fetched]);
+
+      setHasMore(fetched.length === 12);
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : undefined;
+      setGamesError(status && status >= 500
+        ? "El catálogo no está disponible temporalmente. Intenta de nuevo."
+        : "No se pudo cargar el catálogo. Revisa tu conexión e intenta de nuevo.");
+      if (pageNum === 1) setGames([]);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
     }
-
-    if (pageNum === 1) {
-      setGames(fetched);
-    } else {
-      setGames(prev => [...prev, ...fetched]);
-    }
-
-    if (fetched.length < 12) {
-      setHasMore(false);
-    } else {
-      setHasMore(true);
-    }
-
-    setIsLoading(false);
-    setIsLoadingMore(false);
   };
 
   useEffect(() => {
@@ -167,7 +171,7 @@ function CatalogoContent() {
 
   const handleOpenDetailModal = async (game: Game) => {
     setDetailModal({ isOpen: true, game, isLoading: true });
-    if (game.id >= 99900) {
+    if (isDemoGameId(game.id)) {
       // Local mock for switch 2
       setDetailModal({ isOpen: true, game, isLoading: false });
       return;
@@ -348,6 +352,11 @@ function CatalogoContent() {
             <Loader2 className="w-12 h-12 text-[#ffd90f] animate-spin mb-4" />
             <p className="font-bold text-lg text-white">Cargando catálogo de Nintendo Switch...</p>
           </div>
+        ) : gamesError ? (
+          <div role="alert" className="flex flex-col items-center justify-center rounded-3xl border border-amber-500/40 bg-zinc-900/50 p-8 text-center">
+            <p className="mb-5 text-zinc-200">{gamesError}</p>
+            <Button onClick={() => loadGames(1, true)} className="bg-[#ffd90f] font-bold text-zinc-900 hover:bg-[#e5c30d]">Reintentar</Button>
+          </div>
         ) : displayedGames.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-zinc-900/50 rounded-3xl border-2 border-zinc-800 p-8">
             <Gamepad2 className="w-16 h-16 text-zinc-700 mb-4" />
@@ -367,7 +376,7 @@ function CatalogoContent() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {displayedGames.map((game) => {
                 const saved = isGameSaved(game.id);
-                const isDemo = game.id >= 99900;
+                const isDemo = isDemoGameId(game.id);
                 const isSwitch2 = isDemo || game.name.includes('Switch 2');
                 
                 return (
@@ -475,7 +484,7 @@ function CatalogoContent() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-zinc-800">
-                  <Button 
+                  <Button
                     onClick={() => {
                       toggleSaveGame(detailModal.game!);
                     }}
@@ -489,7 +498,7 @@ function CatalogoContent() {
                     <Heart className={`w-4 h-4 mr-2 ${isGameSaved(detailModal.game.id) ? "fill-zinc-900" : ""}`} />
                     {isGameSaved(detailModal.game.id) ? "Guardado en Favoritos" : "Guardar en Favoritos"}
                   </Button>
-                  <Button 
+                  {!isDemoGameId(detailModal.game.id) && <Button
                     onClick={() => {
                       if (detailModal.game) router.push(`/comprar/${detailModal.game.id}`);
                     }}
@@ -497,7 +506,7 @@ function CatalogoContent() {
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     Comprar Ahora
-                  </Button>
+                  </Button>}
                 </div>
               </div>
             )}
