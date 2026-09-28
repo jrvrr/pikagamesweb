@@ -4,6 +4,7 @@ import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { usePayPalConfig } from "@/components/PayPalProviderWrapper";
 
 export interface PayPalConfirmation {
   confirmed: true;
@@ -29,7 +30,9 @@ interface PayPalCheckoutButtonProps {
 }
 
 export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
-  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) {
+  const config = usePayPalConfig();
+  if (!config.ready) return <p role="status" className="text-center text-xs text-zinc-400">Cargando PayPal...</p>;
+  if (!config.clientId) {
     return (
       <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center text-xs text-amber-400">
         PayPal no está disponible por el momento. Puedes pagar por OXXO o transferencia.
@@ -37,17 +40,18 @@ export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
     );
   }
 
-  return <PayPalCheckout {...props} />;
+  return <PayPalCheckout {...props} paypalEnv={config.env} />;
 }
 
 function PayPalCheckout({
   game,
   userId,
+  paypalEnv,
   onSuccess,
   onBusy,
   onCancel,
   onError,
-}: PayPalCheckoutButtonProps) {
+}: PayPalCheckoutButtonProps & { paypalEnv: "live" | "sandbox" }) {
   const [{ isPending, isRejected }] = usePayPalScriptReducer();
   const [busy, setBusy] = useState(false);
   const [paid, setPaid] = useState(false);
@@ -55,7 +59,6 @@ function PayPalCheckout({
   const [recoverable, setRecoverable] = useState(false);
   const session = useRef<{ pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
-  const paypalEnv = process.env.NEXT_PUBLIC_PAYPAL_ENV === "sandbox" ? "sandbox" : "live";
   const storageKey = `paypal-${paypalEnv}:${userId}:rawg:${game.rawg_id}:${game.tipo_cuenta}`;
 
   useEffect(() => {

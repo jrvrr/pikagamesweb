@@ -22,13 +22,17 @@ export interface SavedGame {
 }
 
 // Helper to normalize game data from RAWG or backend API
-export const normalizeSavedGame = (item: any): SavedGame => {
+export const normalizeSavedGame = (value: unknown): SavedGame => {
+  const item = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  const rating = item.rating ?? item.game_rating;
   return {
-    id: Number(item.rawg_game_id || item.id),
-    name: item.name || item.game_name || item.title || "Videojuego",
-    background_image: item.background_image || item.game_image || item.image || null,
-    rating: item.rating !== undefined && item.rating !== null ? Number(item.rating) : (item.game_rating !== undefined && item.game_rating !== null ? Number(item.game_rating) : null),
-    released: item.released || item.game_released || null,
+    id: Number(item.rawg_game_id ?? item.id),
+    name: String(item.name ?? item.game_name ?? item.title ?? "Videojuego"),
+    background_image: typeof (item.background_image ?? item.game_image ?? item.image) === "string" ? String(item.background_image ?? item.game_image ?? item.image) : null,
+    rating: rating === undefined || rating === null || !Number.isFinite(Number(rating)) ? null : Number(rating),
+    released: typeof (item.released ?? item.game_released) === "string" ? String(item.released ?? item.game_released) : null,
   };
 };
 
@@ -42,20 +46,25 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
   // Favorites
   savedGames: SavedGame[];
-  toggleSaveGame: (game: any) => void;
+  toggleSaveGame: (game: unknown) => void;
   isGameSaved: (gameId: number) => boolean;
   isFavoritesLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const normalizeUser = (value: any): User => ({
+const normalizeUser = (input: unknown): User => {
+  const value = input && typeof input === "object" && !Array.isArray(input)
+    ? input as Record<string, unknown>
+    : {};
+  return ({
   id: String(value?.id ?? value?._id ?? value?.user_id ?? value?.usuario_id ?? value?.id_usuario ?? value?.userId ?? ""),
   nombre: String(value?.nombre ?? value?.name ?? value?.nombre_usuario ?? value?.first_name ?? value?.firstName ?? value?.username ?? value?.email ?? "Cuenta"),
   apellidos: String(value?.apellidos ?? value?.last_name ?? value?.lastName ?? ""),
   email: String(value?.email ?? ""),
   rol: String(value?.rol ?? value?.role ?? "cliente"),
-});
+  });
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -65,33 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isFavoritesLoading, setIsFavoritesLoading] = useState(false);
   const router = useRouter();
 
-  const loadFavoritesFromLocalStorage = (): SavedGame[] => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("savedGames");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed.map(normalizeSavedGame);
-        }
-      }
-    } catch {
-      console.error("Failed to parse saved games from localStorage");
-    }
-    return [];
-  };
-
-  const saveFavoritesToLocalStorage = (games: SavedGame[]) => {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem("savedGames", JSON.stringify(games));
-      } catch (e) {
-        console.error("Error writing savedGames to localStorage:", e);
-      }
-    }
-  };
-
-  // Load favorites from server (when logged in) or localStorage (when guest)
+  // The signed-in account is the only source of saved games.
   const loadFavorites = useCallback(async (hasToken: boolean) => {
     if (hasToken) {
       setIsFavoritesLoading(true);
@@ -101,26 +84,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (Array.isArray(rawFavorites)) {
           const serverGames: SavedGame[] = rawFavorites.map(normalizeSavedGame);
           setSavedGames(serverGames);
-          saveFavoritesToLocalStorage(serverGames);
           return serverGames;
         }
       } catch (error) {
-        const localGames = loadFavoritesFromLocalStorage();
-        setSavedGames(localGames);
-        console.warn("No se pudieron cargar los favoritos del servidor; se muestran los guardados locales.", error);
-        return localGames;
+        setSavedGames([]);
+        console.warn("No se pudieron cargar los favoritos de la cuenta.", error);
+        return [];
       } finally {
         setIsFavoritesLoading(false);
       }
     } else {
-      const localGames = loadFavoritesFromLocalStorage();
-      setSavedGames(localGames);
-      return localGames;
+      setSavedGames([]);
+      return [];
     }
   }, []);
 
   const checkAuth = async () => {
     setIsLoading(true);
+    localStorage.removeItem("savedGames");
     const storedToken = localStorage.getItem("token");
     
     if (storedToken) {
@@ -131,16 +112,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(storedToken);
         await loadFavorites(true);
       } catch (error) {
-        localStorage.removeItem("token");
-        setUser(null);
-        setToken(null);
-        setSavedGames(loadFavoritesFromLocalStorage());
+        const status = typeof error === "object" && error !== null && "status" in error ? error.status : undefined;
+        if (status === 401) {
+          localStorage.removeItem("token");
+          setUser(null);
+          setToken(null);
+          setSavedGames([]);
+        } else {
+          setToken(storedToken);
+        }
         console.error("Error al verificar sesión:", error);
       }
     } else {
       setUser(null);
       setToken(null);
-      setSavedGames(loadFavoritesFromLocalStorage());
+      setSavedGames([]);
     }
     
     setIsLoading(false);
@@ -156,49 +142,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     setUser(normalizedUser);
 
-    // Migrate local guest favorites to server upon login
-    const localGames = loadFavoritesFromLocalStorage();
-    if (localGames.length > 0) {
-      const failedMigrations: SavedGame[] = [];
-      for (const game of localGames) {
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api"}/favoritos`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${newToken}`,
-            },
-            body: JSON.stringify({
-              rawg_game_id: game.id,
-              game_name: game.name,
-              game_image: game.background_image || null,
-              game_rating: game.rating || null,
-              game_released: game.released || null,
-            }),
-          });
-          if (!response.ok) failedMigrations.push(game);
-        } catch {
-          failedMigrations.push(game);
-        }
-      }
-      saveFavoritesToLocalStorage(failedMigrations);
-    }
-
-    const serverGames = await loadFavorites(true);
-    const mergedGames = [...(serverGames || [])];
-    for (const game of localGames) {
-      if (!mergedGames.some((saved) => saved.id === game.id)) mergedGames.push(game);
-    }
-    setSavedGames(mergedGames);
-    saveFavoritesToLocalStorage(mergedGames);
+    await loadFavorites(true);
     router.push("/perfil");
   };
 
   const logout = () => {
     localStorage.removeItem("token");
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("savedGames");
-    }
     setToken(null);
     setUser(null);
     setSavedGames([]);
@@ -209,54 +158,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(normalizeUser(userData));
   };
 
-  const toggleSaveGame = async (game: any) => {
-    if (!game) return;
+  const toggleSaveGame = async (game: unknown) => {
+    if (!game || !token) return;
     const normalized = normalizeSavedGame(game);
-    const exists = savedGames.some((g) => Number(g.id) === Number(normalized.id));
-
-    let updated: SavedGame[];
-    if (exists) {
-      updated = savedGames.filter((g) => Number(g.id) !== Number(normalized.id));
-      setSavedGames(updated);
-
-      if (token) {
-        try {
-          await apiFetch(`/favoritos/${normalized.id}`, { method: "DELETE" });
-          saveFavoritesToLocalStorage(updated);
-        } catch (error) {
-          saveFavoritesToLocalStorage(updated);
-          console.warn("No se pudo quitar el favorito del servidor; se actualizó la lista local.", error);
-        }
+    const exists = savedGames.some((saved) => saved.id === normalized.id);
+    try {
+      if (exists) {
+        await apiFetch(`/favoritos/${normalized.id}`, { method: "DELETE" });
+        setSavedGames((games) => games.filter((saved) => saved.id !== normalized.id));
       } else {
-        saveFavoritesToLocalStorage(updated);
+        await apiFetch("/favoritos", {
+          method: "POST",
+          body: JSON.stringify({
+            rawg_game_id: normalized.id,
+            game_name: normalized.name,
+            game_image: normalized.background_image ?? null,
+            game_rating: normalized.rating ?? null,
+            game_released: normalized.released ?? null,
+          }),
+        });
+        setSavedGames((games) => [...games, normalized]);
       }
-    } else {
-      updated = [...savedGames, normalized];
-      setSavedGames(updated);
-
-      if (token) {
-        try {
-          await apiFetch("/favoritos", {
-            method: "POST",
-            body: JSON.stringify({
-              rawg_game_id: normalized.id,
-              game_name: normalized.name,
-              game_image: normalized.background_image || null,
-              game_rating: normalized.rating || null,
-              game_released: normalized.released || null,
-            }),
-          });
-          saveFavoritesToLocalStorage(updated);
-        } catch (error) {
-          saveFavoritesToLocalStorage(updated);
-          console.warn("No se pudo guardar el favorito en el servidor; se guardó localmente.", error);
-        }
-      } else {
-        saveFavoritesToLocalStorage(updated);
-      }
+    } catch (error) {
+      console.warn("No se pudo actualizar favoritos de la cuenta.", error);
     }
   };
-
   const isGameSaved = (gameId: number) => {
     if (gameId === undefined || gameId === null) return false;
     return savedGames.some((g) => Number(g.id) === Number(gameId));
