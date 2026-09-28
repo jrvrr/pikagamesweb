@@ -17,7 +17,7 @@ export interface PayPalConfirmation {
 }
 
 interface PayPalCheckoutButtonProps {
-  productId: string;
+  game: { rawg_id: number; titulo: string; tipo_cuenta: "principal" | "secundaria" };
   userId: string;
   /** Called when payment is successfully captured */
   onSuccess: (details: PayPalConfirmation) => void;
@@ -41,7 +41,7 @@ export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
 }
 
 function PayPalCheckout({
-  productId,
+  game,
   userId,
   onSuccess,
   onBusy,
@@ -56,7 +56,7 @@ function PayPalCheckout({
   const session = useRef<{ pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
   const paypalEnv = process.env.NEXT_PUBLIC_PAYPAL_ENV === "sandbox" ? "sandbox" : "live";
-  const storageKey = `paypal-${paypalEnv}:${userId}:${productId}`;
+  const storageKey = `paypal-${paypalEnv}:${userId}:rawg:${game.rawg_id}:${game.tipo_cuenta}`;
 
   useEffect(() => {
     try {
@@ -95,7 +95,7 @@ function PayPalCheckout({
     creating.current = (async () => {
       if (!session.current.pedidoId) {
         const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
-          productos: [{ producto_id: productId, cantidad: 1 }],
+          juego: game,
         }) });
         if (!pedido?.id || pedido.estado !== "pendiente_pago") throw new Error("Pedido inválido");
         session.current.pedidoId = String(pedido.id);

@@ -22,13 +22,7 @@ import {
 import { getGameDetails, type Game } from "@/lib/rawg";
 import { motion, AnimatePresence } from "framer-motion";
 import PayPalCheckoutButton, { type PayPalConfirmation } from "@/components/PayPalCheckoutButton";
-import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
-
-type CheckoutProduct = {
-  id: string; tipo_cuenta: string; precio: string; activo: boolean; stock: number;
-  Videojuego: { rawg_id: string | null; activo: boolean };
-};
 
 type AccountType = "principal" | "secundaria";
 type PaymentMethod = "paypal" | "oxxo" | "transferencia";
@@ -55,8 +49,6 @@ const switch2FallbackNames: Record<string, string> = {
 
 export default function ComprarJuegoPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
-  const [products, setProducts] = useState<CheckoutProduct[]>([]);
-  const [catalogError, setCatalogError] = useState(false);
   const [paypalBusy, setPaypalBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<PayPalConfirmation | null>(null);
   const [game, setGame] = useState<Game | null>(null);
@@ -73,15 +65,9 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
     async function loadGame() {
       const { id } = await params;
-      const [gameDetails, catalogResult] = await Promise.all([
-        getGameDetails(id),
-        apiFetch("/productos").then((catalog) => ({ catalog, failed: false }))
-          .catch(() => ({ catalog: [], failed: true })),
-      ]);
+      const gameDetails = await getGameDetails(id);
       const fallbackName = switch2FallbackNames[id];
       if (active) {
-        setProducts(Array.isArray(catalogResult.catalog) ? catalogResult.catalog : []);
-        setCatalogError(catalogResult.failed);
         setGame(gameDetails || (fallbackName ? {
           id: Number(id),
           slug: id,
@@ -103,11 +89,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   }, [params]);
 
   const selectedOption = accountOptions[accountType];
-  const matchingProducts = products.filter((product) =>
-    String(product.Videojuego?.rawg_id) === String(game?.id) && product.tipo_cuenta === accountType &&
-    product.activo && product.Videojuego.activo && product.stock > 0);
-  const selectedProduct = matchingProducts.length === 1 ? matchingProducts[0] : undefined;
-  const displayedPrice = paymentMethod === "paypal" ? Number(selectedProduct?.precio) : selectedOption.price;
+  const displayedPrice = selectedOption.price;
   const formattedPrice = Number.isFinite(displayedPrice) ? displayedPrice.toLocaleString("es-MX", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -247,7 +229,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                         <span className="font-black text-sm text-white">{option.label}</span>
                         {isSelected && <Check className="h-4 w-4 text-[#ffd90f] stroke-[3]" />}
                       </div>
-                      <span className="text-sm font-black text-[#ffd90f]">${paymentMethod === "paypal" ? products.find((p) => String(p.Videojuego?.rawg_id) === String(game.id) && p.tipo_cuenta === type && p.activo && p.Videojuego.activo && p.stock > 0)?.precio ?? "—" : option.price} MXN</span>
+                      <span className="text-sm font-black text-[#ffd90f]">${option.price} MXN</span>
                     </button>
                   );
                 })}
@@ -326,18 +308,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   <div className="pt-1">
                     {!user ? (
                       <p role="status" className="text-xs text-amber-400">Inicia sesión para pagar tu pedido.</p>
-                    ) : !selectedProduct ? (
-                      <p role="status" className="text-xs text-amber-400">
-                        {catalogError
-                          ? "No se pudo cargar el catálogo de productos. Intenta de nuevo más tarde."
-                          : matchingProducts.length > 1
-                            ? "Hay productos duplicados para este juego y tipo de cuenta. Contacta a soporte."
-                            : "Este juego y tipo de cuenta no tienen inventario disponible para comprar."}
-                      </p>
                     ) : (
                       <PayPalCheckoutButton
-                        key={`${user.id}:${selectedProduct.id}`}
-                        productId={String(selectedProduct.id)}
+                        key={`${user.id}:${game.id}:${accountType}`}
+                        game={{ rawg_id: game.id, titulo: game.name, tipo_cuenta: accountType }}
                         userId={user.id}
                         onBusy={setPaypalBusy}
                         onSuccess={(details) => {
