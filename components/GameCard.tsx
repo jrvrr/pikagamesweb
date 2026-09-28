@@ -10,6 +10,7 @@ interface GameCardProps {
   onBuy: (game: Game) => void;
   buyLabel?: string;
   isSwitch2?: boolean;
+  isDemo?: boolean;
   showReleaseDate?: boolean;
   onRemove?: (game: Game) => void;
 }
@@ -22,6 +23,7 @@ export function GameCard({
   onBuy,
   buyLabel = "Comprar",
   isSwitch2 = false,
+  isDemo = false,
   showReleaseDate = true,
   onRemove,
 }: GameCardProps) {
@@ -46,7 +48,7 @@ export function GameCard({
 
         <div className="absolute left-2 top-2 right-12 flex flex-wrap items-center gap-1 sm:left-3 sm:top-3 sm:right-auto sm:gap-2">
           <span className={`flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide backdrop-blur-md ${isSwitch2 ? "border-cyan-400/40 bg-cyan-950/80 text-cyan-200" : "border-white/10 bg-zinc-950/75 text-zinc-100"}`}>
-            {platformLabel}
+            {isDemo ? "Demostración · no disponible" : platformLabel}
           </span>
           <span className="flex items-center gap-1 rounded-md border border-white/10 bg-zinc-950/75 px-2 py-1 text-xs font-bold text-[#ffd90f] backdrop-blur-md">
             <Star className="h-3 w-3 fill-current" />
@@ -97,13 +99,13 @@ export function GameCard({
             <Eye className="h-3.5 w-3.5 shrink-0 text-[#ffd90f] sm:h-4 sm:w-4" />
             <span className="min-w-0 truncate">ver detalles</span>
           </Button>
-          <Button
+          {!isDemo && <Button
             onClick={() => onBuy(game)}
             className="min-w-0 w-full gap-1 border-0 bg-[#ffd90f] px-2 text-[10px] font-black text-zinc-950 hover:bg-[#ffe45c] sm:text-xs"
           >
             <ShoppingCart className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
             <span className="min-w-0 truncate">{buyLabel.toLowerCase()}</span>
-          </Button>
+          </Button>}
         </div>
       </div>
     </article>

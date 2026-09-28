@@ -180,7 +180,7 @@ export default function GuardadosPage() {
                 {/* Content */}
                 <div className="flex flex-col grow p-4 bg-zinc-900">
                   <span className="text-[#ffd90f] text-[11px] font-bold uppercase tracking-wider mb-1">
-                    Nintendo Switch
+                    {game.id >= 99900 ? "Demostración · no disponible" : "Nintendo Switch"}
                   </span>
                   <h3 className="text-base font-black text-white mb-4 leading-tight group-hover:text-[#ffd90f] transition-colors line-clamp-2">
                     {game.name}
@@ -196,13 +196,13 @@ export default function GuardadosPage() {
                       ver detalles
                     </Button>
 
-                    <Button 
+                    {game.id < 99900 && <Button
                       onClick={() => router.push(`/comprar/${game.id}`)}
                       className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black lowercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       Comprar
-                    </Button>
+                    </Button>}
                   </div>
                 </div>
               </div>
@@ -272,13 +272,13 @@ export default function GuardadosPage() {
                     <Trash2 className="w-4 h-4 mr-2" />
                     Quitar de Guardados
                   </Button>
-                  <Button 
+                  {detailModal.game.id < 99900 && <Button
                     onClick={() => router.push(`/comprar/${detailModal.game!.id}`)}
                     className="flex-1 py-5 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black rounded-xl text-sm"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     Comprar ahora
-                  </Button>
+                  </Button>}
                 </div>
               </div>
             )}

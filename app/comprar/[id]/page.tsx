@@ -38,15 +38,6 @@ const accountOptions: Record<AccountType, { label: string; price: number }> = {
   },
 };
 
-const switch2FallbackNames: Record<string, string> = {
-  "99901": "Metroid Prime 4: Beyond (Switch 2 Edition)",
-  "99902": "Mario Kart Ultimate (Nintendo Switch 2)",
-  "99903": "Pokémon Legends: Z-A (Switch 2 Enhanced)",
-  "99904": "The Legend of Zelda: Deluxe 4K Edition",
-  "99905": "Donkey Kong 3D Bananza (Switch 2)",
-  "99906": "Super Smash Bros. Universe (Switch 2)",
-};
-
 export default function ComprarJuegoPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
   const [paypalBusy, setPaypalBusy] = useState(false);
@@ -66,18 +57,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     async function loadGame() {
       const { id } = await params;
       const gameDetails = await getGameDetails(id);
-      const fallbackName = switch2FallbackNames[id];
       if (active) {
-        setGame(gameDetails || (fallbackName ? {
-          id: Number(id),
-          slug: id,
-          name: fallbackName,
-          background_image: "",
-          rating: 0,
-          released: "",
-          platforms: [],
-          description_raw: "Título digital para Nintendo Switch.",
-        } : null));
+        setGame(gameDetails);
         setIsLoading(false);
       }
     }
@@ -117,7 +98,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     if (!game) return;
     const message = paymentMethod === "paypal"
       ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedOption.label} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
-      : `Hola Pikagames, he apartado 1 boleto para "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Adjunto mi comprobante de pago.`;
+      : `Hola Pikagames, quiero comprar "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Aun no se ha creado un pedido ni reserva; ¿me confirman disponibilidad e instrucciones para continuar?`;
     
     window.open(`https://wa.me/528136975487?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
@@ -336,7 +317,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>Tienes un máximo de 4 horas para realizar el depósito y verificar tu boleto por WhatsApp.</span>
+                    <span>No se crea una reserva con este metodo. Confirma disponibilidad e instrucciones antes de pagar.</span>
                   </div>
 
                   <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
@@ -373,7 +354,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>Tienes 4 horas para realizar la transferencia y verificar tu boleto enviando tu recibo.</span>
+                    <span>No se crea una reserva con este metodo. Confirma disponibilidad e instrucciones antes de pagar.</span>
                   </div>
 
                   <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
@@ -424,7 +405,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   onClick={handleReserveClick}
                   className="w-full rounded-2xl bg-[#ffd90f] hover:bg-[#ffe45c] py-4 px-6 text-center font-black text-zinc-950 text-base shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-wider flex items-center justify-center gap-2"
                 >
-                  <span>Reservar Boleto</span>
+                  <span>Solicitar instrucciones de pago</span>
                   <Send className="h-4 w-4" />
                 </button>
               )}
@@ -458,11 +439,11 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
                 <div>
                   <span className="inline-block rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffd90f] mb-2">
-                    ¡Reserva Registrada!
+                    Solicitud de pago manual
                   </span>
-                  <h3 className="text-2xl font-black text-white">Boleto Reservado</h3>
+                  <h3 className="text-2xl font-black text-white">Sin reserva de inventario</h3>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Has apartado 1 boleto para <strong className="text-white">{game.name}</strong>
+                    No se ha creado un pedido ni apartado de inventario para <strong className="text-white">{game.name}</strong>
                   </p>
                 </div>
 
@@ -486,7 +467,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   <ul className="space-y-1.5 text-zinc-300">
                     <li className="flex items-start gap-2">
                       <span className="text-[#ffd90f] font-bold">1.</span>
-                      <span>Realiza tu pago mediante {paymentMethodLabels[paymentMethod]}.</span>
+                      <span>Confirma disponibilidad e instrucciones antes de pagar mediante {paymentMethodLabels[paymentMethod]}.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-[#ffd90f] font-bold">2.</span>
@@ -494,7 +475,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-[#ffd90f] font-bold">3.</span>
-                      <span>Envíanos el comprobante por WhatsApp dentro del tiempo límite (4 horas).</span>
+                      <span>Confirma disponibilidad e instrucciones por WhatsApp. El comprobante no crea una reserva.</span>
                     </li>
                   </ul>
                 </div>
@@ -505,7 +486,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   className="w-full rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] py-4 px-6 text-center font-black text-white text-sm shadow-[0_0_20px_rgba(37,211,102,0.3)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 uppercase tracking-wide"
                 >
                   <Send className="h-4 w-4 fill-current" />
-                  Enviar Comprobante por WhatsApp
+                  Contactar por WhatsApp
                 </button>
               </div>
             </motion.div>
@@ -581,6 +562,5 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     </main>
   );
 }
-
 
 
