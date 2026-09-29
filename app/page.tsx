@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
+import { isDemoGameId } from "@/lib/demoGames";
 import { apiFetch } from "@/lib/api";
 
 interface ApiComment {
@@ -637,13 +638,13 @@ export default function HomePage() {
                           </Button>
 
                           {/* Botón Comprar */}
-                          <Button 
+                          {!isDemoGameId(game.id) && <Button
                             onClick={() => router.push(`/comprar/${game.id}`)}
                             className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black text-[10px] sm:text-xs tracking-wide border-0 shadow-sm flex items-center justify-center gap-1 px-2"
                           >
                             <ShoppingCart className="w-4 h-4" />
                             comprar
-                          </Button>
+                          </Button>}
                         </div>
                       </div>
                     </motion.div>
@@ -654,7 +655,7 @@ export default function HomePage() {
               {/* Botón Ver más juegos */}
               <div className="mt-12 flex justify-center w-full">
                 <Link href="/catalogo">
-                  <Button 
+                  <Button
                     size="lg" 
                     className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 border-4 border-zinc-900 rounded-full font-black px-10 py-7 text-lg md:text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(230,0,18,1)] transition-all hover:scale-105 flex items-center gap-3"
                   >
@@ -1136,7 +1137,7 @@ export default function HomePage() {
                     {isGameSaved(detailModal.game.id) ? 'Guardado en Favoritos' : 'Guardar en Favoritos'}
                   </Button>
 
-                  <Button
+                  {!isDemoGameId(detailModal.game.id) && <Button
                     onClick={() => {
                       if (detailModal.game) router.push(`/comprar/${detailModal.game.id}`);
                     }}
@@ -1144,7 +1145,7 @@ export default function HomePage() {
                   >
                     <ShoppingCart className="w-4 h-4" />
                     Comprar Ahora
-                  </Button>
+                  </Button>}
                 </div>
               </div>
             </motion.div>

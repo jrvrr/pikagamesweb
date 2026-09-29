@@ -18,7 +18,7 @@ export interface PayPalConfirmation {
 }
 
 interface PayPalCheckoutButtonProps {
-  game: { rawg_id: number; titulo: string; tipo_cuenta: "principal" | "secundaria" };
+  productId: string;
   userId: string;
   /** Called when payment is successfully captured */
   onSuccess: (details: PayPalConfirmation) => void;
@@ -44,7 +44,7 @@ export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
 }
 
 function PayPalCheckout({
-  game,
+  productId,
   userId,
   paypalEnv,
   onSuccess,
@@ -57,13 +57,14 @@ function PayPalCheckout({
   const [paid, setPaid] = useState(false);
   const [message, setMessage] = useState("");
   const [recoverable, setRecoverable] = useState(false);
-  const session = useRef<{ pedidoId?: string; orderId?: string }>({});
+  const session = useRef<{ requestId?: string; pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
-  const storageKey = `paypal-${paypalEnv}:${userId}:rawg:${game.rawg_id}:${game.tipo_cuenta}`;
+  const storageKey = `paypal-${paypalEnv}:${userId}:product:${productId}`;
 
   useEffect(() => {
     try {
       const saved = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
+      if (typeof saved.requestId === "string") session.current.requestId = saved.requestId;
       if (typeof saved.pedidoId === "string") session.current.pedidoId = saved.pedidoId;
       if (typeof saved.orderId === "string") session.current.orderId = saved.orderId;
       setRecoverable(Boolean(session.current.orderId));
@@ -97,10 +98,16 @@ function PayPalCheckout({
     setMessage("Preparando pedido seguro...");
     creating.current = (async () => {
       if (!session.current.pedidoId) {
+        session.current.requestId ||= crypto.randomUUID();
+        save();
         const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
-          juego: game,
+          request_id: session.current.requestId,
+          metodo_pago: "paypal",
+          productos: [{ producto_id: productId, cantidad: 1 }],
         }) });
-        if (!pedido?.id || pedido.estado !== "pendiente_pago") throw new Error("Pedido inválido");
+        if (!pedido?.id || pedido.estado !== "pendiente_pago" || pedido.metodo_pago !== "paypal") {
+          throw new Error("Pedido inválido");
+        }
         session.current.pedidoId = String(pedido.id);
         save();
       }

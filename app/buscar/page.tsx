@@ -21,6 +21,7 @@ import { ShapeGrid } from "@/components/ShapeGrid";
 import { Button } from "@/components/ui/button";
 import { searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
+import { isDemoGameId } from "@/lib/demoGames";
 
 const popularSearches = [
   "Mario", "Zelda", "Pokemon", "Smash Bros", "Animal Crossing", "Metroid", "Kirby", "Luigi", "Donkey Kong", "Fire Emblem"
@@ -329,13 +330,13 @@ function BuscarContent() {
                             ver detalles
                           </Button>
 
-                          <Button 
+                          {!isDemoGameId(game.id) && <Button
                             onClick={() => router.push(`/comprar/${game.id}`)}
                             className="min-w-0 w-full bg-[#ffd90f] hover:bg-[#ffe45c] text-zinc-950 font-black uppercase text-[10px] sm:text-xs tracking-wide shadow-sm flex items-center justify-center gap-1 px-2"
                           >
                             <ShoppingCart className="w-4 h-4" />
                             comprar
-                          </Button>
+                          </Button>}
                         </div>
                       </div>
                     </div>
@@ -457,7 +458,7 @@ function BuscarContent() {
                     <Heart className={`w-4 h-4 mr-2 ${isGameSaved(detailModal.game.id) ? "fill-zinc-900" : ""}`} />
                     {isGameSaved(detailModal.game.id) ? "Guardado en Favoritos" : "Guardar en Favoritos"}
                   </Button>
-                  <Button 
+                  {!isDemoGameId(detailModal.game.id) && <Button
                     onClick={() => {
                       if (detailModal.game) router.push(`/comprar/${detailModal.game.id}`);
                     }}
@@ -465,7 +466,7 @@ function BuscarContent() {
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     Comprar Ahora
-                  </Button>
+                  </Button>}
                 </div>
               </div>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { 
   ArrowLeft, 
@@ -24,20 +24,33 @@ import { motion, AnimatePresence } from "framer-motion";
 import PayPalCheckoutButton, { type PayPalConfirmation } from "@/components/PayPalCheckoutButton";
 import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
+import { apiFetch } from "@/lib/api";
 
 type AccountType = "principal" | "secundaria";
 type PaymentMethod = "paypal" | "oxxo" | "transferencia";
 
-const accountOptions: Record<AccountType, { label: string; price: number }> = {
-  principal: {
-    label: "Cuenta Principal",
-    price: 650,
-  },
-  secundaria: {
-    label: "Cuenta Secundaria",
-    price: 260,
-  },
+const accountLabels: Record<AccountType, string> = {
+  principal: "Cuenta Principal",
+  secundaria: "Cuenta Secundaria",
 };
+
+type BackendProduct = {
+  id: string;
+  tipo_cuenta: AccountType;
+  precio: string;
+  stock: number;
+  disponible: boolean;
+};
+
+type BackendGame = {
+  rawg_id: string;
+  titulo: string;
+  descripcion?: string | null;
+  imagen_url?: string | null;
+  productos: BackendProduct[];
+};
+
+type ManualOrder = { pedidoId: string; total: string; method: Exclude<PaymentMethod, "paypal"> };
 
 export default function ComprarJuegoPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
@@ -51,6 +64,13 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   const [isPaypalPaid, setIsPaypalPaid] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [paypalError, setPaypalError] = useState(false);
+  const [products, setProducts] = useState<BackendProduct[]>([]);
+  const [catalogError, setCatalogError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [manualBusy, setManualBusy] = useState(false);
+  const [manualError, setManualError] = useState("");
+  const [manualOrder, setManualOrder] = useState<ManualOrder | null>(null);
+  const manualRequest = useRef<{ key: string; id: string } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -61,9 +81,28 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
         if (active) setIsLoading(false);
         return;
       }
-      const gameDetails = await getGameDetails(id);
+      const inventoryPromise = apiFetch(`/productos/rawg/${encodeURIComponent(id)}`)
+        .then((data: BackendGame) => ({ data, error: "" }))
+        .catch((error: unknown) => ({
+          data: null,
+          error: typeof error === "object" && error !== null && "status" in error && error.status === 404
+            ? ""
+            : "No se pudo comprobar la disponibilidad. Intenta de nuevo.",
+        }));
+      const [gameDetails, inventory] = await Promise.all([getGameDetails(id), inventoryPromise]);
       if (active) {
-        setGame(gameDetails);
+        const backendGame = inventory.data;
+        setGame(gameDetails || (backendGame ? {
+          id: Number(id), slug: "", name: backendGame.titulo,
+          background_image: backendGame.imagen_url || "", rating: 0, released: "", platforms: [],
+          description_raw: backendGame.descripcion || undefined,
+        } : null));
+        const availableProducts = backendGame?.productos.filter((product) =>
+          ["principal", "secundaria"].includes(product.tipo_cuenta)) || [];
+        setProducts(availableProducts);
+        setCatalogError(inventory.error);
+        const firstAvailable = availableProducts.find((product) => product.disponible);
+        if (firstAvailable) setAccountType(firstAvailable.tipo_cuenta);
         setIsLoading(false);
       }
     }
@@ -72,10 +111,11 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     return () => {
       active = false;
     };
-  }, [params]);
+  }, [params, loadAttempt]);
 
-  const selectedOption = accountOptions[accountType];
-  const displayedPrice = selectedOption.price;
+  const selectedProduct = products.find((product) => product.tipo_cuenta === accountType);
+  const selectedLabel = accountLabels[accountType];
+  const displayedPrice = Number(selectedProduct?.precio);
   const formattedPrice = Number.isFinite(displayedPrice) ? displayedPrice.toLocaleString("es-MX", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -93,8 +133,35 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  const handleReserveClick = () => {
-    setIsReservedModalOpen(true);
+  const handleReserveClick = async () => {
+    if (!user) {
+      setManualError("Inicia sesión para registrar tu pedido.");
+      return;
+    }
+    if (!selectedProduct?.disponible || paymentMethod === "paypal") {
+      setManualError("Este producto no está disponible.");
+      return;
+    }
+    setManualBusy(true);
+    setManualError("");
+    const key = `${user.id}:${selectedProduct.id}:${paymentMethod}`;
+    if (manualRequest.current?.key !== key) manualRequest.current = { key, id: crypto.randomUUID() };
+    try {
+      const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
+        request_id: manualRequest.current.id,
+        metodo_pago: paymentMethod,
+        productos: [{ producto_id: selectedProduct.id, cantidad: 1 }],
+      }) });
+      if (!pedido?.id || pedido.estado !== "pendiente_pago" || pedido.metodo_pago !== paymentMethod) {
+        throw new Error("El servidor devolvió un pedido inválido.");
+      }
+      setManualOrder({ pedidoId: String(pedido.id), total: String(pedido.total), method: paymentMethod });
+      setIsReservedModalOpen(true);
+    } catch (error) {
+      setManualError(error instanceof Error ? error.message : "No se pudo registrar el pedido. Intenta de nuevo.");
+    } finally {
+      setManualBusy(false);
+    }
   };
 
 
@@ -102,8 +169,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   const sendWhatsAppComprobante = () => {
     if (!game) return;
     const message = paymentMethod === "paypal"
-      ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedOption.label} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
-      : `Hola Pikagames, quiero comprar "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Aun no se ha creado un pedido ni reserva; ¿me confirman disponibilidad e instrucciones para continuar?`;
+      ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedLabel} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
+      : `Hola Pikagames, registré el pedido #${manualOrder?.pedidoId} para "${game.name}" (${selectedLabel} - $${manualOrder?.total} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Envío mi comprobante para validación.`;
     
     window.open(`https://wa.me/528136975487?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
@@ -196,14 +263,14 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 1. Elige el tipo de cuenta:
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
-                {(Object.keys(accountOptions) as AccountType[]).map((type) => {
-                  const option = accountOptions[type];
+                {(Object.keys(accountLabels) as AccountType[]).map((type) => {
+                  const product = products.find((item) => item.tipo_cuenta === type);
                   const isSelected = accountType === type;
                   return (
                     <button
                       key={type}
                       type="button"
-                      disabled={paypalBusy || isPaypalPaid}
+                      disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder) || !product?.disponible}
                       onClick={() => setAccountType(type)}
                       className={`relative flex items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
                         isSelected
@@ -212,10 +279,12 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-white">{option.label}</span>
+                        <span className="font-black text-sm text-white">{accountLabels[type]}</span>
                         {isSelected && <Check className="h-4 w-4 text-[#ffd90f] stroke-[3]" />}
                       </div>
-                      <span className="text-sm font-black text-[#ffd90f]">${option.price} MXN</span>
+                      <span className="text-sm font-black text-[#ffd90f]">
+                        {product?.disponible ? `$${Number(product.precio).toLocaleString("es-MX")} MXN` : "No disponible"}
+                      </span>
                     </button>
                   );
                 })}
@@ -232,7 +301,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción PayPal */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid}
+                  disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder)}
                   onClick={() => setPaymentMethod("paypal")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "paypal"
@@ -247,7 +316,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción OXXO */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid}
+                  disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder)}
                   onClick={() => setPaymentMethod("oxxo")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "oxxo"
@@ -262,7 +331,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción Transferencia */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid}
+                  disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder)}
                   onClick={() => setPaymentMethod("transferencia")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "transferencia"
@@ -292,12 +361,14 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
                   {/* Botones oficiales de PayPal SDK */}
                   <div className="pt-1">
-                    {!user ? (
+                    {!selectedProduct?.disponible ? (
+                      <p role="status" className="text-xs text-amber-400">Este tipo de cuenta no está disponible.</p>
+                    ) : !user ? (
                       <p role="status" className="text-xs text-amber-400">Inicia sesión para pagar tu pedido.</p>
                     ) : (
                       <PayPalCheckoutButton
-                        key={`${user.id}:${game.id}:${accountType}`}
-                        game={{ rawg_id: game.id, titulo: game.name, tipo_cuenta: accountType }}
+                        key={`${user.id}:${selectedProduct?.id || accountType}`}
+                        productId={selectedProduct?.id || ""}
                         userId={user.id}
                         onBusy={setPaypalBusy}
                         onSuccess={(details) => {
@@ -322,35 +393,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>No se crea una reserva con este metodo. Confirma disponibilidad e instrucciones antes de pagar.</span>
+                    <span>Primero registraremos tu pedido. Las instrucciones se mostrarán solo cuando el backend lo confirme.</span>
                   </div>
 
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
-                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                      <span className="text-zinc-400">Banco:</span>
-                      <strong className="font-black text-white text-sm">BANCOPEL</strong>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-zinc-400 block">Número de Cuenta:</span>
-                      <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
-                        <strong className="font-mono text-sm font-black text-[#ffd90f] tracking-wider">4169 1614 5560 1061</strong>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy("4169161455601061")}
-                          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-bold"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                          {copiedText === "4169161455601061" ? "¡Copiado!" : "Copiar"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-zinc-400">Monto a depositar:</span>
-                      <strong className="text-base font-black text-white">${formattedPrice} MXN</strong>
-                    </div>
-                  </div>
+                  <p className="text-xs text-zinc-300">No realices ningún depósito hasta obtener el número de pedido.</p>
                 </div>
               )}
 
@@ -359,40 +405,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>No se crea una reserva con este metodo. Confirma disponibilidad e instrucciones antes de pagar.</span>
+                    <span>Primero registraremos tu pedido. Los datos bancarios se mostrarán solo cuando el backend lo confirme.</span>
                   </div>
 
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
-                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                      <span className="text-zinc-400">Banco / Destino:</span>
-                      <strong className="font-black text-white text-sm">BANCOPEL</strong>
-                    </div>
-
-                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                      <span className="text-zinc-400">Titular:</span>
-                      <strong className="font-black text-white text-sm">Pika Games</strong>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-zinc-400 block">CLABE Interbancaria:</span>
-                      <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
-                        <strong className="font-mono text-xs sm:text-sm font-black text-[#ffd90f] tracking-wider">137888105075633395</strong>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy("137888105075633395")}
-                          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-bold shrink-0 ml-2"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                          {copiedText === "137888105075633395" ? "¡Copiado!" : "Copiar"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-zinc-400">Monto a transferir:</span>
-                      <strong className="text-base font-black text-white">${formattedPrice} MXN</strong>
-                    </div>
-                  </div>
+                  <p className="text-xs text-zinc-300">No realices ninguna transferencia hasta obtener el número de pedido.</p>
                 </div>
               )}
             </div>
@@ -408,12 +424,20 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <button
                   type="button"
                   onClick={handleReserveClick}
+                  disabled={manualBusy || !selectedProduct?.disponible || Boolean(manualOrder)}
                   className="w-full rounded-2xl bg-[#ffd90f] hover:bg-[#ffe45c] py-4 px-6 text-center font-black text-zinc-950 text-base shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-wider flex items-center justify-center gap-2"
                 >
-                  <span>Solicitar instrucciones de pago</span>
-                  <Send className="h-4 w-4" />
+                  <span>{manualBusy ? "Registrando pedido..." : manualOrder ? `Pedido #${manualOrder.pedidoId} registrado` : "Registrar pedido y ver instrucciones"}</span>
+                  {manualBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               )}
+              {catalogError && (
+                <div role="alert" className="mt-3 text-center text-xs text-red-400">
+                  <p>{catalogError}</p>
+                  <button type="button" className="mt-1 underline" onClick={() => { setIsLoading(true); setLoadAttempt((value) => value + 1); }}>Reintentar</button>
+                </div>
+              )}
+              {manualError && <p role="alert" className="mt-3 text-center text-xs text-red-400">{manualError}</p>}
             </div>
           </aside>
         </div>
@@ -421,7 +445,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
       {/* MODAL DE RESERVA DE BOLETO (PARA OXXO / TRANSFERENCIA BANCARIA) */}
       <AnimatePresence>
-        {isReservedModalOpen && (
+        {isReservedModalOpen && manualOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-zinc-950/85 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -444,27 +468,55 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
                 <div>
                   <span className="inline-block rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffd90f] mb-2">
-                    Solicitud de pago manual
+                    Pedido pendiente de pago
                   </span>
-                  <h3 className="text-2xl font-black text-white">Sin reserva de inventario</h3>
+                  <h3 className="text-2xl font-black text-white">Pedido registrado</h3>
                   <p className="mt-1 text-xs text-zinc-400">
-                    No se ha creado un pedido ni apartado de inventario para <strong className="text-white">{game.name}</strong>
+                    El backend confirmó el pedido #{manualOrder.pedidoId} para <strong className="text-white">{game.name}</strong>.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 text-left text-xs space-y-2.5">
                   <div className="flex justify-between items-center text-zinc-300">
                     <span>Tipo de Cuenta:</span>
-                    <strong className="font-bold text-white">{selectedOption.label}</strong>
+                    <strong className="font-bold text-white">{selectedLabel}</strong>
                   </div>
                   <div className="flex justify-between items-center text-zinc-300">
                     <span>Método de Pago:</span>
-                    <strong className="font-bold text-[#ffd90f]">{paymentMethodLabels[paymentMethod]}</strong>
+                    <strong className="font-bold text-[#ffd90f]">{paymentMethodLabels[manualOrder.method]}</strong>
                   </div>
                   <div className="flex justify-between items-center text-zinc-300 pt-2 border-t border-zinc-800">
                     <span>Monto Total:</span>
-                    <strong className="text-sm font-black text-white">${formattedPrice} MXN</strong>
+                    <strong className="text-sm font-black text-white">${manualOrder.total} MXN</strong>
                   </div>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 text-left text-xs space-y-3">
+                  <div className="flex justify-between border-b border-zinc-800 pb-2">
+                    <span className="text-zinc-400">Banco:</span>
+                    <strong className="text-white">Instrucciones por WhatsApp</strong>
+                  </div>
+                  {manualOrder.method === "oxxo" ? (
+                    <div className="space-y-1">
+                      <span className="block text-zinc-400">Número de cuenta:</span>
+                      <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-2.5">
+                        <span className="text-zinc-300">Se enviarÃ¡ despuÃ©s de validar el pedido.</span>
+                        <button type="button" onClick={() => handleCopy(manualOrder.pedidoId)} className="flex items-center gap-1 text-zinc-400 hover:text-white">
+                          <Copy className="h-3.5 w-3.5" /> {copiedText === manualOrder.pedidoId ? "¡Copiado!" : "Copiar"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <span className="block text-zinc-400">Referencia de pago:</span>
+                      <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-2.5">
+                        <span className="text-zinc-300">Se enviarÃ¡ despuÃ©s de validar el pedido.</span>
+                        <button type="button" onClick={() => handleCopy(manualOrder.pedidoId)} className="flex items-center gap-1 text-zinc-400 hover:text-white">
+                          <Copy className="h-3.5 w-3.5" /> {copiedText === manualOrder.pedidoId ? "¡Copiado!" : "Copiar"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-left text-xs space-y-2">
@@ -472,7 +524,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   <ul className="space-y-1.5 text-zinc-300">
                     <li className="flex items-start gap-2">
                       <span className="text-[#ffd90f] font-bold">1.</span>
-                      <span>Confirma disponibilidad e instrucciones antes de pagar mediante {paymentMethodLabels[paymentMethod]}.</span>
+                      <span>Paga el monto exacto indicando el pedido #{manualOrder.pedidoId}.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-[#ffd90f] font-bold">2.</span>
@@ -480,7 +532,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-[#ffd90f] font-bold">3.</span>
-                      <span>Confirma disponibilidad e instrucciones por WhatsApp. El comprobante no crea una reserva.</span>
+                      <span>Envía el comprobante por WhatsApp para su validación.</span>
                     </li>
                   </ul>
                 </div>
@@ -528,7 +580,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   </span>
                   <h3 className="text-2xl font-black text-white">Pago Exitoso con PayPal</h3>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Tu compra para <strong className="text-white">{game.name}</strong> ({selectedOption.label}) ha quedado registrada. La entrega está pendiente.
+                    Tu compra para <strong className="text-white">{game.name}</strong> ({selectedLabel}) ha quedado registrada. La entrega está pendiente.
                   </p>
                 </div>
 
@@ -567,4 +619,3 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     </main>
   );
 }
-

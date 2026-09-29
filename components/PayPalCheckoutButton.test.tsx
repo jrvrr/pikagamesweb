@@ -14,11 +14,12 @@ vi.mock("@paypal/react-paypal-js", () => ({
 const api = vi.mocked(apiFetch);
 const confirmation = { confirmed: true, status: "COMPLETED", pagoEstado: "aprobado", pedidoId: "7",
   paypalOrderId: "ORDER1", captureId: "CAPTURE1", total: "650.00", currency: "MXN" };
+const pedido = { id: "7", estado: "pendiente_pago", metodo_pago: "paypal" };
 const create = () => callbacks.createOrder!({} as never, {} as never);
 const approve = () => callbacks.onApprove!({ orderID: "ORDER1" } as never, {} as never);
 const render = () => {
   const onSuccess = vi.fn(); const onError = vi.fn();
-  renderToString(<Button game={{ rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" }} userId="user1" onSuccess={onSuccess} onError={onError} />);
+  renderToString(<Button productId="15" userId="user1" onSuccess={onSuccess} onError={onError} />);
   return { onSuccess, onError };
 };
 
@@ -27,22 +28,27 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "sandbox");
   api.mockReset();
   vi.stubGlobal("sessionStorage", { setItem: vi.fn(), getItem: vi.fn() });
+  vi.stubGlobal("crypto", { randomUUID: () => "11111111-1111-4111-8111-111111111111" });
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 it("acepta modo Live y bloquea PayPal sin client ID", () => {
   vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENV", "live");
-  expect(renderToString(<Button game={{ rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" }} userId="user1" onSuccess={() => {}} />)).not.toContain("PayPal no");
+  expect(renderToString(<Button productId="15" userId="user1" onSuccess={() => {}} />)).not.toContain("PayPal no");
   vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "");
-  expect(renderToString(<Button game={{ rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" }} userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
+  expect(renderToString(<Button productId="15" userId="user1" onSuccess={() => {}} />)).toContain("PayPal no");
 });
 
 it("crea pedido antes de orden backend, sin precios ni compra SDK", async () => {
   const { onSuccess } = render();
-  api.mockResolvedValueOnce({ id: "7", estado: "pendiente_pago" }).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
+  api.mockResolvedValueOnce(pedido).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
   expect(await create()).toBe("ORDER1");
   expect(api.mock.calls).toEqual([
-    ["/pedidos", { method: "POST", body: JSON.stringify({ juego: { rawg_id: 3328, titulo: "The Witcher 3", tipo_cuenta: "principal" } }) }],
+    ["/pedidos", { method: "POST", body: JSON.stringify({
+      request_id: "11111111-1111-4111-8111-111111111111",
+      metodo_pago: "paypal",
+      productos: [{ producto_id: "15", cantidad: 1 }],
+    }) }],
     ["/paypal/crear-orden", { method: "POST", body: JSON.stringify({ pedidoId: "7" }) }],
   ]);
   expect(onSuccess).not.toHaveBeenCalled();
@@ -50,7 +56,7 @@ it("crea pedido antes de orden backend, sin precios ni compra SDK", async () => 
 
 it("no muestra éxito hasta recibir confirmación válida del backend", async () => {
   const { onSuccess } = render();
-  api.mockResolvedValueOnce({ id: "7", estado: "pendiente_pago" }).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
+  api.mockResolvedValueOnce(pedido).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
   await create();
   let resolve!: (value: unknown) => void;
   api.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
@@ -66,14 +72,14 @@ it.each([
   { ...confirmation, captureId: "" }, { ...confirmation, pagoEstado: "pendiente" },
 ])("rechaza confirmación incompleta o ajena: %j", async (response) => {
   const { onSuccess, onError } = render();
-  api.mockResolvedValueOnce({ id: "7", estado: "pendiente_pago" }).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
+  api.mockResolvedValueOnce(pedido).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
   await create(); api.mockResolvedValueOnce(response); await approve();
   expect(onSuccess).not.toHaveBeenCalled(); expect(onError).toHaveBeenCalledOnce();
 });
 
 it("fallo backend tras aprobación no muestra éxito y reintenta el mismo pedido", async () => {
   const { onSuccess } = render();
-  api.mockResolvedValueOnce({ id: "7", estado: "pendiente_pago" }).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
+  api.mockResolvedValueOnce(pedido).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
   await create(); api.mockRejectedValueOnce(new Error("503")); await approve();
   expect(onSuccess).not.toHaveBeenCalled();
   api.mockResolvedValueOnce(confirmation); await approve();
@@ -83,7 +89,7 @@ it("fallo backend tras aprobación no muestra éxito y reintenta el mismo pedido
 
 it("doble creación concurrente comparte pedido y reintento reutiliza referencia", async () => {
   render();
-  api.mockResolvedValueOnce({ id: "7", estado: "pendiente_pago" }).mockRejectedValueOnce(new Error("503"));
+  api.mockResolvedValueOnce(pedido).mockRejectedValueOnce(new Error("503"));
   await Promise.allSettled([create(), create()]);
   api.mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
   expect(await create()).toBe("ORDER1");
