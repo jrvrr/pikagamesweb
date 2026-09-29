@@ -37,7 +37,6 @@ type BackendProduct = {
   id: string;
   tipo_cuenta: AccountType;
   precio: string;
-  stock: number;
   disponible: boolean;
 };
 
@@ -247,9 +246,9 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
             <section aria-labelledby="availability-title" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
               <div>
                 <h3 id="availability-title" className="text-sm font-bold text-white">Precio y disponibilidad</h3>
-                <p className="mt-1 text-xs text-zinc-400">{catalogError ? "No se pudo verificar el inventario" : `${availableProducts.length} de ${products.length} modalidades disponibles`}</p>
+                <p className="mt-1 text-xs text-zinc-400">{catalogError ? "Disponibilidad por verificar" : availableProducts.length ? "En existencia" : "Disponibilidad por consultar"}</p>
               </div>
-              <p className="text-lg font-black tabular-nums text-[#ffd90f]">{catalogError ? "Por verificar" : startingPrice ? `Desde $${startingPrice} MXN` : "No disponible"}</p>
+              {startingPrice && <p className="text-lg font-black tabular-nums text-[#ffd90f]">Desde ${startingPrice} MXN</p>}
             </section>
 
             <section aria-labelledby="account-types-title" className="mt-5 space-y-2.5">
@@ -274,9 +273,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                         <span className="font-black text-sm text-white">{accountLabels[type]}</span>
                         {isSelected && <Check className="h-4 w-4 text-[#ffd90f] stroke-[3]" />}
                       </div>
-                      <span className="text-sm font-black text-[#ffd90f]">
-                        {product?.disponible ? `$${Number(product.precio).toLocaleString("es-MX")} MXN` : "No disponible"}
-                      </span>
+                      {product?.disponible && <span className="text-sm font-black text-[#ffd90f]">${Number(product.precio).toLocaleString("es-MX")} MXN</span>}
                     </button>
                   );
                 })}
@@ -354,10 +351,6 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     <span className="text-xs font-bold text-zinc-400">PayPal / Tarjeta</span>
                     <span className="text-[10px] font-black uppercase text-[#ffd90f]">Pago único</span>
                   </div>
-
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    PayPal {process.env.NEXT_PUBLIC_PAYPAL_ENV === "sandbox" ? "Sandbox" : "Live"}: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
-                  </p>
 
                   {/* Botones oficiales de PayPal SDK */}
                   <div className="pt-1">
