@@ -211,7 +211,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
           <ArrowLeft className="h-4 w-4" /> Volver al catálogo
         </Link>
 
-        <div className="flex flex-col gap-6">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
           <section aria-labelledby="product-title" className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/90 shadow-2xl">
             <div className="relative aspect-video w-full overflow-hidden bg-zinc-800">
               {game.background_image ? (
@@ -236,7 +236,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
             </div>
           </section>
 
-          <aside aria-labelledby="purchase-title" className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-5 shadow-[0_10px_35px_rgba(255,217,15,0.08)] sm:p-7">
+          <aside aria-labelledby="purchase-title" className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-5 shadow-[0_10px_35px_rgba(255,217,15,0.08)] sm:p-7 lg:sticky lg:top-24">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd90f]">Proceso de Pago</span>
@@ -283,13 +283,13 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               </div>
             </section>
 
-            <section aria-labelledby="account-help-title" className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
-              <h3 id="account-help-title" className="text-sm font-bold text-white">Sobre las modalidades</h3>
+            <details className="mt-3 rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <summary className="cursor-pointer text-sm font-bold text-zinc-200 focus-visible:outline-2 focus-visible:outline-[#ffd90f]">Diferencias entre modalidades</summary>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Principal:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los perfiles compatibles y requisitos para tu consola.</div>
-                <div className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Secundaria:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los requisitos de acceso y conexión para tu consola.</div>
+                <p className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Principal:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los perfiles compatibles y requisitos para tu consola.</p>
+                <p className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Secundaria:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los requisitos de acceso y conexión para tu consola.</p>
               </div>
-            </section>
+            </details>
 
             {/* 2. SELECCIÓN DE MÉTODO DE PAGO */}
             <div className="mt-6 space-y-3">
@@ -441,7 +441,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
             </div>
           </aside>
 
-          <section aria-labelledby="purchase-details-title" className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-7">
+          <section aria-labelledby="purchase-details-title" className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-7 lg:col-span-2">
             <h2 id="purchase-details-title" className="text-lg font-black text-white">Antes de comprar</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div><h3 className="text-sm font-bold text-[#ffd90f]">Entrega</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">Producto digital. La entrega se coordina después de confirmar el pago.</p></div>
@@ -451,10 +451,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
             </div>
           </section>
 
-          <section aria-labelledby="description-title" className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-7">
-            <h2 id="description-title" className="text-lg font-black text-white">Descripción del juego</h2>
+          <details className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-7 lg:col-span-2">
+            <summary className="cursor-pointer text-lg font-black text-white focus-visible:outline-2 focus-visible:outline-[#ffd90f]">Descripción completa del juego</summary>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-300">{game.description_raw || `Conoce ${game.name}, disponible para Nintendo Switch.`}</p>
-          </section>
+          </details>
         </div>
       </div>
 

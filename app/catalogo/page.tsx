@@ -99,6 +99,14 @@ const switch2Games: Game[] = [
   }
 ];
 
+const popularSearches = [
+  { query: "Luigi's Mansion 3", matches: (name: string) => name.includes("luigi") && name.includes("mansion") },
+  { query: "Mario Kart 8 Deluxe", matches: (name: string) => name.includes("mario kart") },
+  { query: "Pokémon Scarlet", matches: (name: string) => name.includes("pokemon") && name.includes("scarlet") },
+  { query: "Pokémon Legends Arceus", matches: (name: string) => name.includes("pokemon") && name.includes("arceus") },
+  { query: "Super Smash Bros Ultimate", matches: (name: string) => name.includes("smash") && name.includes("ultimate") },
+];
+
 function CatalogoContent() {
   const router = useRouter();
   const [consoleTab, setConsoleTab] = useState<'all' | 'switch1' | 'switch2'>('all');
@@ -140,7 +148,24 @@ function CatalogoContent() {
       } else if (genreFilter === 'estrenos') {
         fetched = await getNewReleases(pageNum, 12, { throwOnError: true });
       } else {
-        fetched = await getPopularGames(pageNum, 12, { throwOnError: true });
+        const [popular, ...franchiseResults] = await Promise.all([
+          getPopularGames(pageNum, 12, { throwOnError: true }),
+          ...(pageNum === 1 ? popularSearches.map(({ query }) => searchGames(query, 1, 4)) : []),
+        ]);
+        if (pageNum === 1) {
+          const featured = franchiseResults.map((matches, index) => {
+            const matcher = popularSearches[index].matches;
+            return matches.find((game) => matcher(game.name.toLowerCase())) ?? matches[0];
+          }).filter((game): game is Game => Boolean(game));
+          const seen = new Set<number>();
+          fetched = [...featured, ...popular].filter((game) => {
+            if (seen.has(game.id)) return false;
+            seen.add(game.id);
+            return true;
+          }).slice(0, 12);
+        } else {
+          fetched = popular;
+        }
       }
 
       if (pageNum === 1) setGames(fetched);
@@ -192,9 +217,6 @@ function CatalogoContent() {
         : switch2Games;
     }
     if (consoleTab === 'switch1') return games;
-    if (page === 1 && !searchQuery.trim() && genreFilter === 'todos') {
-      return [...switch2Games.slice(0, 2), ...games];
-    }
     return games;
   })();
 
@@ -311,16 +333,18 @@ function CatalogoContent() {
           <div className="relative min-w-70 lg:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ffd90f]" />
             <input 
+              aria-label="Filtrar catálogo por título"
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filtrar por nombre..." 
-              className="w-full pl-10 pr-10 py-2.5 bg-zinc-900 border-2 border-zinc-800 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] transition-all text-white placeholder-zinc-500"
+              className="catalog-search w-full pl-10 pr-12 py-2.5 bg-zinc-900 border-2 border-zinc-800 rounded-full text-sm font-medium text-white focus-visible:border-[#ffd90f] focus-visible:outline-none"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                type="button"
+                aria-label="Limpiar filtro"
+                className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center text-zinc-400 hover:text-white focus-visible:outline-2 focus-visible:outline-[#ffd90f]"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

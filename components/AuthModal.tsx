@@ -101,7 +101,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             initialFocus={emailRef}
             className="relative z-10 flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-zinc-800 p-6">
+            <div className="flex items-center justify-between border-b border-zinc-800 p-4">
               <Dialog.Title className="text-2xl font-black tracking-tight text-white">
                 {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
               </Dialog.Title>
@@ -126,14 +126,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       <label htmlFor="auth-first-name" className="mb-2 block text-xs font-bold uppercase tracking-widest text-zinc-400">Nombre</label>
                       <div className="relative">
                         <User aria-hidden="true" className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-                        <input id="auth-first-name" type="text" required autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white focus:border-[#ffd90f] focus:outline-none focus:ring-1 focus:ring-[#ffd90f]" />
+                        <input id="auth-first-name" type="text" required autoComplete="given-name" placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus-visible:border-[#ffd90f] focus-visible:outline-none" />
                       </div>
                     </div>
                     <div>
                       <label htmlFor="auth-last-name" className="mb-2 block text-xs font-bold uppercase tracking-widest text-zinc-400">Apellidos</label>
                       <div className="relative">
                         <User aria-hidden="true" className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-                        <input id="auth-last-name" type="text" required autoComplete="family-name" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white focus:border-[#ffd90f] focus:outline-none focus:ring-1 focus:ring-[#ffd90f]" />
+                        <input id="auth-last-name" type="text" required autoComplete="family-name" placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus-visible:border-[#ffd90f] focus-visible:outline-none" />
                       </div>
                     </div>
                   </div>
@@ -143,7 +143,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <label htmlFor="auth-email" className="mb-2 block text-xs font-bold uppercase tracking-widest text-zinc-400">Correo electrónico</label>
                   <div className="relative">
                     <Mail aria-hidden="true" className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-                    <input ref={emailRef} id="auth-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white focus:border-[#ffd90f] focus:outline-none focus:ring-1 focus:ring-[#ffd90f]" />
+                    <input ref={emailRef} id="auth-email" type="email" required autoComplete="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus-visible:border-[#ffd90f] focus-visible:outline-none" />
                   </div>
                 </div>
 
@@ -151,7 +151,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <label htmlFor="auth-password" className="mb-2 block text-xs font-bold uppercase tracking-widest text-zinc-400">Contraseña</label>
                   <div className="relative">
                     <Lock aria-hidden="true" className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-                    <input id="auth-password" type={showPassword ? "text" : "password"} required autoComplete={isLogin ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-10 text-sm text-white focus:border-[#ffd90f] focus:outline-none focus:ring-1 focus:ring-[#ffd90f] [&:-webkit-autofill]:bg-zinc-900 [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#18181b_inset]" />
+                    <input id="auth-password" type={showPassword ? "text" : "password"} required autoComplete={isLogin ? "current-password" : "new-password"} placeholder="******" value={password} onChange={(e) => setPassword(e.target.value)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-10 text-sm text-white placeholder:text-zinc-500 focus-visible:border-[#ffd90f] focus-visible:outline-none [&:-webkit-autofill]:bg-zinc-900 [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#18181b_inset]" />
                     <button type="button" aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-white transition-colors hover:text-[#ffd90f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]">
                       {showPassword ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
                     </button>

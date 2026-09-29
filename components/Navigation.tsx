@@ -134,8 +134,8 @@ export function Navigation() {
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar juegos..." 
-                  className="pl-11 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] w-32 md:focus:w-64 transition-all text-white placeholder-zinc-500"
+                  placeholder="Buscar juegos"
+                  className="pl-11 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium w-32 text-white placeholder-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]"
                 />
               </form>
             </div>
@@ -251,7 +251,7 @@ export function Navigation() {
               value={mobileSearchQuery}
               onChange={(e) => setMobileSearchQuery(e.target.value)}
               placeholder="Buscar juegos..." 
-              className="w-full h-full bg-transparent border-none text-white pl-3 pr-2 focus:outline-none focus:ring-0 text-sm font-medium placeholder-zinc-500"
+              className="w-full h-full bg-transparent border-none text-white pl-3 pr-2 text-sm font-medium placeholder-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#ffd90f]"
               autoFocus
             />
             <button 
