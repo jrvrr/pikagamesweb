@@ -40,6 +40,15 @@ export function Navigation() {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMenuOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isMenuOpen]);
+
   const handleTabClick = (tab: string, path?: string) => {
     setIsMenuOpen(false);
     if (path) {
@@ -84,7 +93,7 @@ export function Navigation() {
         </div>
       )}
       {/* Top Navbar (Dark Theme) - Hidden on mobile */}
-      <div className="fixed top-0 left-0 w-full z-50 bg-[#18181b] border-b border-zinc-800 hidden md:block transition-all">
+      <div className="fixed top-0 left-0 w-full z-50 bg-[#18181b] border-b border-zinc-800 hidden lg:block transition-all">
         <header className="w-full flex items-stretch h-16">
           {/* Logo Area */}
           <Link href="/" className="bg-[#ffd90f] px-6 flex items-center justify-center gap-2 hover:bg-[#f5cf07] transition-colors">
@@ -95,7 +104,7 @@ export function Navigation() {
           <nav className="flex items-center h-full ml-4 space-x-2 font-bold text-sm tracking-wide text-zinc-300">
             {/* Explorar Dropdown */}
             <div className="relative h-full flex items-center">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`flex items-center gap-2 px-4 h-full transition-colors border-b-4 ${isMenuOpen ? "text-[#ffd90f] border-[#ffd90f]" : "text-[#ffd90f] hover:bg-zinc-800 border-transparent hover:border-[#ffd90f]"}`}>
+              <button type="button" aria-expanded={isMenuOpen} aria-controls="navigation-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} className={`flex items-center gap-2 px-4 h-full transition-colors border-b-4 focus-visible:outline-2 focus-visible:outline-[#ffd90f] ${isMenuOpen ? "text-[#ffd90f] border-[#ffd90f]" : "text-[#ffd90f] hover:bg-zinc-800 border-transparent hover:border-[#ffd90f]"}`}>
                 <Compass className="w-5 h-5" />
                 Explorar
                 <ChevronDown className={`w-4 h-4 opacity-50 transition-transform ${isMenuOpen ? "rotate-180" : ""}`} />
@@ -117,7 +126,7 @@ export function Navigation() {
           <div className="flex items-center h-full mr-4 space-x-2 font-bold text-sm text-zinc-300">
             <div className="flex items-center px-4 h-full">
               <form onSubmit={handleDesktopSearch} className="relative flex items-center">
-                <button type="submit" aria-label="Buscar juegos" className="absolute left-3 text-zinc-500 hover:text-[#ffd90f] transition-colors" title="Buscar">
+            <button type="submit" aria-label="Buscar juegos" className="absolute left-1 size-11 flex items-center justify-center text-zinc-500 hover:text-[#ffd90f] transition-colors" title="Buscar">
                   <Search className="w-4 h-4" />
                 </button>
                 <input 
@@ -126,7 +135,7 @@ export function Navigation() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar juegos..." 
-                  className="pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] w-32 md:focus:w-64 transition-all text-white placeholder-zinc-500" 
+                  className="pl-11 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-full text-sm font-medium focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] w-32 md:focus:w-64 transition-all text-white placeholder-zinc-500"
                 />
               </form>
             </div>
@@ -162,10 +171,10 @@ export function Navigation() {
       </div>
 
       {/* Backdrop Overlay */}
-      <button type="button" aria-label="Cerrar menú de navegación" onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 md:top-16 z-50 border-0 bg-black/70 p-0 backdrop-blur-sm transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "pointer-events-none opacity-0 invisible"}`} />
+      <button type="button" tabIndex={-1} aria-label="Cerrar menú de navegación" onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 lg:top-16 z-50 border-0 bg-black/70 p-0 backdrop-blur-sm transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "pointer-events-none opacity-0 invisible"}`} />
 
       {/* Mega Menu (Dropdown) */}
-      <div className={`fixed top-14 md:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-60 cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] md:max-h-[calc(100vh-4rem)] pb-28 md:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
+      <div id="navigation-menu" className={`fixed top-14 lg:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-60 cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] lg:max-h-[calc(100vh-4rem)] pb-28 lg:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
         <div className="max-w-6xl mx-auto w-full py-5 md:py-12 px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-5 md:gap-8 relative z-50">
           
           {/* Left Main Content */}
@@ -226,14 +235,14 @@ export function Navigation() {
       </div>
 
       {/* Mobile Top Bar (Minimal - no logo) */}
-      <div className="fixed top-0 left-0 w-full z-45 bg-[#18181b] border-b border-zinc-800 h-14 md:hidden shadow-md" />
+      <div aria-hidden="true" className="fixed top-0 left-0 w-full z-45 bg-[#18181b] border-b border-zinc-800 h-14 lg:hidden shadow-md" />
 
       {/* Mobile Bottom Tab Bar (Floating Pill) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-100 z-70 bg-[#18181b] rounded-full h-16 md:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">
+      <nav aria-label="Navegación móvil" className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] mx-auto w-auto max-w-100 z-70 bg-[#18181b] rounded-full h-16 lg:hidden flex justify-around items-center text-zinc-400 shadow-2xl border border-zinc-800 px-2 transition-all duration-300">
         
         {isMobileSearchOpen ? (
-          <form onSubmit={handleMobileSearch} className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">
-            <button type="submit" aria-label="Buscar juegos" className="shrink-0 ml-2" title="Buscar">
+          <form id="mobile-search" onSubmit={handleMobileSearch} className="w-full flex items-center h-full px-2 animate-in fade-in zoom-in duration-200">
+            <button type="submit" aria-label="Buscar juegos" className="size-11 shrink-0 ml-2 flex items-center justify-center" title="Buscar">
               <Search className="w-5 h-5 text-[#ffd90f]" />
             </button>
             <input 
@@ -249,29 +258,29 @@ export function Navigation() {
               type="button"
               aria-label="Cerrar búsqueda"
               onClick={() => setIsMobileSearchOpen(false)}
-              className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 ml-1"
+              className="size-11 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shrink-0 ml-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]"
             >
               <X className="w-4 h-4" />
             </button>
           </form>
         ) : (
           <div className="flex justify-around items-center w-full h-full animate-in fade-in zoom-in duration-200">
-            <button type="button" aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={isMenuOpen} onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={isMenuOpen} aria-controls="navigation-menu" onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="flex items-center justify-center w-full h-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#ffd90f]">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Menu className="w-6 h-6" />
               </div>
             </button>
-            <button type="button" aria-label="Ver guardados" onClick={() => handleTabClick("guardados", "/guardados")} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label="Ver guardados" aria-current={activeTab === "guardados" ? "page" : undefined} onClick={() => handleTabClick("guardados", "/guardados")} className="flex items-center justify-center w-full h-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#ffd90f]">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "guardados" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Heart className="w-6 h-6" />
               </div>
             </button>
-            <button type="button" aria-label="Buscar juegos" aria-expanded={isMobileSearchOpen} onClick={() => setIsMobileSearchOpen(true)} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label="Buscar juegos" aria-expanded={isMobileSearchOpen} aria-controls="mobile-search" onClick={() => setIsMobileSearchOpen(true)} className="flex items-center justify-center w-full h-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#ffd90f]">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${isMobileSearchOpen && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Search className="w-6 h-6" />
               </div>
             </button>
-            <button type="button" aria-label="Ir al inicio" onClick={() => handleTabClick("inicio", "/")} className="flex items-center justify-center w-full h-full">
+            <button type="button" aria-label="Ir al inicio" aria-current={activeTab === "inicio" ? "page" : undefined} onClick={() => handleTabClick("inicio", "/")} className="flex items-center justify-center w-full h-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#ffd90f]">
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "inicio" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <Gamepad2 className="w-6 h-6" />
               </div>
@@ -288,7 +297,8 @@ export function Navigation() {
                 }
               }} 
               aria-label={user ? "Abrir mi perfil" : token && sessionError ? "Reintentar sesión" : "Iniciar sesión"}
-              className="flex items-center justify-center w-full h-full"
+              aria-current={activeTab === "perfil" ? "page" : undefined}
+              className="flex items-center justify-center w-full h-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#ffd90f]"
             >
               <div className={`flex items-center justify-center transition-all duration-300 rounded-full ${activeTab === "perfil" && !isMenuOpen ? "bg-[#ffd90f] text-[#18181b] w-12 h-12 shadow-lg" : "text-zinc-400 hover:text-[#ffd90f] hover:bg-zinc-800 w-10 h-10"}`}>
                 <User className="w-6 h-6" />
@@ -296,7 +306,7 @@ export function Navigation() {
             </button>
           </div>
         )}
-      </div>
+      </nav>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>

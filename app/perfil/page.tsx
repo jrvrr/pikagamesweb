@@ -11,6 +11,8 @@ export default function PerfilPage() {
 
   const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   const [userInfo, setUserInfo] = useState({
     nombre: "",
@@ -42,6 +44,7 @@ export default function PerfilPage() {
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setInfoMessage("");
     setIsSavingInfo(true);
     
     try {
@@ -61,12 +64,12 @@ export default function PerfilPage() {
       const data = await response.json();
       if (response.ok) {
         updateUser(data.usuario);
-        alert("Información personal actualizada con éxito.");
+        setInfoMessage("Información personal actualizada con éxito.");
       } else {
-        alert(data.message || "Error al actualizar la información.");
+        setInfoMessage(data.message || "Error al actualizar la información.");
       }
     } catch {
-      alert("Error de conexión con el servidor.");
+      setInfoMessage("Error de conexión con el servidor.");
     }
 
     setIsSavingInfo(false);
@@ -74,8 +77,9 @@ export default function PerfilPage() {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordMessage("");
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert("Las nuevas contraseñas no coinciden.");
+      setPasswordMessage("Las nuevas contraseñas no coinciden.");
       return;
     }
     setIsSavingPassword(true);
@@ -95,13 +99,13 @@ export default function PerfilPage() {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Contraseña actualizada con éxito.");
+        setPasswordMessage("Contraseña actualizada con éxito.");
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       } else {
-        alert(data.message || "Error al actualizar la contraseña.");
+        setPasswordMessage(data.message || "Error al actualizar la contraseña.");
       }
     } catch {
-      alert("Error de conexión con el servidor.");
+      setPasswordMessage("Error de conexión con el servidor.");
     }
     
     setIsSavingPassword(false);
@@ -116,7 +120,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#111311] text-zinc-300 font-sans pt-20 md:pt-24 pb-32">
+    <main id="main-content" className="min-h-screen bg-[#111311] text-zinc-300 font-sans pt-20 md:pt-24 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-12">
       <div className="max-w-6xl mx-auto px-6">
         
         {/* Back to home button for easy mobile navigation */}
@@ -167,11 +171,11 @@ export default function PerfilPage() {
               <form onSubmit={handleInfoSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre</label>
+                    <label htmlFor="profile-first-name" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
                       <input 
-                        type="text" 
+                        id="profile-first-name" type="text"
                         value={userInfo.nombre}
                         onChange={(e) => setUserInfo({...userInfo, nombre: e.target.value})}
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
@@ -180,11 +184,11 @@ export default function PerfilPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Apellidos</label>
+                    <label htmlFor="profile-last-name" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Apellidos</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
                       <input 
-                        type="text" 
+                        id="profile-last-name" type="text"
                         value={userInfo.apellidos}
                         onChange={(e) => setUserInfo({...userInfo, apellidos: e.target.value})}
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
@@ -195,11 +199,11 @@ export default function PerfilPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Correo Electrónico</label>
+                  <label htmlFor="profile-email" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Correo Electrónico</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
                     <input 
-                      type="email" 
+                      id="profile-email" type="email"
                       value={userInfo.email}
                       onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
                       className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
@@ -208,6 +212,7 @@ export default function PerfilPage() {
                   </div>
                 </div>
 
+                {infoMessage && <p role="status" aria-live="polite" className="text-sm text-zinc-200">{infoMessage}</p>}
                 <div className="pt-2 flex justify-end">
                   <button 
                     type="submit" 
@@ -233,9 +238,9 @@ export default function PerfilPage() {
               
               <form onSubmit={handlePasswordSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Contraseña Actual</label>
+                  <label htmlFor="current-password" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Contraseña Actual</label>
                   <input 
-                    type="password" 
+                    id="current-password" type="password"
                     autoComplete="current-password"
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
@@ -247,9 +252,9 @@ export default function PerfilPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nueva Contraseña</label>
+                    <label htmlFor="new-password" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nueva Contraseña</label>
                     <input 
-                      type="password" 
+                      id="new-password" type="password"
                       autoComplete="new-password"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
@@ -259,9 +264,9 @@ export default function PerfilPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Confirmar Nueva Contraseña</label>
+                    <label htmlFor="confirm-password" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Confirmar Nueva Contraseña</label>
                     <input 
-                      type="password" 
+                      id="confirm-password" type="password" aria-invalid={passwordMessage.includes("no coinciden")} aria-describedby={passwordMessage ? "password-feedback" : undefined}
                       autoComplete="new-password"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
@@ -272,6 +277,7 @@ export default function PerfilPage() {
                   </div>
                 </div>
 
+                {passwordMessage && <p id="password-feedback" role={passwordMessage.includes("no coinciden") ? "alert" : "status"} className="text-sm text-zinc-200">{passwordMessage}</p>}
                 <div className="pt-2 flex justify-end">
                   <button 
                     type="submit" 
@@ -306,6 +312,6 @@ export default function PerfilPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

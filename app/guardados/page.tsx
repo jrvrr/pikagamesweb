@@ -20,6 +20,7 @@ import { ShapeGrid } from "@/components/ShapeGrid";
 import { useAuth, type SavedGame } from "@/lib/AuthContext";
 import { getGameDetails, type Game } from "@/lib/rawg";
 import { isDemoGameId } from "@/lib/demoGames";
+import { AccessibleDialog } from "@/components/AccessibleDialog";
 
 export default function GuardadosPage() {
   const { savedGames, toggleSaveGame, isFavoritesLoading, favoritesError, reloadFavorites } = useAuth();
@@ -61,7 +62,7 @@ export default function GuardadosPage() {
 
 
   return (
-    <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 pb-20 md:pb-12">
+    <main id="main-content" className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-12">
       {/* Background shape grid */}
       <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
         <ShapeGrid 
@@ -225,11 +226,12 @@ export default function GuardadosPage() {
 
       {/* GAME DETAIL MODAL */}
       {detailModal.isOpen && detailModal.game && (
-        <div className="fixed inset-0 flex items-center justify-center z-100 p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <AccessibleDialog open={detailModal.isOpen} title={detailModal.game.name} description={`Detalles del juego ${detailModal.game.name}`} onClose={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}>
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-800 p-2 rounded-full"
+              aria-label="Cerrar detalles del juego"
+              className="absolute top-4 right-4 size-11 text-zinc-400 hover:text-white bg-zinc-800 rounded-full flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
@@ -295,10 +297,10 @@ export default function GuardadosPage() {
               </div>
             )}
           </div>
-        </div>
+        </AccessibleDialog>
       )}
 
 
-    </div>
+    </main>
   );
 }
