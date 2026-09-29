@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
+import { AccessibleDialog } from "@/components/AccessibleDialog";
 
 const popularSearches = [
   "Mario", "Zelda", "Pokemon", "Smash Bros", "Animal Crossing", "Metroid", "Kirby", "Luigi", "Donkey Kong", "Fire Emblem"
@@ -163,7 +164,7 @@ function BuscarContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 md:pt-28 pb-24 md:pb-12">
+    <main id="main-content" className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 md:pt-28 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-12">
       {/* Background shape grid */}
       <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
         <ShapeGrid 
@@ -176,6 +177,7 @@ function BuscarContent() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 relative z-10 flex flex-col gap-8">
+        <h1 className="sr-only">Buscar videojuegos</h1>
         {/* Header / Search Input */}
         <div className="flex flex-col gap-6">
           <Link href="/" className="inline-flex items-center text-zinc-400 hover:text-[#ffd90f] transition-colors font-bold w-fit">
@@ -192,7 +194,6 @@ function BuscarContent() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="¿Qué videojuego estás buscando? (ej. Mario Kart, Zelda...)" 
               className="w-full pl-18 md:pl-20 pr-12 py-5 md:py-6 bg-zinc-900 border-2 border-zinc-800 rounded-3xl text-lg md:text-xl font-bold focus:outline-none focus:border-[#ffd90f] focus:ring-4 focus:ring-[#ffd90f]/20 transition-all text-white placeholder-zinc-500 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
-              autoFocus
             />
             {query && (
               <button 
@@ -264,7 +265,7 @@ function BuscarContent() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {results.map((game) => {
                   const saved = isGameSaved(game.id);
                   return (
@@ -390,11 +391,12 @@ function BuscarContent() {
 
       {/* GAME DETAIL MODAL */}
       {detailModal.isOpen && detailModal.game && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <AccessibleDialog open={detailModal.isOpen} title={detailModal.game.name} description={`Detalles del juego ${detailModal.game.name}`} onClose={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}>
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-800 p-2 rounded-full"
+              aria-label="Cerrar detalles del juego"
+              className="absolute top-4 right-4 size-11 text-zinc-400 hover:text-white bg-zinc-800 rounded-full flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
@@ -471,10 +473,10 @@ function BuscarContent() {
               </div>
             )}
           </div>
-        </div>
+        </AccessibleDialog>
       )}
 
-    </div>
+    </main>
   );
 }
 

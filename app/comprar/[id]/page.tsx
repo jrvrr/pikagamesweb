@@ -20,11 +20,12 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { getGameDetails, type Game } from "@/lib/rawg";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import PayPalCheckoutButton, { type PayPalConfirmation } from "@/components/PayPalCheckoutButton";
 import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
 import { apiFetch } from "@/lib/api";
+import { AccessibleDialog } from "@/components/AccessibleDialog";
 
 type AccountType = "principal" | "secundaria";
 type PaymentMethod = "paypal" | "oxxo" | "transferencia";
@@ -177,7 +178,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
+      <main id="main-content" className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 py-32 text-center">
           <Loader2 className="mb-4 h-12 w-12 animate-spin text-[#ffd90f]" />
           <p className="font-bold">Cargando detalles del juego...</p>
@@ -188,7 +189,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
   if (!game) {
     return (
-      <main className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
+      <main id="main-content" className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
         <div className="mx-auto max-w-xl px-6 py-24 text-center">
           <Gamepad2 className="mx-auto mb-5 h-14 w-14 text-[#ffd90f]" />
           <h1 className="text-2xl font-black">Juego no encontrado</h1>
@@ -202,7 +203,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <main className="min-h-screen bg-[#111311] pb-24 pt-24 text-zinc-100 md:pt-28">
+    <main id="main-content" className="min-h-screen bg-[#111311] pb-[calc(6rem+env(safe-area-inset-bottom))] pt-24 text-zinc-100 lg:pb-24 md:pt-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Link href="/catalogo" className="mb-6 inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-xs font-bold text-zinc-300 transition-colors hover:border-[#ffd90f] hover:text-[#ffd90f]">
           <ArrowLeft className="h-4 w-4" /> Volver al catálogo
@@ -444,9 +445,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* MODAL DE RESERVA DE BOLETO (PARA OXXO / TRANSFERENCIA BANCARIA) */}
-      <AnimatePresence>
-        {isReservedModalOpen && manualOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-zinc-950/85 backdrop-blur-md">
+      {manualOrder && (
+          <AccessibleDialog open={isReservedModalOpen} title="Pedido registrado" description={`Pedido ${manualOrder.pedidoId} pendiente de pago para ${game.name}`} onClose={() => setIsReservedModalOpen(false)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -456,7 +456,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               <button
                 type="button"
                 onClick={() => setIsReservedModalOpen(false)}
-                className="absolute top-5 right-5 p-2 text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
+                aria-label="Cerrar confirmación del pedido"
+                className="absolute top-5 right-5 size-11 flex items-center justify-center text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -547,14 +548,12 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 </button>
               </div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          </AccessibleDialog>
+      )}
 
       {/* MODAL DE CONFIRMACIÓN POST-PAGO PAYPAL */}
-      <AnimatePresence>
-        {isPaypalPaid && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-zinc-950/85 backdrop-blur-md">
+      {isPaypalPaid && (
+          <AccessibleDialog open={isPaypalPaid} title="Pago exitoso con PayPal" description={`Pago confirmado para ${game.name}`} onClose={() => setIsPaypalPaid(false)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -564,7 +563,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               <button
                 type="button"
                 onClick={() => setIsPaypalPaid(false)}
-                className="absolute top-5 right-5 p-2 text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
+                aria-label="Cerrar confirmación de PayPal"
+                className="absolute top-5 right-5 size-11 flex items-center justify-center text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -613,9 +613,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 </button>
               </div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          </AccessibleDialog>
+      )}
     </main>
   );
 }

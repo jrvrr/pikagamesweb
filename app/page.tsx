@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { AccessibleDialog } from "@/components/AccessibleDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import {
@@ -278,6 +279,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans">
+      <main id="main-content">
       {/* Hero Section */}
       <section className="relative w-full min-h-175 md:min-h-200 flex flex-col md:flex-row items-center justify-between px-6 md:px-12 pb-12 pt-32 md:pt-40 overflow-hidden border-b-4 border-zinc-900 bg-[#111311]">
         {/* Animated Background */}
@@ -753,6 +755,7 @@ export default function HomePage() {
       </section>
 
       {/* Main Footer */}
+      </main>
       <footer className="relative text-zinc-100 pt-24 pb-12 px-6 md:px-12 overflow-hidden border-t-8 border-white bg-zinc-900">
         
         {/* Background SVG (Diagonal Tiled) */}
@@ -852,19 +855,10 @@ export default function HomePage() {
       </footer>
 
       {/* Modal de Servicio al Cliente */}
-      <AnimatePresence>
-        {isCustomerServiceOpen && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/75 backdrop-blur-sm"
-              onClick={() => {
-                setIsCustomerServiceOpen(false);
-                setTimeout(() => setCustomerServiceView('selection'), 300);
-              }}
-            />
+      <AccessibleDialog open={isCustomerServiceOpen} title="Servicio al Cliente" description="Formulario de comentarios y contacto de soporte" onClose={() => {
+        setIsCustomerServiceOpen(false);
+        setTimeout(() => setCustomerServiceView('selection'), 300);
+      }}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -881,7 +875,8 @@ export default function HomePage() {
                     setIsCustomerServiceOpen(false);
                     setTimeout(() => setCustomerServiceView('selection'), 300);
                   }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  aria-label="Cerrar servicio al cliente"
+                  className="size-11 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
                 >
                   <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
@@ -935,28 +930,28 @@ export default function HomePage() {
                       </button>
                       <div className="space-y-5 w-full">
                         {commentError && (
-                          <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+                          <p id="comment-error" role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
                             {commentError}
                           </p>
                         )}
                         <div>
-                          <label className="block text-sm font-bold text-zinc-300 mb-2">Tu Nombre (Automático)</label>
-                          <input type="text" readOnly value={commentUserName || "Inicia sesión para comentar"} className="w-full bg-zinc-800 border-2 border-zinc-700 rounded-xl px-4 py-3 text-zinc-300 font-medium cursor-not-allowed outline-none" />
+                          <label htmlFor="comment-name" className="block text-sm font-bold text-zinc-300 mb-2">Tu Nombre (Automático)</label>
+                          <input id="comment-name" type="text" readOnly value={commentUserName || "Inicia sesión para comentar"} className="w-full bg-zinc-800 border-2 border-zinc-700 rounded-xl px-4 py-3 text-zinc-300 font-medium cursor-not-allowed outline-none" />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-zinc-300 mb-2">Calificación</label>
+                          <span id="comment-rating-label" className="block text-sm font-bold text-zinc-300 mb-2">Calificación</span>
                           <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <button key={star} type="button" onClick={() => { setRating(star); setCommentError(""); }} className="focus:outline-none hover:scale-110 transition-transform">
+                              <button key={star} type="button" aria-label={`${star} de 5 estrellas`} aria-pressed={rating === star} onClick={() => { setRating(star); setCommentError(""); }} className="size-11 flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ffd90f] hover:scale-110 transition-transform">
                                 <Star className={`w-8 h-8 ${rating >= star ? 'fill-[#ffd90f] text-[#ffd90f]' : 'text-zinc-600'} transition-colors`} strokeWidth={2} />
                               </button>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-zinc-300 mb-2">Comentario</label>
+                          <label htmlFor="comment-message" className="block text-sm font-bold text-zinc-300 mb-2">Comentario</label>
                           <textarea 
-                            rows={4} 
+                            id="comment-message" rows={4} aria-invalid={Boolean(commentError)} aria-describedby={commentError ? "comment-error" : undefined}
                             placeholder="¡Me encantó mi nuevo juego para Switch!" 
                             className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"
                             value={mensaje}
@@ -991,12 +986,12 @@ export default function HomePage() {
                       </button>
                       <div className="space-y-5 w-full">
                         <div>
-                          <label className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
-                          <input type="text" placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ff7a93] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
+                          <input id="support-subject" type="text" placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ff7a93] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
-                          <textarea rows={5} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ff7a93] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
+                          <label htmlFor="support-message" className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
+                          <textarea id="support-message" rows={5} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ff7a93] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
                         </div>
                         <Button className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-black text-lg py-6 rounded-xl">
                           Enviar Correo
@@ -1007,21 +1002,11 @@ export default function HomePage() {
                 </AnimatePresence>
               </div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      </AccessibleDialog>
 
       {/* Modal de Detalle del Videojuego ("Ver Videojuego") */}
-      <AnimatePresence>
-        {detailModal.isOpen && detailModal.game && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
-            />
+      {detailModal.isOpen && detailModal.game && (
+          <AccessibleDialog open={detailModal.isOpen} title={detailModal.game.name} description={`Detalles del juego ${detailModal.game.name}`} onClose={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1046,7 +1031,8 @@ export default function HomePage() {
                 {/* Close Button */}
                 <button 
                   onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-zinc-900/80 hover:bg-[#ffd90f] hover:text-zinc-900 text-white border-2 border-zinc-700 flex items-center justify-center transition-colors z-20"
+                  aria-label="Cerrar detalles del juego"
+                  className="absolute top-4 right-4 size-11 rounded-full bg-zinc-900/80 hover:bg-[#ffd90f] hover:text-zinc-900 text-white border-2 border-zinc-700 flex items-center justify-center transition-colors z-20"
                 >
                   <X className="w-5 h-5 font-bold" />
                 </button>
@@ -1149,9 +1135,8 @@ export default function HomePage() {
                 </div>
               </div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          </AccessibleDialog>
+      )}
 
 
     </div>

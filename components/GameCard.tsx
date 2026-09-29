@@ -59,7 +59,8 @@ export function GameCard({
         {onRemove ? (
           <button
             onClick={() => onRemove(game)}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-950/75 text-zinc-300 backdrop-blur-md transition-colors hover:border-red-400 hover:bg-red-500 hover:text-white"
+            className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-xl border border-white/10 bg-zinc-950/75 text-zinc-300 backdrop-blur-md transition-colors hover:border-red-400 hover:bg-red-500 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]"
+            aria-label={`Quitar ${game.name} de guardados`}
             title="Eliminar de guardados"
           >
             <Trash2 className="h-4 w-4" />
@@ -67,7 +68,8 @@ export function GameCard({
         ) : (
           <button
             onClick={() => onToggleSave(game)}
-            className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border backdrop-blur-md transition-colors ${saved ? "border-[#ffd90f] bg-[#ffd90f] text-zinc-950" : "border-white/10 bg-zinc-950/75 text-white hover:border-[#ffd90f] hover:bg-[#ffd90f] hover:text-zinc-950"}`}
+            className={`absolute right-3 top-3 flex size-11 items-center justify-center rounded-xl border backdrop-blur-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f] ${saved ? "border-[#ffd90f] bg-[#ffd90f] text-zinc-950" : "border-white/10 bg-zinc-950/75 text-white hover:border-[#ffd90f] hover:bg-[#ffd90f] hover:text-zinc-950"}`}
+            aria-label={saved ? `Quitar ${game.name} de guardados` : `Guardar ${game.name}`}
             title={saved ? "Quitar de guardados" : "Guardar en favoritos"}
           >
             <Heart className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
@@ -94,14 +96,14 @@ export function GameCard({
           <Button
             onClick={() => onView(game)}
             variant="outline"
-            className="min-w-0 w-full gap-1 border-zinc-700 bg-zinc-800 px-2 text-[10px] font-bold text-zinc-100 hover:border-[#ffd90f] hover:bg-zinc-700 sm:text-xs"
+            className="min-h-11 min-w-0 w-full gap-1 border-zinc-700 bg-zinc-800 px-2 text-xs font-bold text-zinc-100 hover:border-[#ffd90f] hover:bg-zinc-700"
           >
             <Eye className="h-3.5 w-3.5 shrink-0 text-[#ffd90f] sm:h-4 sm:w-4" />
             <span className="min-w-0 truncate">ver detalles</span>
           </Button>
           {!isDemo && <Button
             onClick={() => onBuy(game)}
-            className="min-w-0 w-full gap-1 border-0 bg-[#ffd90f] px-2 text-[10px] font-black text-zinc-950 hover:bg-[#ffe45c] sm:text-xs"
+            className="min-h-11 min-w-0 w-full gap-1 border-0 bg-[#ffd90f] px-2 text-xs font-black text-zinc-950 hover:bg-[#ffe45c]"
           >
             <ShoppingCart className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
             <span className="min-w-0 truncate">{buyLabel.toLowerCase()}</span>

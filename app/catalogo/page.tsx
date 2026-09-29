@@ -21,6 +21,7 @@ import {
 import { getPopularGames, getNewReleases, searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
+import { AccessibleDialog } from "@/components/AccessibleDialog";
 
 // Special curated Nintendo Switch 2 upcoming and enhanced titles
 const switch2Games: Game[] = [
@@ -198,7 +199,7 @@ function CatalogoContent() {
   })();
 
   return (
-    <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 md:pt-28 pb-24 md:pb-16">
+    <main id="main-content" className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 md:pt-28 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-16">
       {/* Background shape grid */}
       <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
         <ShapeGrid 
@@ -425,11 +426,12 @@ function CatalogoContent() {
 
       {/* GAME DETAIL MODAL */}
       {detailModal.isOpen && detailModal.game && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <AccessibleDialog open={detailModal.isOpen} title={detailModal.game.name} description={`Detalles del juego ${detailModal.game.name}`} onClose={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}>
           <div className="bg-zinc-900 border-2 border-zinc-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative">
             <button 
               onClick={() => setDetailModal({ isOpen: false, game: null, isLoading: false })}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-800 p-2 rounded-full"
+              aria-label="Cerrar detalles del juego"
+              className="absolute top-4 right-4 size-11 text-zinc-400 hover:text-white bg-zinc-800 rounded-full flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
@@ -511,10 +513,10 @@ function CatalogoContent() {
               </div>
             )}
           </div>
-        </div>
+        </AccessibleDialog>
       )}
 
-    </div>
+    </main>
   );
 }
 

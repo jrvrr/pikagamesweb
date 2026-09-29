@@ -35,6 +35,7 @@ export const metadata: Metadata = {
 };
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { MotionConfig } from "framer-motion";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,8 +47,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col bg-[#111311]" suppressHydrationWarning>
         <AuthProvider>
           <PayPalProviderWrapper>
-            <Navigation />
-            {children}
+            <MotionConfig reducedMotion="user">
+              <a href="#main-content" className="sr-only fixed left-4 top-4 z-[200] rounded bg-[#ffd90f] px-4 py-3 font-bold text-zinc-900 focus:not-sr-only">
+                Saltar al contenido principal
+              </a>
+              <Navigation />
+              {children}
+            </MotionConfig>
           </PayPalProviderWrapper>
         </AuthProvider>
         <SpeedInsights />

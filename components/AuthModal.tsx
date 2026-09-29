@@ -107,7 +107,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </Dialog.Title>
               <Dialog.Close
                 aria-label="Cerrar ventana de acceso"
-                className="rounded-md p-1 text-zinc-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]"
+                className="size-11 rounded-md flex items-center justify-center text-zinc-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]"
               >
                 <X aria-hidden="true" className="size-6" />
               </Dialog.Close>
