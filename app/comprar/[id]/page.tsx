@@ -8,7 +8,6 @@ import {
   Gamepad2, 
   Loader2, 
   Send, 
-  ShieldCheck, 
   Star, 
   Copy, 
   X, 
@@ -16,7 +15,6 @@ import {
   Landmark, 
   Clock, 
   AlertTriangle,
-  Sparkles,
   CheckCircle2
 } from "lucide-react";
 import { getGameDetails, type Game } from "@/lib/rawg";
@@ -121,6 +119,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }) : "—";
+  const availableProducts = products.filter((product) => product.disponible && Number.isFinite(Number(product.precio)));
+  const startingPrice = availableProducts.length
+    ? Math.min(...availableProducts.map((product) => Number(product.precio))).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : null;
 
   const paymentMethodLabels: Record<PaymentMethod, string> = {
     paypal: "PayPal / Tarjeta",
@@ -209,11 +211,8 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
           <ArrowLeft className="h-4 w-4" /> Volver al catálogo
         </Link>
 
-        {/* Layout Principal */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] items-start">
-
-          {/* COLUMNA IZQUIERDA: Tarjeta del juego */}
-          <section className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/90 shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col gap-6">
+          <section aria-labelledby="product-title" className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/90 shadow-2xl">
             <div className="relative aspect-video w-full overflow-hidden bg-zinc-800">
               {game.background_image ? (
                 <img src={game.background_image} alt={game.name} className="h-full w-full object-cover" />
@@ -223,46 +222,38 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-              {game.rating > 0 && (
-                <span className="absolute bottom-4 right-4 inline-flex items-center gap-1 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-1.5 text-xs font-black text-[#ffd90f] backdrop-blur-md">
-                  <Star className="h-3.5 w-3.5 fill-current" /> {game.rating.toFixed(1)}
-                </span>
-              )}
             </div>
 
-            <div className="p-6 md:p-8">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd90f]">
-                <Sparkles className="h-3 w-3" /> Selección Actual
-              </span>
-              <h1 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">{game.name}</h1>
-              
-              {game.genres && game.genres.length > 0 && (
-                <p className="mt-2 text-xs font-bold text-zinc-400">{game.genres.map((g) => g.name).join(" · ")}</p>
-              )}
-
-              <p className="mt-4 text-xs leading-relaxed text-zinc-300 sm:text-sm">{game.description_raw || "Título digital listo para Nintendo Switch con entrega rápida."}</p>
-
-              <div className="mt-6 flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 text-xs text-zinc-400">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#ffd90f]" />
-                <span>Garantía de activación digital y soporte directo por WhatsApp.</span>
+            <div className="p-5 sm:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ffd90f]/10 px-3 py-1 text-xs font-bold text-[#ffd90f]">
+                  <Gamepad2 className="size-4" /> Nintendo Switch
+                </span>
+                {game.rating > 0 && <span className="text-xs font-bold text-zinc-400"><Star className="mr-1 inline size-3.5 fill-[#ffd90f] text-[#ffd90f]" />{game.rating.toFixed(1)}</span>}
               </div>
+              <h1 id="product-title" className="mt-3 text-balance text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">{game.name}</h1>
+              {game.genres && game.genres.length > 0 && <p className="mt-2 text-sm text-zinc-400">{game.genres.map((g) => g.name).join(" · ")}</p>}
             </div>
           </section>
 
-          {/* COLUMNA DERECHA: Panel de Compra y Reserva en la parte superior */}
-          <aside className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-6 shadow-[0_10px_35px_rgba(255,217,15,0.08)] backdrop-blur-md lg:sticky lg:top-28">
+          <aside aria-labelledby="purchase-title" className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-5 shadow-[0_10px_35px_rgba(255,217,15,0.08)] sm:p-7">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd90f]">Proceso de Pago</span>
-                <h2 className="text-xl font-black text-white">Completa tu Pedido</h2>
+                <h2 id="purchase-title" className="text-xl font-black text-white">Completa tu Pedido</h2>
               </div>
             </div>
 
-            {/* 1. SELECCIÓN DE TIPO DE CUENTA (Sin descripciones largas) */}
-            <div className="mt-5 space-y-2.5">
-              <label className="block text-xs font-black uppercase tracking-wider text-zinc-300">
-                1. Elige el tipo de cuenta:
-              </label>
+            <section aria-labelledby="availability-title" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+              <div>
+                <h3 id="availability-title" className="text-sm font-bold text-white">Precio y disponibilidad</h3>
+                <p className="mt-1 text-xs text-zinc-400">{catalogError ? "No se pudo verificar el inventario" : `${availableProducts.length} de ${products.length} modalidades disponibles`}</p>
+              </div>
+              <p className="text-lg font-black tabular-nums text-[#ffd90f]">{catalogError ? "Por verificar" : startingPrice ? `Desde $${startingPrice} MXN` : "No disponible"}</p>
+            </section>
+
+            <section aria-labelledby="account-types-title" className="mt-5 space-y-2.5">
+              <h3 id="account-types-title" className="text-xs font-black uppercase tracking-wider text-zinc-300">1. Elige el tipo de cuenta:</h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {(Object.keys(accountLabels) as AccountType[]).map((type) => {
                   const product = products.find((item) => item.tipo_cuenta === type);
@@ -290,7 +281,15 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   );
                 })}
               </div>
-            </div>
+            </section>
+
+            <section aria-labelledby="account-help-title" className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <h3 id="account-help-title" className="text-sm font-bold text-white">Sobre las modalidades</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Principal:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los perfiles compatibles y requisitos para tu consola.</div>
+                <div className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Secundaria:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los requisitos de acceso y conexión para tu consola.</div>
+              </div>
+            </section>
 
             {/* 2. SELECCIÓN DE MÉTODO DE PAGO */}
             <div className="mt-6 space-y-3">
@@ -441,6 +440,21 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               {manualError && <p role="alert" className="mt-3 text-center text-xs text-red-400">{manualError}</p>}
             </div>
           </aside>
+
+          <section aria-labelledby="purchase-details-title" className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-7">
+            <h2 id="purchase-details-title" className="text-lg font-black text-white">Antes de comprar</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div><h3 className="text-sm font-bold text-[#ffd90f]">Entrega</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">Producto digital. La entrega se coordina después de confirmar el pago.</p></div>
+              <div><h3 className="text-sm font-bold text-[#ffd90f]">Región</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">Confirma con soporte que la región sea compatible con tu consola antes de comprar.</p></div>
+              <div><h3 className="text-sm font-bold text-[#ffd90f]">Idioma</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">El idioma depende de la versión del título. Confírmalo con soporte antes de comprar.</p></div>
+              <div><h3 className="text-sm font-bold text-[#ffd90f]">Soporte</h3><a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-zinc-200 underline underline-offset-4 hover:text-[#ffd90f] focus-visible:outline-2 focus-visible:outline-[#ffd90f]">Resolver dudas por WhatsApp</a></div>
+            </div>
+          </section>
+
+          <section aria-labelledby="description-title" className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-7">
+            <h2 id="description-title" className="text-lg font-black text-white">Descripción del juego</h2>
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-300">{game.description_raw || `Conoce ${game.name}, disponible para Nintendo Switch.`}</p>
+          </section>
         </div>
       </div>
 
