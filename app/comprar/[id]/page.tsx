@@ -86,10 +86,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
         }),
       }).catch(() => null) : null;
       if (active) {
-        setProducts([
-          ...(Array.isArray(catalog) ? catalog : []),
-          ...(Array.isArray(ensured?.productos) ? ensured.productos : []),
-        ]);
+        setProducts(Array.isArray(ensured?.productos) ? ensured.productos : Array.isArray(catalog) ? catalog : []);
         setGame(gameDetails || (fallbackName ? {
           id: Number(id),
           slug: id,
