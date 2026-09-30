@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
   ArrowLeft, 
@@ -9,11 +9,10 @@ import {
   Loader2, 
   Send, 
   Star, 
-  Copy, 
   X, 
   CreditCard,
   Landmark, 
-  Clock, 
+  Clock,
   AlertTriangle,
   CheckCircle2
 } from "lucide-react";
@@ -48,7 +47,6 @@ type BackendGame = {
   productos: BackendProduct[];
 };
 
-type ManualOrder = { pedidoId: string; total: string; method: Exclude<PaymentMethod, "paypal"> };
 
 export default function ComprarJuegoPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
@@ -58,17 +56,11 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   const [isLoading, setIsLoading] = useState(true);
   const [accountType, setAccountType] = useState<AccountType>("principal");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
-  const [isReservedModalOpen, setIsReservedModalOpen] = useState(false);
   const [isPaypalPaid, setIsPaypalPaid] = useState(false);
-  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [paypalError, setPaypalError] = useState(false);
   const [products, setProducts] = useState<BackendProduct[]>([]);
   const [catalogError, setCatalogError] = useState("");
   const [loadAttempt, setLoadAttempt] = useState(0);
-  const [manualBusy, setManualBusy] = useState(false);
-  const [manualError, setManualError] = useState("");
-  const [manualOrder, setManualOrder] = useState<ManualOrder | null>(null);
-  const manualRequest = useRef<{ key: string; id: string } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -99,8 +91,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
           ["principal", "secundaria"].includes(product.tipo_cuenta)) || [];
         setProducts(availableProducts);
         setCatalogError(inventory.error);
-        const firstAvailable = availableProducts.find((product) => product.disponible);
-        if (firstAvailable) setAccountType(firstAvailable.tipo_cuenta);
+        if (availableProducts.length) setAccountType(availableProducts[0].tipo_cuenta);
         setIsLoading(false);
       }
     }
@@ -129,50 +120,11 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     transferencia: "Transferencia SPEI",
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(text);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
-
-  const handleReserveClick = async () => {
-    if (!user) {
-      setManualError("Inicia sesión para registrar tu pedido.");
-      return;
-    }
-    if (!selectedProduct?.disponible || paymentMethod === "paypal") {
-      setManualError("Este producto no está disponible.");
-      return;
-    }
-    setManualBusy(true);
-    setManualError("");
-    const key = `${user.id}:${selectedProduct.id}:${paymentMethod}`;
-    if (manualRequest.current?.key !== key) manualRequest.current = { key, id: crypto.randomUUID() };
-    try {
-      const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
-        request_id: manualRequest.current.id,
-        metodo_pago: paymentMethod,
-        productos: [{ producto_id: selectedProduct.id, cantidad: 1 }],
-      }) });
-      if (!pedido?.id || pedido.estado !== "pendiente_pago" || pedido.metodo_pago !== paymentMethod) {
-        throw new Error("El servidor devolvió un pedido inválido.");
-      }
-      setManualOrder({ pedidoId: String(pedido.id), total: String(pedido.total), method: paymentMethod });
-      setIsReservedModalOpen(true);
-    } catch (error) {
-      setManualError(error instanceof Error ? error.message : "No se pudo registrar el pedido. Intenta de nuevo.");
-    } finally {
-      setManualBusy(false);
-    }
-  };
-
-
-
   const sendWhatsAppComprobante = () => {
     if (!game) return;
     const message = paymentMethod === "paypal"
       ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedLabel} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
-      : `Hola Pikagames, registré el pedido #${manualOrder?.pedidoId} para "${game.name}" (${selectedLabel} - $${manualOrder?.total} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Envío mi comprobante para validación.`;
+      : `Hola PikaGames, quiero comprar "${game.name}" (${selectedLabel}) por ${paymentMethodLabels[paymentMethod]}. Precio: $${formattedPrice} MXN. Enlace: ${window.location.href}. Haré el ${paymentMethod === "oxxo" ? "depósito" : "la transferencia"} y enviaré el comprobante por aquí.`;
     
     window.open(`https://wa.me/528136975487?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
@@ -246,7 +198,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
             <section aria-labelledby="availability-title" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
               <div>
                 <h3 id="availability-title" className="text-sm font-bold text-white">Precio y disponibilidad</h3>
-                <p className="mt-1 text-xs text-zinc-400">{catalogError ? "Disponibilidad por verificar" : availableProducts.length ? "En existencia" : "Disponibilidad por consultar"}</p>
+                <p className="mt-1 text-xs text-zinc-400">Videojuego digital con disponibilidad ilimitada</p>
               </div>
               {startingPrice && <p className="text-lg font-black tabular-nums text-[#ffd90f]">Desde ${startingPrice} MXN</p>}
             </section>
@@ -261,7 +213,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     <button
                       key={type}
                       type="button"
-                      disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder) || !product?.disponible}
+                      disabled={paypalBusy || isPaypalPaid || !product?.disponible}
                       onClick={() => setAccountType(type)}
                       className={`relative flex items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
                         isSelected
@@ -298,7 +250,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción PayPal */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder)}
+                  disabled={paypalBusy || isPaypalPaid}
                   onClick={() => setPaymentMethod("paypal")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "paypal"
@@ -313,7 +265,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción OXXO */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder)}
+                  disabled={paypalBusy || isPaypalPaid}
                   onClick={() => setPaymentMethod("oxxo")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "oxxo"
@@ -328,7 +280,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción Transferencia */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid || manualBusy || Boolean(manualOrder)}
+                  disabled={paypalBusy || isPaypalPaid}
                   onClick={() => setPaymentMethod("transferencia")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "transferencia"
@@ -386,10 +338,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>Primero registraremos tu pedido. Las instrucciones se mostrarán solo cuando el backend lo confirme.</span>
+                    <span>Realiza el depósito y envíanos el comprobante por WhatsApp para coordinar la entrega.</span>
                   </div>
 
-                  <p className="text-xs text-zinc-300">No realices ningún depósito hasta obtener el número de pedido.</p>
+                  <p className="text-xs text-zinc-300">WhatsApp abrirá el mensaje con el título, modalidad y enlace del juego.</p>
                 </div>
               )}
 
@@ -398,10 +350,10 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>Primero registraremos tu pedido. Los datos bancarios se mostrarán solo cuando el backend lo confirme.</span>
+                    <span>Realiza la transferencia y envíanos el comprobante por WhatsApp para coordinar la entrega.</span>
                   </div>
 
-                  <p className="text-xs text-zinc-300">No realices ninguna transferencia hasta obtener el número de pedido.</p>
+                  <p className="text-xs text-zinc-300">WhatsApp abrirá el mensaje con el título, modalidad y enlace del juego.</p>
                 </div>
               )}
             </div>
@@ -416,12 +368,12 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               {paymentMethod !== "paypal" && (
                 <button
                   type="button"
-                  onClick={handleReserveClick}
-                  disabled={manualBusy || !selectedProduct?.disponible || Boolean(manualOrder)}
+                  onClick={sendWhatsAppComprobante}
+                  disabled={!selectedProduct?.disponible}
                   className="w-full rounded-2xl bg-[#ffd90f] hover:bg-[#ffe45c] py-4 px-6 text-center font-black text-zinc-950 text-base shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-wider flex items-center justify-center gap-2"
                 >
-                  <span>{manualBusy ? "Registrando pedido..." : manualOrder ? `Pedido #${manualOrder.pedidoId} registrado` : "Registrar pedido y ver instrucciones"}</span>
-                  {manualBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  <span>Continuar por WhatsApp</span>
+                  <Send className="h-4 w-4" />
                 </button>
               )}
               {catalogError && (
@@ -430,7 +382,6 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   <button type="button" className="mt-1 underline" onClick={() => { setIsLoading(true); setLoadAttempt((value) => value + 1); }}>Reintentar</button>
                 </div>
               )}
-              {manualError && <p role="alert" className="mt-3 text-center text-xs text-red-400">{manualError}</p>}
             </div>
           </aside>
 
@@ -452,112 +403,6 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* MODAL DE RESERVA DE BOLETO (PARA OXXO / TRANSFERENCIA BANCARIA) */}
-      {manualOrder && (
-          <AccessibleDialog open={isReservedModalOpen} title="Pedido registrado" description={`Pedido ${manualOrder.pedidoId} pendiente de pago para ${game.name}`} onClose={() => setIsReservedModalOpen(false)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 20 }}
-              className="relative w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden my-auto p-6 sm:p-8"
-            >
-              <button
-                type="button"
-                onClick={() => setIsReservedModalOpen(false)}
-                aria-label="Cerrar confirmación del pedido"
-                className="absolute top-5 right-5 size-11 flex items-center justify-center text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-
-              <div className="text-center space-y-5">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                  <CheckCircle2 className="h-10 w-10 stroke-[2.5]" />
-                </div>
-
-                <div>
-                  <span className="inline-block rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffd90f] mb-2">
-                    Pedido pendiente de pago
-                  </span>
-                  <h3 className="text-2xl font-black text-white">Pedido registrado</h3>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    El backend confirmó el pedido #{manualOrder.pedidoId} para <strong className="text-white">{game.name}</strong>.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 text-left text-xs space-y-2.5">
-                  <div className="flex justify-between items-center text-zinc-300">
-                    <span>Tipo de Cuenta:</span>
-                    <strong className="font-bold text-white">{selectedLabel}</strong>
-                  </div>
-                  <div className="flex justify-between items-center text-zinc-300">
-                    <span>Método de Pago:</span>
-                    <strong className="font-bold text-[#ffd90f]">{paymentMethodLabels[manualOrder.method]}</strong>
-                  </div>
-                  <div className="flex justify-between items-center text-zinc-300 pt-2 border-t border-zinc-800">
-                    <span>Monto Total:</span>
-                    <strong className="text-sm font-black text-white">${manualOrder.total} MXN</strong>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 text-left text-xs space-y-3">
-                  <div className="flex justify-between border-b border-zinc-800 pb-2">
-                    <span className="text-zinc-400">Banco:</span>
-                    <strong className="text-white">Instrucciones por WhatsApp</strong>
-                  </div>
-                  {manualOrder.method === "oxxo" ? (
-                    <div className="space-y-1">
-                      <span className="block text-zinc-400">Número de cuenta:</span>
-                      <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-2.5">
-                        <span className="text-zinc-300">Se enviarÃ¡ despuÃ©s de validar el pedido.</span>
-                        <button type="button" onClick={() => handleCopy(manualOrder.pedidoId)} className="flex items-center gap-1 text-zinc-400 hover:text-white">
-                          <Copy className="h-3.5 w-3.5" /> {copiedText === manualOrder.pedidoId ? "¡Copiado!" : "Copiar"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <span className="block text-zinc-400">Referencia de pago:</span>
-                      <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-2.5">
-                        <span className="text-zinc-300">Se enviarÃ¡ despuÃ©s de validar el pedido.</span>
-                        <button type="button" onClick={() => handleCopy(manualOrder.pedidoId)} className="flex items-center gap-1 text-zinc-400 hover:text-white">
-                          <Copy className="h-3.5 w-3.5" /> {copiedText === manualOrder.pedidoId ? "¡Copiado!" : "Copiar"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-left text-xs space-y-2">
-                  <h4 className="font-black text-[#ffd90f] uppercase tracking-wider text-[11px]">Pasos para confirmar:</h4>
-                  <ul className="space-y-1.5 text-zinc-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#ffd90f] font-bold">1.</span>
-                      <span>Paga el monto exacto indicando el pedido #{manualOrder.pedidoId}.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#ffd90f] font-bold">2.</span>
-                      <span>Toma captura o foto al comprobante de pago.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#ffd90f] font-bold">3.</span>
-                      <span>Envía el comprobante por WhatsApp para su validación.</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={sendWhatsAppComprobante}
-                  className="w-full rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] py-4 px-6 text-center font-black text-white text-sm shadow-[0_0_20px_rgba(37,211,102,0.3)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 uppercase tracking-wide"
-                >
-                  <Send className="h-4 w-4 fill-current" />
-                  Contactar por WhatsApp
-                </button>
-              </div>
-            </motion.div>
-          </AccessibleDialog>
-      )}
-
       {/* MODAL DE CONFIRMACIÓN POST-PAGO PAYPAL */}
       {isPaypalPaid && (
           <AccessibleDialog open={isPaypalPaid} title="Pago exitoso con PayPal" description={`Pago confirmado para ${game.name}`} onClose={() => setIsPaypalPaid(false)}>
