@@ -8,90 +8,86 @@ import {
   Gamepad2, 
   Loader2, 
   Send, 
+  ShieldCheck, 
   Star, 
+  Copy, 
   X, 
   CreditCard,
   Landmark, 
-  Clock,
+  Clock, 
   AlertTriangle,
+  Sparkles,
   CheckCircle2
 } from "lucide-react";
 import { getGameDetails, type Game } from "@/lib/rawg";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PayPalCheckoutButton, { type PayPalConfirmation } from "@/components/PayPalCheckoutButton";
-import { useAuth } from "@/lib/AuthContext";
-import { isDemoGameId } from "@/lib/demoGames";
 import { apiFetch } from "@/lib/api";
-import { AccessibleDialog } from "@/components/AccessibleDialog";
+import { useAuth } from "@/lib/AuthContext";
+
+type CheckoutProduct = {
+  id: string; tipo_cuenta: string; precio: string; activo: boolean;
+  Videojuego: { rawg_id: string | null; activo: boolean };
+};
 
 type AccountType = "principal" | "secundaria";
 type PaymentMethod = "paypal" | "oxxo" | "transferencia";
 
-const accountLabels: Record<AccountType, string> = {
-  principal: "Cuenta Principal",
-  secundaria: "Cuenta Secundaria",
+const accountOptions: Record<AccountType, { label: string; price: number }> = {
+  principal: {
+    label: "Cuenta Principal",
+    price: 650,
+  },
+  secundaria: {
+    label: "Cuenta Secundaria",
+    price: 260,
+  },
 };
 
-type BackendProduct = {
-  id: string;
-  tipo_cuenta: AccountType;
-  precio: string;
-  disponible: boolean;
+const switch2FallbackNames: Record<string, string> = {
+  "99901": "Metroid Prime 4: Beyond (Switch 2 Edition)",
+  "99902": "Mario Kart Ultimate (Nintendo Switch 2)",
+  "99903": "Pokémon Legends: Z-A (Switch 2 Enhanced)",
+  "99904": "The Legend of Zelda: Deluxe 4K Edition",
+  "99905": "Donkey Kong 3D Bananza (Switch 2)",
+  "99906": "Super Smash Bros. Universe (Switch 2)",
 };
-
-type BackendGame = {
-  rawg_id: string;
-  titulo: string;
-  descripcion?: string | null;
-  imagen_url?: string | null;
-  productos: BackendProduct[];
-};
-
 
 export default function ComprarJuegoPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
+  const [products, setProducts] = useState<CheckoutProduct[]>([]);
   const [paypalBusy, setPaypalBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<PayPalConfirmation | null>(null);
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [accountType, setAccountType] = useState<AccountType>("principal");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
+  const [isReservedModalOpen, setIsReservedModalOpen] = useState(false);
   const [isPaypalPaid, setIsPaypalPaid] = useState(false);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [paypalError, setPaypalError] = useState(false);
-  const [products, setProducts] = useState<BackendProduct[]>([]);
-  const [catalogError, setCatalogError] = useState("");
-  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
 
     async function loadGame() {
       const { id } = await params;
-      if (isDemoGameId(id)) {
-        if (active) setIsLoading(false);
-        return;
-      }
-      const inventoryPromise = apiFetch(`/productos/rawg/${encodeURIComponent(id)}`)
-        .then((data: BackendGame) => ({ data, error: "" }))
-        .catch((error: unknown) => ({
-          data: null,
-          error: typeof error === "object" && error !== null && "status" in error && error.status === 404
-            ? ""
-            : "No se pudo comprobar la disponibilidad. Intenta de nuevo.",
-        }));
-      const [gameDetails, inventory] = await Promise.all([getGameDetails(id), inventoryPromise]);
+      const [gameDetails, catalog] = await Promise.all([
+        getGameDetails(id), apiFetch("/productos").catch(() => []),
+      ]);
+      const fallbackName = switch2FallbackNames[id];
       if (active) {
-        const backendGame = inventory.data;
-        setGame(gameDetails || (backendGame ? {
-          id: Number(id), slug: "", name: backendGame.titulo,
-          background_image: backendGame.imagen_url || "", rating: 0, released: "", platforms: [],
-          description_raw: backendGame.descripcion || undefined,
+        setProducts(Array.isArray(catalog) ? catalog : []);
+        setGame(gameDetails || (fallbackName ? {
+          id: Number(id),
+          slug: id,
+          name: fallbackName,
+          background_image: "",
+          rating: 0,
+          released: "",
+          platforms: [],
+          description_raw: "Título digital para Nintendo Switch.",
         } : null));
-        const availableProducts = backendGame?.productos.filter((product) =>
-          ["principal", "secundaria"].includes(product.tipo_cuenta)) || [];
-        setProducts(availableProducts);
-        setCatalogError(inventory.error);
-        if (availableProducts.length) setAccountType(availableProducts[0].tipo_cuenta);
         setIsLoading(false);
       }
     }
@@ -100,19 +96,18 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     return () => {
       active = false;
     };
-  }, [params, loadAttempt]);
+  }, [params]);
 
-  const selectedProduct = products.find((product) => product.tipo_cuenta === accountType);
-  const selectedLabel = accountLabels[accountType];
-  const displayedPrice = Number(selectedProduct?.precio);
+  const selectedOption = accountOptions[accountType];
+  const matchingProducts = products.filter((product) =>
+    String(product.Videojuego?.rawg_id) === String(game?.id) && product.tipo_cuenta === accountType &&
+    product.activo && product.Videojuego.activo);
+  const selectedProduct = matchingProducts.length === 1 ? matchingProducts[0] : undefined;
+  const displayedPrice = paymentMethod === "paypal" ? Number(selectedProduct?.precio) : selectedOption.price;
   const formattedPrice = Number.isFinite(displayedPrice) ? displayedPrice.toLocaleString("es-MX", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }) : accountType === "secundaria" ? "260.00" : "—";
-  const availableProducts = products.filter((product) => product.disponible && Number.isFinite(Number(product.precio)));
-  const startingPrice = availableProducts.length
-    ? Math.min(...availableProducts.map((product) => Number(product.precio))).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : null;
+  }) : "—";
 
   const paymentMethodLabels: Record<PaymentMethod, string> = {
     paypal: "PayPal / Tarjeta",
@@ -120,18 +115,30 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     transferencia: "Transferencia SPEI",
   };
 
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(text);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
+  const handleReserveClick = () => {
+    setIsReservedModalOpen(true);
+  };
+
+
+
   const sendWhatsAppComprobante = () => {
     if (!game) return;
     const message = paymentMethod === "paypal"
-      ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedLabel} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
-      : `Hola PikaGames, quiero comprar "${game.name}" (${selectedLabel}) por ${paymentMethodLabels[paymentMethod]}. Precio: $${formattedPrice} MXN. Enlace: ${window.location.href}. Haré el ${paymentMethod === "oxxo" ? "depósito" : "la transferencia"} y enviaré el comprobante por aquí.`;
+      ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedOption.label} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
+      : `Hola Pikagames, he apartado 1 boleto para "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Adjunto mi comprobante de pago.`;
     
     window.open(`https://wa.me/528136975487?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
   if (isLoading) {
     return (
-      <main id="main-content" className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
+      <main className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center px-6 py-32 text-center">
           <Loader2 className="mb-4 h-12 w-12 animate-spin text-[#ffd90f]" />
           <p className="font-bold">Cargando detalles del juego...</p>
@@ -142,7 +149,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
 
   if (!game) {
     return (
-      <main id="main-content" className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
+      <main className="min-h-screen bg-[#111311] pt-28 text-zinc-100">
         <div className="mx-auto max-w-xl px-6 py-24 text-center">
           <Gamepad2 className="mx-auto mb-5 h-14 w-14 text-[#ffd90f]" />
           <h1 className="text-2xl font-black">Juego no encontrado</h1>
@@ -156,14 +163,17 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#111311] pb-[calc(6rem+env(safe-area-inset-bottom))] pt-24 text-zinc-100 lg:pb-24 md:pt-28">
+    <main className="min-h-screen bg-[#111311] pb-24 pt-24 text-zinc-100 md:pt-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Link href="/catalogo" className="mb-6 inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-xs font-bold text-zinc-300 transition-colors hover:border-[#ffd90f] hover:text-[#ffd90f]">
           <ArrowLeft className="h-4 w-4" /> Volver al catálogo
         </Link>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
-          <section aria-labelledby="product-title" className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/90 shadow-2xl">
+        {/* Layout Principal */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] items-start">
+
+          {/* COLUMNA IZQUIERDA: Tarjeta del juego */}
+          <section className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/90 shadow-2xl backdrop-blur-md">
             <div className="relative aspect-video w-full overflow-hidden bg-zinc-800">
               {game.background_image ? (
                 <img src={game.background_image} alt={game.name} className="h-full w-full object-cover" />
@@ -173,41 +183,49 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+              {game.rating > 0 && (
+                <span className="absolute bottom-4 right-4 inline-flex items-center gap-1 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-1.5 text-xs font-black text-[#ffd90f] backdrop-blur-md">
+                  <Star className="h-3.5 w-3.5 fill-current" /> {game.rating.toFixed(1)}
+                </span>
+              )}
             </div>
 
-            <div className="p-5 sm:p-7">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ffd90f]/10 px-3 py-1 text-xs font-bold text-[#ffd90f]">
-                  <Gamepad2 className="size-4" /> Nintendo Switch
-                </span>
-                {game.rating > 0 && <span className="text-xs font-bold text-zinc-400"><Star className="mr-1 inline size-3.5 fill-[#ffd90f] text-[#ffd90f]" />{game.rating.toFixed(1)}</span>}
+            <div className="p-6 md:p-8">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd90f]">
+                <Sparkles className="h-3 w-3" /> Selección Actual
+              </span>
+              <h1 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">{game.name}</h1>
+              
+              {game.genres && game.genres.length > 0 && (
+                <p className="mt-2 text-xs font-bold text-zinc-400">{game.genres.map((g) => g.name).join(" · ")}</p>
+              )}
+
+              <p className="mt-4 text-xs leading-relaxed text-zinc-300 sm:text-sm">{game.description_raw || "Título digital listo para Nintendo Switch con entrega rápida."}</p>
+
+              <div className="mt-6 flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 text-xs text-zinc-400">
+                <ShieldCheck className="h-5 w-5 shrink-0 text-[#ffd90f]" />
+                <span>Garantía de activación digital y soporte directo por WhatsApp.</span>
               </div>
-              <h1 id="product-title" className="mt-3 text-balance text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">{game.name}</h1>
-              {game.genres && game.genres.length > 0 && <p className="mt-2 text-sm text-zinc-400">{game.genres.map((g) => g.name).join(" · ")}</p>}
             </div>
           </section>
 
-          <aside aria-labelledby="purchase-title" className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-5 shadow-[0_10px_35px_rgba(255,217,15,0.08)] sm:p-7">
+          {/* COLUMNA DERECHA: Panel de Compra y Reserva en la parte superior */}
+          <aside className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-6 shadow-[0_10px_35px_rgba(255,217,15,0.08)] backdrop-blur-md lg:sticky lg:top-28">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd90f]">Proceso de Pago</span>
-                <h2 id="purchase-title" className="text-xl font-black text-white">Completa tu Pedido</h2>
+                <h2 className="text-xl font-black text-white">Completa tu Pedido</h2>
               </div>
             </div>
 
-            <section aria-labelledby="availability-title" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
-              <div>
-                <h3 id="availability-title" className="text-sm font-bold text-white">Precio y disponibilidad</h3>
-                <p className="mt-1 text-xs text-zinc-400">Videojuego digital con disponibilidad ilimitada</p>
-              </div>
-              {startingPrice && <p className="text-lg font-black tabular-nums text-[#ffd90f]">Desde ${startingPrice} MXN</p>}
-            </section>
-
-            <section aria-labelledby="account-types-title" className="mt-5 space-y-2.5">
-              <h3 id="account-types-title" className="text-xs font-black uppercase tracking-wider text-zinc-300">1. Elige el tipo de cuenta:</h3>
+            {/* 1. SELECCIÓN DE TIPO DE CUENTA (Sin descripciones largas) */}
+            <div className="mt-5 space-y-2.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-zinc-300">
+                1. Elige el tipo de cuenta:
+              </label>
               <div className="grid gap-3 sm:grid-cols-2">
-                {(Object.keys(accountLabels) as AccountType[]).map((type) => {
-                  const product = products.find((item) => item.tipo_cuenta === type);
+                {(Object.keys(accountOptions) as AccountType[]).map((type) => {
+                  const option = accountOptions[type];
                   const isSelected = accountType === type;
                   return (
                     <button
@@ -222,23 +240,15 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-white">{accountLabels[type]}</span>
+                        <span className="font-black text-sm text-white">{option.label}</span>
                         {isSelected && <Check className="h-4 w-4 text-[#ffd90f] stroke-[3]" />}
                       </div>
-                      {(product?.disponible || type === "secundaria") && <span className="text-sm font-black text-[#ffd90f]">${Number(product?.precio ?? 260).toLocaleString("es-MX")} MXN</span>}
+                      <span className="text-sm font-black text-[#ffd90f]">${paymentMethod === "paypal" ? products.find((p) => String(p.Videojuego?.rawg_id) === String(game.id) && p.tipo_cuenta === type && p.activo && p.Videojuego.activo)?.precio ?? "—" : option.price} MXN</span>
                     </button>
                   );
                 })}
               </div>
-            </section>
-
-            <details className="mt-3 rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
-              <summary className="cursor-pointer text-sm font-bold text-zinc-200 focus-visible:outline-2 focus-visible:outline-[#ffd90f]">Diferencias entre modalidades</summary>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <p className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Principal:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los perfiles compatibles y requisitos para tu consola.</p>
-                <p className="text-xs leading-relaxed text-zinc-300"><strong className="text-[#ffd90f]">Secundaria:</strong> el producto se entrega bajo esta modalidad. Consulta con soporte los requisitos de acceso y conexión para tu consola.</p>
-              </div>
-            </details>
+            </div>
 
             {/* 2. SELECCIÓN DE MÉTODO DE PAGO */}
             <div className="mt-6 space-y-3">
@@ -300,20 +310,24 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               {paymentMethod === "paypal" && (
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-400">PayPal / Tarjeta</span>
-                    <span className="text-[10px] font-black uppercase text-[#ffd90f]">Pago único</span>
+                    <span className="text-xs font-bold text-zinc-400">Pago Directo</span>
+                    <span className="text-[10px] font-black uppercase text-[#ffd90f]">Sin Caducidad</span>
                   </div>
+
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    PayPal Sandbox: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
+                  </p>
 
                   {/* Botones oficiales de PayPal SDK */}
                   <div className="pt-1">
-                    {!selectedProduct?.disponible ? (
-                      <p role="status" className="text-xs text-amber-400">Este tipo de cuenta no está disponible.</p>
-                    ) : !user ? (
+                    {!user ? (
                       <p role="status" className="text-xs text-amber-400">Inicia sesión para pagar tu pedido.</p>
+                    ) : !selectedProduct ? (
+                      <p role="status" className="text-xs text-amber-400">Este juego no tiene un producto disponible vinculado para PayPal.</p>
                     ) : (
                       <PayPalCheckoutButton
-                        key={`${user.id}:${selectedProduct?.id || accountType}`}
-                        productId={selectedProduct?.id || ""}
+                        key={`${user.id}:${selectedProduct.id}`}
+                        productId={String(selectedProduct.id)}
                         userId={user.id}
                         onBusy={setPaypalBusy}
                         onSuccess={(details) => {
@@ -338,10 +352,35 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>Realiza el depósito y envíanos el comprobante por WhatsApp para coordinar la entrega.</span>
+                    <span>Tienes un máximo de 4 horas para realizar el depósito y verificar tu boleto por WhatsApp.</span>
                   </div>
 
-                  <p className="text-xs text-zinc-300">WhatsApp abrirá el mensaje con el título, modalidad y enlace del juego.</p>
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                      <span className="text-zinc-400">Banco:</span>
+                      <strong className="font-black text-white text-sm">BANCOPEL</strong>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-zinc-400 block">Número de Cuenta:</span>
+                      <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <strong className="font-mono text-sm font-black text-[#ffd90f] tracking-wider">4169 1614 5560 1061</strong>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy("4169161455601061")}
+                          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-bold"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          {copiedText === "4169161455601061" ? "¡Copiado!" : "Copiar"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-zinc-400">Monto a depositar:</span>
+                      <strong className="text-base font-black text-white">${formattedPrice} MXN</strong>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -350,10 +389,40 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>Realiza la transferencia y envíanos el comprobante por WhatsApp para coordinar la entrega.</span>
+                    <span>Tienes 4 horas para realizar la transferencia y verificar tu boleto enviando tu recibo.</span>
                   </div>
 
-                  <p className="text-xs text-zinc-300">WhatsApp abrirá el mensaje con el título, modalidad y enlace del juego.</p>
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                      <span className="text-zinc-400">Banco / Destino:</span>
+                      <strong className="font-black text-white text-sm">BANCOPEL</strong>
+                    </div>
+
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                      <span className="text-zinc-400">Titular:</span>
+                      <strong className="font-black text-white text-sm">Pika Games</strong>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-zinc-400 block">CLABE Interbancaria:</span>
+                      <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <strong className="font-mono text-xs sm:text-sm font-black text-[#ffd90f] tracking-wider">137888105075633395</strong>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy("137888105075633395")}
+                          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-bold shrink-0 ml-2"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          {copiedText === "137888105075633395" ? "¡Copiado!" : "Copiar"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-zinc-400">Monto a transferir:</span>
+                      <strong className="text-base font-black text-white">${formattedPrice} MXN</strong>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -368,43 +437,102 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               {paymentMethod !== "paypal" && (
                 <button
                   type="button"
-                  onClick={sendWhatsAppComprobante}
+                  onClick={handleReserveClick}
                   className="w-full rounded-2xl bg-[#ffd90f] hover:bg-[#ffe45c] py-4 px-6 text-center font-black text-zinc-950 text-base shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-wider flex items-center justify-center gap-2"
                 >
-                  <span>Continuar por WhatsApp</span>
+                  <span>Reservar Boleto</span>
                   <Send className="h-4 w-4" />
                 </button>
               )}
-              {catalogError && (
-                <div role="alert" className="mt-3 text-center text-xs text-red-400">
-                  <p>{catalogError}</p>
-                  <button type="button" className="mt-1 underline" onClick={() => { setIsLoading(true); setLoadAttempt((value) => value + 1); }}>Reintentar</button>
-                </div>
-              )}
             </div>
           </aside>
-
-          <section aria-labelledby="purchase-details-title" className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-7 lg:col-span-2">
-            <h2 id="purchase-details-title" className="text-lg font-black text-white">Antes de comprar</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div><h3 className="text-sm font-bold text-[#ffd90f]">Entrega</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">Producto digital. La entrega se coordina después de confirmar el pago.</p></div>
-              <div><h3 className="text-sm font-bold text-[#ffd90f]">Región</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">Confirma con soporte que la región sea compatible con tu consola antes de comprar.</p></div>
-              <div><h3 className="text-sm font-bold text-[#ffd90f]">Idioma</h3><p className="mt-1 text-sm leading-relaxed text-zinc-300">El idioma depende de la versión del título. Confírmalo con soporte antes de comprar.</p></div>
-              <div><h3 className="text-sm font-bold text-[#ffd90f]">Soporte</h3><a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-zinc-200 underline underline-offset-4 hover:text-[#ffd90f] focus-visible:outline-2 focus-visible:outline-[#ffd90f]">Resolver dudas por WhatsApp</a></div>
-            </div>
-          </section>
-
-          <details className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-7 lg:col-span-2">
-            <summary className="cursor-pointer text-lg font-black text-white focus-visible:outline-2 focus-visible:outline-[#ffd90f]">Descripción completa del juego</summary>
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-300">{game.description_raw || `Conoce ${game.name}, disponible para Nintendo Switch.`}</p>
-          </details>
         </div>
       </div>
 
       {/* MODAL DE RESERVA DE BOLETO (PARA OXXO / TRANSFERENCIA BANCARIA) */}
+      <AnimatePresence>
+        {isReservedModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-zinc-950/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              className="relative w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden my-auto p-6 sm:p-8"
+            >
+              <button
+                type="button"
+                onClick={() => setIsReservedModalOpen(false)}
+                className="absolute top-5 right-5 p-2 text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="text-center space-y-5">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                  <CheckCircle2 className="h-10 w-10 stroke-[2.5]" />
+                </div>
+
+                <div>
+                  <span className="inline-block rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffd90f] mb-2">
+                    ¡Reserva Registrada!
+                  </span>
+                  <h3 className="text-2xl font-black text-white">Boleto Reservado</h3>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    Has apartado 1 boleto para <strong className="text-white">{game.name}</strong>
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 text-left text-xs space-y-2.5">
+                  <div className="flex justify-between items-center text-zinc-300">
+                    <span>Tipo de Cuenta:</span>
+                    <strong className="font-bold text-white">{selectedOption.label}</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-zinc-300">
+                    <span>Método de Pago:</span>
+                    <strong className="font-bold text-[#ffd90f]">{paymentMethodLabels[paymentMethod]}</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-zinc-300 pt-2 border-t border-zinc-800">
+                    <span>Monto Total:</span>
+                    <strong className="text-sm font-black text-white">${formattedPrice} MXN</strong>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-left text-xs space-y-2">
+                  <h4 className="font-black text-[#ffd90f] uppercase tracking-wider text-[11px]">Pasos para confirmar:</h4>
+                  <ul className="space-y-1.5 text-zinc-300">
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#ffd90f] font-bold">1.</span>
+                      <span>Realiza tu pago mediante {paymentMethodLabels[paymentMethod]}.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#ffd90f] font-bold">2.</span>
+                      <span>Toma captura o foto al comprobante de pago.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#ffd90f] font-bold">3.</span>
+                      <span>Envíanos el comprobante por WhatsApp dentro del tiempo límite (4 horas).</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={sendWhatsAppComprobante}
+                  className="w-full rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] py-4 px-6 text-center font-black text-white text-sm shadow-[0_0_20px_rgba(37,211,102,0.3)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 uppercase tracking-wide"
+                >
+                  <Send className="h-4 w-4 fill-current" />
+                  Enviar Comprobante por WhatsApp
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* MODAL DE CONFIRMACIÓN POST-PAGO PAYPAL */}
-      {isPaypalPaid && (
-          <AccessibleDialog open={isPaypalPaid} title="Pago exitoso con PayPal" description={`Pago confirmado para ${game.name}`} onClose={() => setIsPaypalPaid(false)}>
+      <AnimatePresence>
+        {isPaypalPaid && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-zinc-950/85 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -414,8 +542,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               <button
                 type="button"
                 onClick={() => setIsPaypalPaid(false)}
-                aria-label="Cerrar confirmación de PayPal"
-                className="absolute top-5 right-5 size-11 flex items-center justify-center text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
+                className="absolute top-5 right-5 p-2 text-zinc-400 hover:text-white rounded-full bg-zinc-800/80 hover:bg-zinc-700 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -431,7 +558,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   </span>
                   <h3 className="text-2xl font-black text-white">Pago Exitoso con PayPal</h3>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Tu compra para <strong className="text-white">{game.name}</strong> ({selectedLabel}) ha quedado registrada. La entrega está pendiente.
+                    Tu compra para <strong className="text-white">{game.name}</strong> ({selectedOption.label}) ha quedado registrada. La entrega está pendiente.
                   </p>
                 </div>
 
@@ -464,8 +591,12 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 </button>
               </div>
             </motion.div>
-          </AccessibleDialog>
-      )}
+          </div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
+
+
+
