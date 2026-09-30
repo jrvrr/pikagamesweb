@@ -108,7 +108,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   const formattedPrice = Number.isFinite(displayedPrice) ? displayedPrice.toLocaleString("es-MX", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }) : "—";
+  }) : accountType === "secundaria" ? "260.00" : "—";
   const availableProducts = products.filter((product) => product.disponible && Number.isFinite(Number(product.precio)));
   const startingPrice = availableProducts.length
     ? Math.min(...availableProducts.map((product) => Number(product.precio))).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -187,7 +187,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
             </div>
           </section>
 
-          <aside aria-labelledby="purchase-title" className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-5 shadow-[0_10px_35px_rgba(255,217,15,0.08)] sm:p-7 lg:sticky lg:top-24">
+          <aside aria-labelledby="purchase-title" className="rounded-3xl border border-[#ffd90f]/30 bg-zinc-900 p-5 shadow-[0_10px_35px_rgba(255,217,15,0.08)] sm:p-7">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd90f]">Proceso de Pago</span>
@@ -213,7 +213,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     <button
                       key={type}
                       type="button"
-                      disabled={paypalBusy || isPaypalPaid || !product?.disponible}
+                      disabled={paypalBusy || isPaypalPaid}
                       onClick={() => setAccountType(type)}
                       className={`relative flex items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
                         isSelected
@@ -225,7 +225,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                         <span className="font-black text-sm text-white">{accountLabels[type]}</span>
                         {isSelected && <Check className="h-4 w-4 text-[#ffd90f] stroke-[3]" />}
                       </div>
-                      {product?.disponible && <span className="text-sm font-black text-[#ffd90f]">${Number(product.precio).toLocaleString("es-MX")} MXN</span>}
+                      {(product?.disponible || type === "secundaria") && <span className="text-sm font-black text-[#ffd90f]">${Number(product?.precio ?? 260).toLocaleString("es-MX")} MXN</span>}
                     </button>
                   );
                 })}
@@ -369,7 +369,6 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <button
                   type="button"
                   onClick={sendWhatsAppComprobante}
-                  disabled={!selectedProduct?.disponible}
                   className="w-full rounded-2xl bg-[#ffd90f] hover:bg-[#ffe45c] py-4 px-6 text-center font-black text-zinc-950 text-base shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-wider flex items-center justify-center gap-2"
                 >
                   <span>Continuar por WhatsApp</span>
