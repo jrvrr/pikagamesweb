@@ -76,8 +76,20 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
         getGameDetails(id), apiFetch("/productos").catch(() => []),
       ]);
       const fallbackName = switch2FallbackNames[id];
+      const title = gameDetails?.name || fallbackName;
+      const ensured = user && title ? await apiFetch("/productos/ensure", {
+        method: "POST",
+        body: JSON.stringify({
+          rawg_id: id,
+          titulo: title,
+          imagen_url: gameDetails?.background_image || null,
+        }),
+      }).catch(() => null) : null;
       if (active) {
-        setProducts(Array.isArray(catalog) ? catalog : []);
+        setProducts([
+          ...(Array.isArray(catalog) ? catalog : []),
+          ...(Array.isArray(ensured?.productos) ? ensured.productos : []),
+        ]);
         setGame(gameDetails || (fallbackName ? {
           id: Number(id),
           slug: id,
@@ -96,7 +108,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     return () => {
       active = false;
     };
-  }, [params]);
+  }, [params, user?.id]);
 
   const selectedOption = accountOptions[accountType];
   const matchingProducts = products.filter((product) =>
@@ -315,7 +327,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   </div>
 
                   <p className="text-xs text-zinc-300 leading-relaxed">
-                    PayPal Sandbox: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
+                    PayPal Live: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
                   </p>
 
                   {/* Botones oficiales de PayPal SDK */}
