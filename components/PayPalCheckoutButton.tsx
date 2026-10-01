@@ -236,12 +236,20 @@ function CardFieldsPaymentForm({
 }) {
   const { cardFieldsForm } = usePayPalCardFields();
   const [eligible, setEligible] = useState(false);
+  const [eligibilityChecked, setEligibilityChecked] = useState(false);
 
   useEffect(() => {
-    setEligible(Boolean(cardFieldsForm?.isEligible()));
+    if (!cardFieldsForm) return;
+    setEligible(cardFieldsForm.isEligible());
+    setEligibilityChecked(true);
   }, [cardFieldsForm]);
 
-  if (!eligible) return null;
+  if (!eligibilityChecked) return null;
+  if (!eligible) {
+    return <p role="status" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
+      PayPal no habilitó el pago directo con tarjeta para esta cuenta. Puedes pagar con PayPal o activar “Advanced Credit and Debit Card Payments” en tu cuenta PayPal.
+    </p>;
+  }
 
   return (
     <div className="space-y-3 rounded-xl border border-zinc-300 bg-white p-4 text-zinc-900">
