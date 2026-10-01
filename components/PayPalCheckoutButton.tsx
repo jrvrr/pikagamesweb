@@ -172,6 +172,20 @@ function PayPalCheckout({
         }}
         onError={failed}
       />
+      <PayPalButtons
+        key={`card-${buttonVersion}`}
+        fundingSource={FUNDING.CARD}
+        disabled={busy || paid}
+        style={{ layout: "vertical", color: "silver", shape: "rect", tagline: false, height: 45 }}
+        createOrder={createOrder}
+        onApprove={approve}
+        onCancel={() => {
+          working(false);
+          setMessage("Pago con tarjeta cancelado. Puedes volver a intentarlo.");
+          onCancel?.();
+        }}
+        onError={failed}
+      />
       {!paid && <PayPalCardFieldsProvider
         createOrder={createOrder}
         onApprove={approve}
