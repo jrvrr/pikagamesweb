@@ -65,7 +65,6 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   const [isReservedModalOpen, setIsReservedModalOpen] = useState(false);
   const [isPaypalPaid, setIsPaypalPaid] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
-  const [paypalError, setPaypalError] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -341,16 +340,9 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                         onBusy={setPaypalBusy}
                         onSuccess={(details) => {
                           setConfirmation(details);
-                          setPaypalError(false);
                           setIsPaypalPaid(true);
                         }}
-                        onError={() => setPaypalError(true)}
                       />
-                    )}
-                    {paypalError && (
-                      <p className="mt-2 text-xs text-red-400 text-center">
-                        No se confirmó el pago. Verifica el mismo pedido antes de intentar otra compra.
-                      </p>
                     )}
                   </div>
                 </div>

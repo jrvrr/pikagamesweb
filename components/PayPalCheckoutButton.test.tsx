@@ -8,8 +8,12 @@ import Button from "./PayPalCheckoutButton";
 let callbacks: ComponentProps<typeof PayPalButtons>;
 vi.mock("@/lib/api", () => ({ apiFetch: vi.fn() }));
 vi.mock("@paypal/react-paypal-js", () => ({
+  FUNDING: { PAYPAL: "paypal" },
   usePayPalScriptReducer: () => [{ isPending: false, isRejected: false }],
+  usePayPalCardFields: () => ({ cardFieldsForm: null }),
   PayPalButtons: (props: ComponentProps<typeof PayPalButtons>) => { callbacks = props; return null; },
+  PayPalCardFieldsProvider: ({ children }: { children: React.ReactNode }) => children,
+  PayPalCardFieldsForm: () => null,
 }));
 const api = vi.mocked(apiFetch);
 const confirmation = { confirmed: true, status: "COMPLETED", pagoEstado: "aprobado", pedidoId: "7",
@@ -52,6 +56,17 @@ it("crea pedido antes de orden backend, sin precios ni compra SDK", async () => 
     ["/paypal/crear-orden", { method: "POST", body: JSON.stringify({ pedidoId: "7" }) }],
   ]);
   expect(onSuccess).not.toHaveBeenCalled();
+});
+
+it("un error del botón al cargar no se reporta como pago fallido", async () => {
+  const { onError } = render();
+  callbacks.onError!({ message: "SDK" });
+  expect(onError).not.toHaveBeenCalled();
+
+  api.mockResolvedValueOnce(pedido).mockResolvedValueOnce({ id: "ORDER1", pedidoId: "7" });
+  await create();
+  callbacks.onError!({ message: "PayPal rechazó el intento" });
+  expect(onError).toHaveBeenCalledOnce();
 });
 
 it("no muestra éxito hasta recibir confirmación válida del backend", async () => {

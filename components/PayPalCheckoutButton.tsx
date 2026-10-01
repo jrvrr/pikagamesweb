@@ -61,6 +61,7 @@ function PayPalCheckout({
   const [cardError, setCardError] = useState<string | null>(null);
   const session = useRef<{ requestId?: string; pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
+  const paymentAttempted = useRef(false);
   const storageKey = `paypal-${paypalEnv}:${userId}:product:${productId}`;
 
   useEffect(() => {
@@ -83,6 +84,13 @@ function PayPalCheckout({
     setMessage(error instanceof Error ? error.message : "No se pudo confirmar el pago. Verifica el mismo pedido antes de volver a pagar.");
     onError?.(error);
   };
+  const buttonError = (error: unknown) => {
+    if (!paymentAttempted.current) {
+      setMessage("No se pudo iniciar PayPal. Recarga la página o elige otro método de pago.");
+      return;
+    }
+    failed(error);
+  };
   const confirm = (result: PayPalConfirmation) => {
     if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
         result.pedidoId !== session.current.pedidoId || result.paypalOrderId !== session.current.orderId ||
@@ -96,6 +104,7 @@ function PayPalCheckout({
   };
   const createOrder = () => {
     if (creating.current) return creating.current;
+    paymentAttempted.current = true;
     working(true);
     setMessage("Preparando pedido seguro...");
     creating.current = (async () => {
@@ -171,7 +180,7 @@ function PayPalCheckout({
           setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
           onCancel?.();
         }}
-        onError={failed}
+        onError={buttonError}
       />
       {!paid && <PayPalCardFieldsProvider
         createOrder={createOrder}
