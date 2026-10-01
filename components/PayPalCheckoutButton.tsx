@@ -177,7 +177,8 @@ function PayPalCheckout({
         onApprove={approve}
         onError={failed}
         style={{
-          input: { color: "#18181b", "font-size": "16px", "font-family": "Arial, sans-serif", "font-weight": "500", opacity: "1" },
+          input: { color: "#09090b", "font-size": "17px", "font-family": "Arial, sans-serif", "font-weight": "600", opacity: "1" },
+          ":focus": { color: "#000000", opacity: "1" },
           ".invalid": { color: "#b91c1c" },
         }}
       >
