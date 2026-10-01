@@ -1,6 +1,6 @@
 "use client";
 
-import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+import { PayPalButtons, PayPalCardFieldsForm, PayPalCardFieldsProvider, usePayPalCardFields, FUNDING, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -153,6 +153,7 @@ function PayPalCheckout({
       {/* PayPal & Debit/Credit Card buttons rendered by the SDK */}
       <PayPalButtons
         key={buttonVersion}
+        fundingSource={FUNDING.PAYPAL}
         disabled={busy || paid}
         style={{
           layout: "vertical",
@@ -171,6 +172,17 @@ function PayPalCheckout({
         }}
         onError={failed}
       />
+      {!paid && <PayPalCardFieldsProvider
+        createOrder={createOrder}
+        onApprove={approve}
+        onError={failed}
+        style={{
+          input: { color: "#18181b", "font-size": "16px", "font-family": "Arial, sans-serif", "font-weight": "500", opacity: "1" },
+          ".invalid": { color: "#b91c1c" },
+        }}
+      >
+        <CardFieldsPaymentForm busy={busy} paid={paid} working={working} onError={failed} />
+      </PayPalCardFieldsProvider>}
       {message && <p role="status" className="text-xs text-zinc-300">{message}</p>}
       {recoverable && !paid && (
         <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -192,6 +204,49 @@ function PayPalCheckout({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function CardFieldsPaymentForm({
+  busy,
+  paid,
+  working,
+  onError,
+}: {
+  busy: boolean;
+  paid: boolean;
+  working: (value: boolean) => void;
+  onError: (error: unknown) => void;
+}) {
+  const { cardFieldsForm } = usePayPalCardFields();
+  const [eligible, setEligible] = useState(false);
+
+  useEffect(() => {
+    setEligible(Boolean(cardFieldsForm?.isEligible()));
+  }, [cardFieldsForm]);
+
+  if (!eligible) return null;
+
+  return (
+    <div className="space-y-3 rounded-xl border border-zinc-300 bg-white p-4 text-zinc-900">
+      <h3 className="text-sm font-semibold">Pagar con tarjeta</h3>
+      <div className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5">
+        <PayPalCardFieldsForm />
+      </div>
+      <button
+        type="button"
+        disabled={busy || paid || !cardFieldsForm}
+        onClick={async () => {
+          working(true);
+          try { await cardFieldsForm?.submit(); }
+          catch (error) { onError(error); }
+          finally { working(false); }
+        }}
+        className="w-full rounded-full bg-[#0070ba] px-4 py-3 text-sm font-semibold text-white hover:bg-[#005ea6] disabled:opacity-50"
+      >
+        {busy ? "Procesando…" : "Pagar con tarjeta"}
+      </button>
     </div>
   );
 }

@@ -31,7 +31,7 @@ export default function PayPalProviderWrapper({ children }: { children: ReactNod
   }, []);
 
   const content = config.clientId ? (
-    <PayPalScriptProvider options={{ clientId: config.clientId, currency: "MXN", intent: "capture" }}>
+    <PayPalScriptProvider options={{ clientId: config.clientId, currency: "MXN", intent: "capture", components: "buttons,card-fields" }}>
       {children}
     </PayPalScriptProvider>
   ) : children;
