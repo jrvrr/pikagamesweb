@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { PayPalButtons, PayPalCardFieldsForm, PayPalCardFieldsProvider, usePayPalCardFields, FUNDING, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
@@ -58,6 +58,7 @@ function PayPalCheckout({
   const [message, setMessage] = useState("");
   const [recoverable, setRecoverable] = useState(false);
   const [buttonVersion, setButtonVersion] = useState(0);
+  const [cardError, setCardError] = useState<string | null>(null);
   const session = useRef<{ requestId?: string; pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
   const storageKey = `paypal-${paypalEnv}:${userId}:product:${productId}`;
@@ -175,14 +176,18 @@ function PayPalCheckout({
       {!paid && <PayPalCardFieldsProvider
         createOrder={createOrder}
         onApprove={approve}
-        onError={failed}
+        onError={(err) => {
+          // Errors here are card-field level (init, eligibility). Don't trigger global failed().
+          const msg = err instanceof Error ? err.message : "No se pudo cargar el formulario de tarjeta.";
+          setCardError(msg);
+        }}
         style={{
           input: { color: "#09090b", "font-size": "17px", "font-family": "Arial, sans-serif", "font-weight": "600", opacity: "1" },
           ":focus": { color: "#000000", opacity: "1" },
           ".invalid": { color: "#b91c1c" },
         }}
       >
-        <CardFieldsPaymentForm busy={busy} paid={paid} working={working} onError={failed} />
+        <CardFieldsPaymentForm busy={busy} paid={paid} working={working} onError={failed} cardError={cardError} />
       </PayPalCardFieldsProvider>}
       {message && <p role="status" className="text-xs text-zinc-300">{message}</p>}
       {recoverable && !paid && (
@@ -214,11 +219,13 @@ function CardFieldsPaymentForm({
   paid,
   working,
   onError,
+  cardError,
 }: {
   busy: boolean;
   paid: boolean;
   working: (value: boolean) => void;
   onError: (error: unknown) => void;
+  cardError?: string | null;
 }) {
   const { cardFieldsForm } = usePayPalCardFields();
   const [eligible, setEligible] = useState(false);
@@ -229,6 +236,14 @@ function CardFieldsPaymentForm({
     setEligible(cardFieldsForm.isEligible());
     setEligibilityChecked(true);
   }, [cardFieldsForm]);
+
+  if (cardError) {
+    return (
+      <p role="status" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
+        El pago con tarjeta no está disponible en este momento. Puedes pagar con tu cuenta PayPal.
+      </p>
+    );
+  }
 
   if (!eligibilityChecked) return null;
   if (!eligible) {
