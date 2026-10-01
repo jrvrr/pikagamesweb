@@ -324,7 +324,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   </div>
 
                   <p className="text-xs text-zinc-300 leading-relaxed">
-                    PayPal Live: el pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
+                    El pago se confirmará cuando el servidor lo registre. La entrega quedará pendiente de coordinación.
                   </p>
 
                   {/* Botones oficiales de PayPal SDK */}

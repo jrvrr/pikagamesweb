@@ -57,6 +57,7 @@ function PayPalCheckout({
   const [paid, setPaid] = useState(false);
   const [message, setMessage] = useState("");
   const [recoverable, setRecoverable] = useState(false);
+  const [buttonVersion, setButtonVersion] = useState(0);
   const session = useRef<{ requestId?: string; pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
   const storageKey = `paypal-${paypalEnv}:${userId}:product:${productId}`;
@@ -151,6 +152,7 @@ function PayPalCheckout({
     <div className="space-y-2">
       {/* PayPal & Debit/Credit Card buttons rendered by the SDK */}
       <PayPalButtons
+        key={buttonVersion}
         disabled={busy || paid}
         style={{
           layout: "vertical",
@@ -171,15 +173,24 @@ function PayPalCheckout({
       />
       {message && <p role="status" className="text-xs text-zinc-300">{message}</p>}
       {recoverable && !paid && (
-        <button type="button" disabled={busy} className="text-xs underline disabled:opacity-50"
-          onClick={async () => {
-            working(true);
-            try { confirm(await apiFetch(`/paypal/orden/${encodeURIComponent(session.current.orderId!)}`)); }
-            catch (error) { failed(error); }
-            finally { working(false); }
-          }}>
-          Verificar pago de este pedido
-        </button>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          <button type="button" disabled={busy} className="text-xs underline disabled:opacity-50"
+            onClick={async () => {
+              working(true);
+              try { confirm(await apiFetch(`/paypal/orden/${encodeURIComponent(session.current.orderId!)}`)); }
+              catch (error) { failed(error); }
+              finally { working(false); }
+            }}>
+            Verificar pago de este pedido
+          </button>
+          <button type="button" disabled={busy} className="text-xs underline disabled:opacity-50"
+            onClick={() => {
+              setButtonVersion((version) => version + 1);
+              setMessage("Formulario restablecido. Puedes volver a intentar con este mismo pedido.");
+            }}>
+            Restablecer formulario de PayPal
+          </button>
+        </div>
       )}
     </div>
   );
