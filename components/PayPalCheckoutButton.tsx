@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { PayPalButtons, PayPalCardFieldsForm, PayPalCardFieldsProvider, usePayPalCardFields, FUNDING, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+import { PayPalButtons, FUNDING, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -16,6 +16,10 @@ export interface PayPalConfirmation {
   total: string;
   currency: "MXN";
 }
+type PayPalConfirmationResponse = Partial<Omit<PayPalConfirmation, "pagoEstado" | "status">> & {
+  pagoEstado?: string;
+  status?: string;
+};
 
 interface PayPalCheckoutButtonProps {
   productId: string;
@@ -58,7 +62,6 @@ function PayPalCheckout({
   const [message, setMessage] = useState("");
   const [recoverable, setRecoverable] = useState(false);
   const [buttonVersion, setButtonVersion] = useState(0);
-  const [cardError, setCardError] = useState<string | null>(null);
   const session = useRef<{ requestId?: string; pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
   const paymentAttempted = useRef(false);
@@ -91,8 +94,18 @@ function PayPalCheckout({
     }
     failed(error);
   };
-  const confirm = (result: PayPalConfirmation) => {
-    if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
+  const confirm = (result: PayPalConfirmationResponse | null) => {
+    if (result?.confirmed !== true) {
+      const estado = result?.pagoEstado ?? result?.status;
+      const message = estado === "rechazado" || estado === "DECLINED" || estado === "FAILED"
+        ? "PayPal rechazó el pago. Verifica el estado de este pedido antes de volver a intentarlo."
+        : estado === "cancelado" || estado === "REFUNDED" || estado === "REVERSED"
+          ? "El pago aparece cancelado. Verifica el estado de este pedido antes de volver a intentarlo."
+          : "PayPal todavía está procesando el pago. No vuelvas a pagar; verifica el estado de este pedido en unos momentos.";
+      setMessage(message);
+      return;
+    }
+    if (result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
         result.pedidoId !== session.current.pedidoId || result.paypalOrderId !== session.current.orderId ||
         typeof result.captureId !== "string" || !result.captureId || result.currency !== "MXN" ||
         typeof result.total !== "string" || !/^\d+\.\d{2}$/.test(result.total)) {
@@ -100,7 +113,7 @@ function PayPalCheckout({
     }
     setPaid(true);
     setMessage(`Pago confirmado. Pedido #${result.pedidoId}`);
-    onSuccess(result);
+    onSuccess(result as PayPalConfirmation);
   };
   const createOrder = () => {
     if (creating.current) return creating.current;
@@ -182,22 +195,24 @@ function PayPalCheckout({
         }}
         onError={buttonError}
       />
-      {!paid && <PayPalCardFieldsProvider
+      <PayPalButtons
+        key={`card-${buttonVersion}`}
+        fundingSource={FUNDING.CARD}
+        disabled={busy || paid}
+        style={{ layout: "vertical", color: "black", shape: "rect", label: "pay", height: 45 }}
         createOrder={createOrder}
         onApprove={approve}
-        onError={(err) => {
-          // Errors here are card-field level (init, eligibility). Don't trigger global failed().
-          const msg = err instanceof Error ? err.message : "No se pudo cargar el formulario de tarjeta.";
-          setCardError(msg);
+        onCancel={() => {
+          working(false);
+          setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
+          onCancel?.();
         }}
-        style={{
-          input: { color: "#09090b", "font-size": "17px", "font-family": "Arial, sans-serif", "font-weight": "600", opacity: "1" },
-          ":focus": { color: "#000000", opacity: "1" },
-          ".invalid": { color: "#b91c1c" },
-        }}
+        onError={buttonError}
       >
-        <CardFieldsPaymentForm busy={busy} paid={paid} working={working} onError={failed} cardError={cardError} />
-      </PayPalCardFieldsProvider>}
+        <p role="status" className="text-center text-xs text-amber-300">
+          El pago con tarjeta no está disponible para esta cuenta PayPal.
+        </p>
+      </PayPalButtons>
       {message && <p role="status" className="text-xs text-zinc-300">{message}</p>}
       {recoverable && !paid && (
         <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -219,67 +234,6 @@ function PayPalCheckout({
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-function CardFieldsPaymentForm({
-  busy,
-  paid,
-  working,
-  onError,
-  cardError,
-}: {
-  busy: boolean;
-  paid: boolean;
-  working: (value: boolean) => void;
-  onError: (error: unknown) => void;
-  cardError?: string | null;
-}) {
-  const { cardFieldsForm } = usePayPalCardFields();
-  const [eligible, setEligible] = useState(false);
-  const [eligibilityChecked, setEligibilityChecked] = useState(false);
-
-  useEffect(() => {
-    if (!cardFieldsForm) return;
-    setEligible(cardFieldsForm.isEligible());
-    setEligibilityChecked(true);
-  }, [cardFieldsForm]);
-
-  if (cardError) {
-    return (
-      <p role="status" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
-        El pago con tarjeta no está disponible en este momento. Puedes pagar con tu cuenta PayPal.
-      </p>
-    );
-  }
-
-  if (!eligibilityChecked) return null;
-  if (!eligible) {
-    return <p role="status" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
-      PayPal no habilitó el pago directo con tarjeta para esta cuenta. Puedes pagar con PayPal o activar “Advanced Credit and Debit Card Payments” en tu cuenta PayPal.
-    </p>;
-  }
-
-  return (
-    <div className="space-y-3 rounded-xl border border-zinc-300 bg-white p-4 text-zinc-900">
-      <h3 className="text-sm font-semibold">Pagar con tarjeta</h3>
-      <div className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5">
-        <PayPalCardFieldsForm />
-      </div>
-      <button
-        type="button"
-        disabled={busy || paid || !cardFieldsForm}
-        onClick={async () => {
-          working(true);
-          try { await cardFieldsForm?.submit(); }
-          catch (error) { onError(error); }
-          finally { working(false); }
-        }}
-        className="w-full rounded-full bg-[#0070ba] px-4 py-3 text-sm font-semibold text-white hover:bg-[#005ea6] disabled:opacity-50"
-      >
-        {busy ? "Procesando…" : "Pagar con tarjeta"}
-      </button>
     </div>
   );
 }
