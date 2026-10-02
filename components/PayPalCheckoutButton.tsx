@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+import { PayPalButtons, FUNDING, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -16,6 +16,10 @@ export interface PayPalConfirmation {
   total: string;
   currency: "MXN";
 }
+type PayPalConfirmationResponse = Partial<Omit<PayPalConfirmation, "pagoEstado" | "status">> & {
+  pagoEstado?: string;
+  status?: string;
+};
 
 interface PayPalCheckoutButtonProps {
   productId: string;
@@ -57,8 +61,10 @@ function PayPalCheckout({
   const [paid, setPaid] = useState(false);
   const [message, setMessage] = useState("");
   const [recoverable, setRecoverable] = useState(false);
+  const [buttonVersion, setButtonVersion] = useState(0);
   const session = useRef<{ requestId?: string; pedidoId?: string; orderId?: string }>({});
   const creating = useRef<Promise<string> | null>(null);
+  const paymentAttempted = useRef(false);
   const storageKey = `paypal-${paypalEnv}:${userId}:product:${productId}`;
 
   useEffect(() => {
@@ -81,8 +87,25 @@ function PayPalCheckout({
     setMessage(error instanceof Error ? error.message : "No se pudo confirmar el pago. Verifica el mismo pedido antes de volver a pagar.");
     onError?.(error);
   };
-  const confirm = (result: PayPalConfirmation) => {
-    if (result?.confirmed !== true || result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
+  const buttonError = (error: unknown) => {
+    if (!paymentAttempted.current) {
+      setMessage("No se pudo iniciar PayPal. Recarga la página o elige otro método de pago.");
+      return;
+    }
+    failed(error);
+  };
+  const confirm = (result: PayPalConfirmationResponse | null) => {
+    if (result?.confirmed !== true) {
+      const estado = result?.pagoEstado ?? result?.status;
+      const message = estado === "rechazado" || estado === "DECLINED" || estado === "FAILED"
+        ? "PayPal rechazó el pago. Verifica el estado de este pedido antes de volver a intentarlo."
+        : estado === "cancelado" || estado === "REFUNDED" || estado === "REVERSED"
+          ? "El pago aparece cancelado. Verifica el estado de este pedido antes de volver a intentarlo."
+          : "PayPal todavía está procesando el pago. No vuelvas a pagar; verifica el estado de este pedido en unos momentos.";
+      setMessage(message);
+      return;
+    }
+    if (result.status !== "COMPLETED" || result.pagoEstado !== "aprobado" ||
         result.pedidoId !== session.current.pedidoId || result.paypalOrderId !== session.current.orderId ||
         typeof result.captureId !== "string" || !result.captureId || result.currency !== "MXN" ||
         typeof result.total !== "string" || !/^\d+\.\d{2}$/.test(result.total)) {
@@ -90,10 +113,11 @@ function PayPalCheckout({
     }
     setPaid(true);
     setMessage(`Pago confirmado. Pedido #${result.pedidoId}`);
-    onSuccess(result);
+    onSuccess(result as PayPalConfirmation);
   };
   const createOrder = () => {
     if (creating.current) return creating.current;
+    paymentAttempted.current = true;
     working(true);
     setMessage("Preparando pedido seguro...");
     creating.current = (async () => {
@@ -151,6 +175,8 @@ function PayPalCheckout({
     <div className="space-y-2">
       {/* PayPal & Debit/Credit Card buttons rendered by the SDK */}
       <PayPalButtons
+        key={buttonVersion}
+        fundingSource={FUNDING.PAYPAL}
         disabled={busy || paid}
         style={{
           layout: "vertical",
@@ -167,19 +193,46 @@ function PayPalCheckout({
           setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
           onCancel?.();
         }}
-        onError={failed}
+        onError={buttonError}
       />
+      <PayPalButtons
+        key={`card-${buttonVersion}`}
+        fundingSource={FUNDING.CARD}
+        disabled={busy || paid}
+        style={{ layout: "vertical", color: "black", shape: "rect", label: "pay", height: 45 }}
+        createOrder={createOrder}
+        onApprove={approve}
+        onCancel={() => {
+          working(false);
+          setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
+          onCancel?.();
+        }}
+        onError={buttonError}
+      >
+        <p role="status" className="text-center text-xs text-amber-300">
+          El pago con tarjeta no está disponible para esta cuenta PayPal.
+        </p>
+      </PayPalButtons>
       {message && <p role="status" className="text-xs text-zinc-300">{message}</p>}
       {recoverable && !paid && (
-        <button type="button" disabled={busy} className="text-xs underline disabled:opacity-50"
-          onClick={async () => {
-            working(true);
-            try { confirm(await apiFetch(`/paypal/orden/${encodeURIComponent(session.current.orderId!)}`)); }
-            catch (error) { failed(error); }
-            finally { working(false); }
-          }}>
-          Verificar pago de este pedido
-        </button>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          <button type="button" disabled={busy} className="text-xs underline disabled:opacity-50"
+            onClick={async () => {
+              working(true);
+              try { confirm(await apiFetch(`/paypal/orden/${encodeURIComponent(session.current.orderId!)}`)); }
+              catch (error) { failed(error); }
+              finally { working(false); }
+            }}>
+            Verificar pago de este pedido
+          </button>
+          <button type="button" disabled={busy} className="text-xs underline disabled:opacity-50"
+            onClick={() => {
+              setButtonVersion((version) => version + 1);
+              setMessage("Formulario restablecido. Puedes volver a intentar con este mismo pedido.");
+            }}>
+            Restablecer formulario de PayPal
+          </button>
+        </div>
       )}
     </div>
   );

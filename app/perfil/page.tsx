@@ -1,78 +1,48 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
-import { User, Shield, LogOut, Lock, Mail, Edit3, Save, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle, Lock, LogOut, Mail, Save, ShoppingBag, UserRound } from "lucide-react";
+
+const avatarEmojis = ["🎮", "🕹️", "👾", "⭐", "🚀", "🐉", "⚡", "🦊"];
 
 export default function PerfilPage() {
   const { user, token, isLoading, updateUser, logout } = useAuth();
   const router = useRouter();
-
   const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
-
-  const [userInfo, setUserInfo] = useState({
-    nombre: "",
-    apellidos: "",
-    email: "",
-    rol: "cliente"
-  });
-
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-  });
-
+  const [userInfo, setUserInfo] = useState({ nombre: "", apellidos: "", email: "" });
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/");
-    } else if (user) {
-      setUserInfo({
-        nombre: user.nombre || "",
-        apellidos: user.apellidos || "",
-        email: user.email || "",
-        rol: user.rol || "cliente"
-      });
-    }
+    if (!isLoading && !user) router.push("/");
+    if (user) setUserInfo({ nombre: user.nombre || "", apellidos: user.apellidos || "", email: user.email || "" });
   }, [user, isLoading, router]);
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setInfoMessage("");
     setIsSavingInfo(true);
-    
     try {
       const response = await fetch(`${apiUrl}/auth/perfil`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          nombre: userInfo.nombre,
-          apellidos: userInfo.apellidos,
-          email: userInfo.email
-        })
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre: userInfo.nombre, apellidos: userInfo.apellidos, email: userInfo.email }),
       });
-
       const data = await response.json();
-      if (response.ok) {
-        updateUser(data.usuario);
-        setInfoMessage("Información personal actualizada con éxito.");
-      } else {
-        setInfoMessage(data.message || "Error al actualizar la información.");
-      }
-    } catch {
-      setInfoMessage("Error de conexión con el servidor.");
+      if (!response.ok) throw new Error(data.message || "No se pudo actualizar tu información.");
+      updateUser(data.usuario);
+      setInfoMessage("Tu información se actualizó correctamente.");
+    } catch (error) {
+      setInfoMessage(error instanceof Error ? error.message : "Error de conexión con el servidor.");
+    } finally {
+      setIsSavingInfo(false);
     }
-
-    setIsSavingInfo(false);
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -83,234 +53,73 @@ export default function PerfilPage() {
       return;
     }
     setIsSavingPassword(true);
-    
     try {
       const response = await fetch(`${apiUrl}/auth/password`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword }),
       });
-
       const data = await response.json();
-      if (response.ok) {
-        setPasswordMessage("Contraseña actualizada con éxito.");
-        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      } else {
-        setPasswordMessage(data.message || "Error al actualizar la contraseña.");
-      }
-    } catch {
-      setPasswordMessage("Error de conexión con el servidor.");
+      if (!response.ok) throw new Error(data.message || "No se pudo actualizar la contraseña.");
+      setPasswordMessage("Contraseña actualizada correctamente.");
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error) {
+      setPasswordMessage(error instanceof Error ? error.message : "Error de conexión con el servidor.");
+    } finally {
+      setIsSavingPassword(false);
     }
-    
-    setIsSavingPassword(false);
   };
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen bg-[#111311] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#ffd90f] border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <div className="flex min-h-screen items-center justify-center bg-[#111311]" role="status" aria-label="Cargando perfil"><div className="size-10 animate-spin rounded-full border-4 border-[#ffd90f] border-t-transparent" /></div>;
   }
 
-  return (
-    <main id="main-content" className="min-h-screen bg-[#111311] text-zinc-300 font-sans pt-20 md:pt-24 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-12">
-      <div className="max-w-6xl mx-auto px-6">
-        
-        {/* Back to home button for easy mobile navigation */}
-        <div className="mb-6">
-          <button 
-            onClick={() => router.push("/")} 
-            className="bg-zinc-800 text-white border border-zinc-700 hover:bg-zinc-700 hover:border-[#ffd90f] rounded-full px-5 py-2 text-xs md:text-sm font-bold shadow-md inline-flex items-center gap-2 transition-all hover:-translate-y-0.5"
-          >
-            ← Volver a Inicio
-          </button>
-        </div>
+  const avatarIndex = [...user.id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % avatarEmojis.length;
+  const firstName = userInfo.nombre.trim().split(/\s+/)[0] || "jugador";
 
-        {/* Profile Header */}
-        <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full border-4 border-[#ffd90f] bg-zinc-800 flex items-center justify-center overflow-hidden">
-              <User className="w-16 h-16 text-zinc-500" />
+  return (
+    <main id="main-content" className="min-h-screen bg-[#111311] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-20 text-zinc-200 md:px-6 md:pt-24 lg:pb-12">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <header className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950 text-xl" aria-hidden="true">{avatarEmojis[avatarIndex]}</div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-balance truncate text-xl font-bold text-white">Hola, {firstName}</h1>
+              <p className="mt-1 inline-flex max-w-full items-center gap-2 text-sm text-zinc-400"><Mail aria-hidden="true" className="hidden size-4 shrink-0 sm:block" /><span className="truncate">{userInfo.email}</span></p>
             </div>
-            <button className="absolute bottom-0 right-0 bg-[#ffd90f] text-black p-2 rounded-full shadow-lg hover:bg-[#e5c30d] transition-colors">
-              <Edit3 className="w-4 h-4" />
+            <button onClick={logout} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-zinc-700 px-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ffd90f]">
+              <LogOut aria-hidden="true" className="hidden size-4 sm:block" /><span>Cerrar sesión</span>
             </button>
           </div>
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Hola, {userInfo.nombre.split(" ")[0]}</h1>
-            <p className="text-zinc-500 font-medium">{userInfo.email}</p>
-            <div className="mt-4 flex gap-3 justify-center md:justify-start">
-              <span className="px-4 py-1 bg-[#ffd90f]/10 border border-[#ffd90f]/30 rounded-full text-xs font-bold text-[#ffd90f] uppercase tracking-wider flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                Rol: {userInfo.rol}
-              </span>
-              <span className="px-4 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-bold text-white">Miembro desde 2026</span>
+          <nav aria-label="Secciones del perfil" className="mt-4 grid grid-cols-3 gap-2 border-t border-zinc-800 pt-4">
+            <Link href="/perfil/compras" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 px-2 text-center text-sm font-medium text-zinc-200 hover:bg-zinc-800"><ShoppingBag aria-hidden="true" className="hidden size-4 shrink-0 sm:block" /><span>Compras</span></Link>
+            <a href="#datos" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 px-2 text-center text-sm font-medium text-zinc-200 hover:bg-zinc-800"><UserRound aria-hidden="true" className="hidden size-4 shrink-0 sm:block" /><span>Mis datos</span></a>
+            <a href="#seguridad" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-zinc-700 px-2 text-center text-sm font-medium text-zinc-200 hover:bg-zinc-800"><Lock aria-hidden="true" className="hidden size-4 shrink-0 sm:block" /><span>Seguridad</span></a>
+          </nav>
+        </header>
+
+        <section id="datos" aria-labelledby="details-title" className="scroll-mt-24 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-7">
+          <div className="mb-6 flex items-center gap-3"><div className="flex size-11 items-center justify-center rounded-2xl bg-[#ffd90f]/10 text-[#ffd90f]"><UserRound aria-hidden="true" className="size-5" /></div><div><h2 id="details-title" className="text-xl font-bold text-white">Mis datos</h2><p className="text-sm text-zinc-500">Mantén actualizada tu información</p></div></div>
+          <form onSubmit={handleInfoSubmit} className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div><label htmlFor="profile-first-name" className="mb-2 block text-sm font-medium text-zinc-300">Nombre</label><input id="profile-first-name" type="text" autoComplete="given-name" value={userInfo.nombre} onChange={(e) => setUserInfo({ ...userInfo, nombre: e.target.value })} className="min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white placeholder:text-zinc-500 focus-visible:border-[#ffd90f] focus-visible:outline-none" required /></div>
+              <div><label htmlFor="profile-last-name" className="mb-2 block text-sm font-medium text-zinc-300">Apellidos</label><input id="profile-last-name" type="text" autoComplete="family-name" value={userInfo.apellidos} onChange={(e) => setUserInfo({ ...userInfo, apellidos: e.target.value })} className="min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white placeholder:text-zinc-500 focus-visible:border-[#ffd90f] focus-visible:outline-none" required /></div>
             </div>
-          </div>
-        </div>
+            <div><label htmlFor="profile-email" className="mb-2 block text-sm font-medium text-zinc-300">Correo electrónico</label><input id="profile-email" type="email" autoComplete="email" value={userInfo.email} onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })} className="min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white focus-visible:border-[#ffd90f] focus-visible:outline-none" required /></div>
+            {infoMessage && <p role="status" aria-live="polite" className="text-sm text-zinc-300">{infoMessage}</p>}
+            <div className="flex justify-end"><button type="submit" disabled={isSavingInfo} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#ffd90f] px-5 font-bold text-zinc-900 transition hover:bg-[#e5c30d] disabled:cursor-not-allowed disabled:opacity-60">{isSavingInfo ? <span className="size-4 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent" /> : <Save aria-hidden="true" className="size-4" />}Guardar cambios</button></div>
+          </form>
+        </section>
 
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Main Column - Settings */}
-          <div className="md:col-span-2 space-y-8">
-            
-            {/* Personal Info Card */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 md:p-8">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <User className="w-5 h-5 text-[#ffd90f]" /> Información Personal
-              </h2>
-              
-              <form onSubmit={handleInfoSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label htmlFor="profile-first-name" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nombre</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                      <input 
-                        id="profile-first-name" type="text"
-                        value={userInfo.nombre}
-                        onChange={(e) => setUserInfo({...userInfo, nombre: e.target.value})}
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="profile-last-name" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Apellidos</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                      <input 
-                        id="profile-last-name" type="text"
-                        value={userInfo.apellidos}
-                        onChange={(e) => setUserInfo({...userInfo, apellidos: e.target.value})}
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="profile-email" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Correo Electrónico</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                    <input 
-                      id="profile-email" type="email"
-                      value={userInfo.email}
-                      onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {infoMessage && <p role="status" aria-live="polite" className="text-sm text-zinc-200">{infoMessage}</p>}
-                <div className="pt-2 flex justify-end">
-                  <button 
-                    type="submit" 
-                    disabled={isSavingInfo}
-                    className="flex items-center gap-2 bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 px-6 py-3 rounded-full font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSavingInfo ? (
-                      <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Save className="w-5 h-5" />
-                    )}
-                    Guardar Cambios
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Security / Password Card */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 md:p-8">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Lock className="w-5 h-5 text-[#ffd90f]" /> Seguridad y Contraseña
-              </h2>
-              
-              <form onSubmit={handlePasswordSubmit} className="space-y-5">
-                <div>
-                  <label htmlFor="current-password" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Contraseña Actual</label>
-                  <input 
-                    id="current-password" type="password"
-                    autoComplete="current-password"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
-                    placeholder="••••••••"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label htmlFor="new-password" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Nueva Contraseña</label>
-                    <input 
-                      id="new-password" type="password"
-                      autoComplete="new-password"
-                      value={passwordForm.newPassword}
-                      onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                      placeholder="••••••••"
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="confirm-password" className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Confirmar Nueva Contraseña</label>
-                    <input 
-                      id="confirm-password" type="password" aria-invalid={passwordMessage.includes("no coinciden")} aria-describedby={passwordMessage ? "password-feedback" : undefined}
-                      autoComplete="new-password"
-                      value={passwordForm.confirmPassword}
-                      onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
-                      placeholder="••••••••"
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-[#ffd90f] focus:ring-1 focus:ring-[#ffd90f] transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {passwordMessage && <p id="password-feedback" role={passwordMessage.includes("no coinciden") ? "alert" : "status"} className="text-sm text-zinc-200">{passwordMessage}</p>}
-                <div className="pt-2 flex justify-end">
-                  <button 
-                    type="submit" 
-                    disabled={isSavingPassword}
-                    className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 px-6 py-3 rounded-full font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSavingPassword ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <CheckCircle className="w-5 h-5" />
-                    )}
-                    Actualizar Contraseña
-                  </button>
-                </div>
-              </form>
-            </div>
-
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            
-            {/* Quick Links */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-2">            
-              
-              <button onClick={logout} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors text-left text-zinc-500">
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Cerrar Sesión</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
+        <section id="seguridad" aria-labelledby="security-title" className="scroll-mt-24 rounded-3xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-7">
+          <div className="mb-6 flex items-center gap-3"><div className="flex size-11 items-center justify-center rounded-2xl bg-zinc-800 text-zinc-300"><Lock aria-hidden="true" className="size-5" /></div><div><h2 id="security-title" className="text-xl font-bold text-white">Seguridad</h2><p className="text-sm text-zinc-500">Cambia la contraseña de tu cuenta</p></div></div>
+          <form onSubmit={handlePasswordSubmit} className="space-y-5">
+            <div><label htmlFor="current-password" className="mb-2 block text-sm font-medium text-zinc-300">Contraseña actual</label><input id="current-password" type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="******" className="min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white placeholder:text-zinc-600 focus-visible:border-[#ffd90f] focus-visible:outline-none" required /></div>
+            <div className="grid gap-5 sm:grid-cols-2"><div><label htmlFor="new-password" className="mb-2 block text-sm font-medium text-zinc-300">Nueva contraseña</label><input id="new-password" type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} placeholder="******" className="min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white placeholder:text-zinc-600 focus-visible:border-[#ffd90f] focus-visible:outline-none" required /></div><div><label htmlFor="confirm-password" className="mb-2 block text-sm font-medium text-zinc-300">Confirmar contraseña</label><input id="confirm-password" type="password" autoComplete="new-password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} placeholder="******" aria-invalid={passwordMessage.includes("no coinciden")} aria-describedby={passwordMessage ? "password-feedback" : undefined} className="min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white placeholder:text-zinc-600 focus-visible:border-[#ffd90f] focus-visible:outline-none" required /></div></div>
+            {passwordMessage && <p id="password-feedback" role={passwordMessage.includes("no coinciden") ? "alert" : "status"} className="text-sm text-zinc-300">{passwordMessage}</p>}
+            <div className="flex justify-end"><button type="submit" disabled={isSavingPassword} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-700 px-5 font-bold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60">{isSavingPassword ? <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <CheckCircle aria-hidden="true" className="size-4" />}Actualizar contraseña</button></div>
+          </form>
+        </section>
       </div>
     </main>
   );

@@ -38,6 +38,7 @@ function BuscarContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchRequestId = useRef(0);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
@@ -149,8 +150,14 @@ function BuscarContent() {
 
   const handleSelectSearch = (term: string) => {
     setQuery(term);
+    setIsSearchFocused(false);
     router.replace(`/buscar?q=${encodeURIComponent(term)}`);
     setSearchError("");
+  };
+
+  const handleSubmitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (query.trim()) handleSelectSearch(query.trim());
   };
 
   const handleOpenDetailModal = async (game: Game) => {
@@ -185,26 +192,42 @@ function BuscarContent() {
             Volver al inicio
           </Link>
 
-          <div className="relative w-full">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-7 h-7 text-[#ffd90f]" />
-            <input 
+          <form onSubmit={handleSubmitSearch} className="relative w-full">
+            <Search aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-zinc-400 sm:left-5" />
+            <input
+              id="game-search"
               aria-label="Buscar videojuegos"
-              type="text" 
+              type="text"
               value={query}
+              onFocus={() => setIsSearchFocused(true)}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="¿Qué videojuego estás buscando? (ej. Mario Kart, Zelda...)" 
-              className="w-full pl-18 md:pl-20 pr-12 py-5 md:py-6 bg-zinc-900 border-2 border-zinc-800 rounded-3xl text-lg md:text-xl font-bold focus:outline-none focus:border-[#ffd90f] focus:ring-4 focus:ring-[#ffd90f]/20 transition-all text-white placeholder-zinc-500 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+              className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 py-4 pl-12 pr-32 text-base font-bold text-white transition-colors focus-visible:border-b-2 focus-visible:border-b-[#ffd90f] focus-visible:outline-none sm:pl-14 sm:text-lg"
             />
             {query && (
-              <button 
-              onClick={clearSearch}
-              className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-              aria-label="Limpiar búsqueda"
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-24 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                aria-label="Limpiar búsqueda"
               >
-                <X className="w-4 h-4" />
+                <X aria-hidden="true" className="size-4" />
               </button>
             )}
-          </div>
+            <button type="submit" className="absolute right-1.5 top-1/2 flex min-h-11 -translate-y-1/2 items-center gap-2 rounded-xl bg-[#ffd90f] px-3 font-bold text-zinc-950 hover:bg-[#ffe45c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd90f]">
+              <Search aria-hidden="true" className="size-4" /><span>Buscar</span>
+            </button>
+            {isSearchFocused && query.trim().length >= 2 && !isLoading && results.length > 0 && (
+              <ul id="game-search-suggestions" aria-label="Sugerencias de juegos" aria-live="polite" className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 shadow-xl">
+                {results.slice(0, 5).map((game) => (
+                  <li key={game.id}>
+                    <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSelectSearch(game.name)} className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm font-medium text-zinc-100 hover:bg-zinc-800 focus-visible:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-[#ffd90f]">
+                      <span className="truncate">{game.name}</span><span className="shrink-0 text-xs text-zinc-500">Nintendo Switch</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </form>
         </div>
 
         {/* Quick Chips if no query or along with results */}

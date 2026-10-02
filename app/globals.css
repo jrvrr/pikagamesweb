@@ -25,9 +25,39 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px #18181b inset;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 :focus-visible {
   outline: 3px solid #ffd90f;
   outline-offset: 3px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-color: #ffd90f;
+}
+
+#game-search:focus-visible,
+.catalog-search:focus-visible {
+  border-color: #3f3f46;
+  border-bottom-color: #ffd90f;
+}
+
+#mobile-search input:focus-visible {
+  border-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

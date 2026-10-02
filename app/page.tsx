@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AccessibleDialog } from "@/components/AccessibleDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShapeGrid } from "@/components/ShapeGrid";
+import { HeroSwitch } from "@/components/HeroSwitch";
 import {
   MessageCircle,
   Home,
@@ -312,14 +313,10 @@ export default function HomePage() {
         </div>
 
         {/* Hero Visuals */}
-        <div className="relative z-10 mt-12 md:mt-0 flex items-center justify-center">
-          <div className="relative w-72 md:w-96 aspect-square flex items-center justify-center">
+        <div className="relative z-10 mt-12 md:mt-0 w-full md:w-[52%] md:shrink-0 flex items-center justify-center">
+          <div className="relative w-full max-w-2xl flex items-center justify-center">
             <div className="absolute inset-0 bg-linear-to-tr from-[#ffd90f]/20 to-transparent rounded-full blur-3xl" />
-            <img 
-              src="/1.png" 
-              alt="Nintendo Switch Cartridges" 
-              className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500" 
-            />
+            <HeroSwitch />
           </div>
         </div>
       </section>
