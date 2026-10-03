@@ -410,17 +410,17 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
               viewport={{ once: false, amount: 0.1 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.5 }}
-              className="flex flex-col md:flex-row justify-center items-center gap-12 w-full mt-8"
+              className="grid w-full min-w-0 grid-cols-1 items-center justify-items-center gap-8 mt-8 md:grid-cols-2 md:gap-10"
             >
               <img 
                 src="/1.png" 
                 alt="Catálogo Switch 1" 
-                className="-mt-4 md:-mt-8 h-60 md:h-80 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] hover:-translate-y-2 transition-transform duration-300"
+                className="-mt-4 h-auto max-h-60 w-full max-w-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] transition-transform duration-300 hover:-translate-y-2 md:-mt-8 md:max-h-80"
               />
               <img 
                 src="/2.avif" 
                 alt="Catálogo Switch 2" 
-                className="h-48 md:h-72 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] hover:-translate-y-2 transition-transform duration-300"
+                className="h-auto max-h-60 w-full max-w-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] transition-transform duration-300 hover:-translate-y-2 md:max-h-72"
               />
             </motion.div>
           </div>
@@ -868,12 +868,9 @@ export default function HomePage() {
               <div className="flex justify-between items-start px-7 py-6 sm:px-8 sm:py-7 border-b border-zinc-800 bg-[#18181b]/95">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#ffd90f]/10 text-[#ffd90f] border border-[#ffd90f]/25 tracking-wide w-fit">
-                      Servicio al cliente
-                    </span>
+                    
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
-                    <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-[#ffd90f] shrink-0" />
                     ¿Necesitas ayuda?
                   </h3>
                   <p className="text-xs sm:text-sm text-zinc-400 font-medium">Estamos aquí para ayudarte.</p>
@@ -933,10 +930,7 @@ export default function HomePage() {
                         </button>
                       </div>
 
-                      {/* Modal Footer Text */}
-                      <div className="pt-3 border-t border-zinc-800/80 text-center">
-                        <p className="text-xs sm:text-sm text-zinc-400/80 font-medium">Normalmente respondemos pronto</p>
-                      </div>
+          
                     </motion.div>
                   )}
 

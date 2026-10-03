@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { motion } from "framer-motion";
 import styles from "./HeroSwitch.module.css";
 
@@ -8,20 +7,25 @@ const directions = ["Arriba", "Izquierda", "Derecha", "Abajo"];
 const letters = ["X", "Y", "A", "B"];
 
 function Joystick({ side }: { side: "left" | "right" }) {
-  const baseRef = useRef<HTMLDivElement>(null);
-
   return (
-    <div ref={baseRef} className={`${styles.stickBase} ${side === "left" ? styles.leftStick : styles.rightStick}`}>
-      <motion.button
-        type="button"
-        className={styles.stick}
-        aria-label={`Joystick ${side === "left" ? "izquierdo" : "derecho"}; arrastra para moverlo`}
+    <div className={`${styles.stickSocket} ${side === "left" ? styles.leftStick : styles.rightStick}`}>
+      <motion.div
+        className={styles.stickAssembly}
         drag
-        dragConstraints={baseRef}
-        dragElastic={0}
+        dragConstraints={{ top: -8, right: 8, bottom: 8, left: -8 }}
+        dragElastic={0.08}
         dragMomentum={false}
         dragSnapToOrigin
-      />
+        whileDrag={{ rotate: 8 }}
+      >
+        <div className={styles.stickBase}>
+          <button
+            type="button"
+            className={styles.stick}
+            aria-label={`Joystick ${side === "left" ? "izquierdo" : "derecho"}; arrástralo dentro de su base`}
+          />
+        </div>
+      </motion.div>
     </div>
   );
 }

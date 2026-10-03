@@ -107,7 +107,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   }, [params, user?.id]);
 
   const selectedOption = accountOptions[accountType];
-  const matchingProducts = products.filter((product) =>
+  const matchingProducts = products.filter((product: CheckoutProduct) =>
     String(product.Videojuego?.rawg_id) === String(game?.id) && product.tipo_cuenta === accountType &&
     product.activo && product.Videojuego.activo);
   const selectedProduct = matchingProducts.length === 1 ? matchingProducts[0] : undefined;
@@ -205,7 +205,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               <h1 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">{game.name}</h1>
               
               {game.genres && game.genres.length > 0 && (
-                <p className="mt-2 text-xs font-bold text-zinc-400">{game.genres.map((g) => g.name).join(" · ")}</p>
+                <p className="mt-2 text-xs font-bold text-zinc-400">{game.genres.map((g: { id: number; name: string }) => g.name).join(" · ")}</p>
               )}
 
               <p className="mt-4 text-xs leading-relaxed text-zinc-300 sm:text-sm">{game.description_raw || "Título digital listo para Nintendo Switch con entrega rápida."}</p>
@@ -251,7 +251,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                         <span className="font-black text-sm text-white">{option.label}</span>
                         {isSelected && <Check className="h-4 w-4 text-[#ffd90f] stroke-[3]" />}
                       </div>
-                      <span className="text-sm font-black text-[#ffd90f]">${paymentMethod === "paypal" ? products.find((p) => String(p.Videojuego?.rawg_id) === String(game.id) && p.tipo_cuenta === type && p.activo && p.Videojuego.activo)?.precio ?? "—" : option.price} MXN</span>
+                      <span className="text-sm font-black text-[#ffd90f]">${paymentMethod === "paypal" ? products.find((p: CheckoutProduct) => String(p.Videojuego?.rawg_id) === String(game.id) && p.tipo_cuenta === type && p.activo && p.Videojuego.activo)?.precio ?? "—" : option.price} MXN</span>
                     </button>
                   );
                 })}
@@ -338,7 +338,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                         productId={String(selectedProduct.id)}
                         userId={user.id}
                         onBusy={setPaypalBusy}
-                        onSuccess={(details) => {
+                        onSuccess={(details: PayPalConfirmation) => {
                           setConfirmation(details);
                           setIsPaypalPaid(true);
                         }}
