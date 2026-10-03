@@ -36,7 +36,9 @@ import {
   Calendar,
   Info,
   Check,
-  Flame
+  Flame,
+  Headphones,
+  ArrowRight
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -779,7 +781,7 @@ export default function HomePage() {
             <Button 
               onClick={() => setIsCustomerServiceOpen(true)}
               size="lg" 
-              className="text-sm sm:text-lg md:text-xl font-extrabold px-5 py-2.5 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-linear-to-r from-[#ffdf91] to-[#ff7a93] text-zinc-900 border-2 border-white hover:from-[#ffcf61] hover:to-[#ff607d] transition-all shadow-[0_4px_20px_rgba(255,122,147,0.3)] hover:shadow-[0_8px_30px_rgba(255,122,147,0.6)] hover:-translate-y-1 tracking-tight flex items-center gap-2 sm:gap-3"
+              className="text-sm sm:text-lg md:text-xl font-extrabold px-6 py-3 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-zinc-800 text-white border-2 border-zinc-600 hover:bg-zinc-700 hover:border-[#ffd90f] hover:text-[#ffd90f] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:-translate-y-1 tracking-tight flex items-center gap-2 sm:gap-3"
             >
               <span>Servicio al cliente</span>
               <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 stroke-3 shrink-0" />
@@ -860,27 +862,36 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-zinc-900 border-2 border-zinc-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col my-auto max-h-[85vh] sm:max-h-[90vh]"
+              className="relative w-full max-w-[590px] bg-[#18181b] border border-[#ffd90f]/30 rounded-[24px] shadow-[0_0_35px_rgba(255,217,15,0.08),0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden z-10 flex flex-col mx-auto my-auto max-h-[85vh] sm:max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-zinc-800 bg-zinc-900/80">
-                <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#ff7a93] fill-[#ff7a93]" /> Servicio al Cliente
-                </h3>
+              <div className="flex justify-between items-start px-7 py-6 sm:px-8 sm:py-7 border-b border-zinc-800 bg-[#18181b]/95">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#ffd90f]/10 text-[#ffd90f] border border-[#ffd90f]/25 tracking-wide w-fit">
+                      Servicio al cliente
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                    <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-[#ffd90f] shrink-0" />
+                    ¿Necesitas ayuda?
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-400 font-medium">Estamos aquí para ayudarte.</p>
+                </div>
                 <button 
                   onClick={() => {
                     setIsCustomerServiceOpen(false);
                     setTimeout(() => setCustomerServiceView('selection'), 300);
                   }}
                   aria-label="Cerrar servicio al cliente"
-                  className="size-11 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  className="size-10 sm:size-11 rounded-full bg-zinc-800/80 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0 mt-0.5"
                 >
                   <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
 
               {/* Contenido */}
-              <div className="p-5 sm:p-6 md:p-8 flex flex-col justify-center relative overflow-y-auto">
+              <div className="p-7 sm:p-8 flex flex-col justify-center relative overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {customerServiceView === 'selection' && (
                     <motion.div 
@@ -888,29 +899,44 @@ export default function HomePage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full py-2"
+                      className="flex flex-col gap-6 w-full py-1"
                     >
-                      <button 
-                        onClick={() => { setCommentError(""); setCustomerServiceView('comment'); }}
-                        className="flex-1 group bg-zinc-800/90 border-2 border-zinc-700 hover:border-[#ffd90f] hover:bg-zinc-800 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1 active:translate-y-0"
-                      >
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-zinc-700/70 group-hover:bg-[#ffd90f]/20 flex items-center justify-center mb-4 transition-colors">
-                          <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
-                        </div>
-                        <h4 className="text-lg sm:text-xl font-bold text-white mb-1.5">Dejar un Comentario</h4>
-                        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">Cuéntanos tu experiencia y aparece en nuestra página.</p>
-                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Card 1: Comentario */}
+                        <button 
+                          onClick={() => { setCommentError(""); setCustomerServiceView('comment'); }}
+                          className="group bg-zinc-900/90 hover:bg-zinc-800/90 border-2 border-zinc-700/60 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all duration-200 hover:-translate-y-1 active:translate-y-0 shadow-lg hover:shadow-[0_8px_25px_rgba(255,217,15,0.1)] cursor-pointer"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700/60 group-hover:border-[#ffd90f]/40 group-hover:bg-[#ffd90f]/15 flex items-center justify-center mb-4 transition-colors">
+                            <MessageCircle className="w-6 h-6 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
+                          </div>
+                          <h4 className="text-lg font-bold text-white mb-1.5 group-hover:text-[#ffd90f] transition-colors">Dejar comentario</h4>
+                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">Comparte tu experiencia</p>
+                          <span className="text-xs sm:text-sm font-bold text-[#ffd90f] flex items-center gap-1.5 mt-auto pt-2 group-hover:translate-x-1 transition-transform">
+                            Comentar <ArrowRight className="w-4 h-4" />
+                          </span>
+                        </button>
 
-                      <button 
-                        onClick={() => setCustomerServiceView('email')}
-                        className="flex-1 group bg-zinc-800/90 border-2 border-zinc-700 hover:border-[#ff7a93] hover:bg-zinc-800 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center transition-all hover:-translate-y-1 active:translate-y-0"
-                      >
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-zinc-700/70 group-hover:bg-[#ff7a93]/20 flex items-center justify-center mb-4 transition-colors">
-                          <Mail className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-400 group-hover:text-[#ff7a93] transition-colors" />
-                        </div>
-                        <h4 className="text-lg sm:text-xl font-bold text-white mb-1.5">Enviar un Correo</h4>
-                        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">Contáctanos directamente para soporte o dudas.</p>
-                      </button>
+                        {/* Card 2: Enviar correo */}
+                        <button 
+                          onClick={() => setCustomerServiceView('email')}
+                          className="group bg-zinc-900/90 hover:bg-zinc-800/90 border-2 border-zinc-700/60 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all duration-200 hover:-translate-y-1 active:translate-y-0 shadow-lg hover:shadow-[0_8px_25px_rgba(255,217,15,0.1)] cursor-pointer"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700/60 group-hover:border-[#ffd90f]/40 group-hover:bg-[#ffd90f]/15 flex items-center justify-center mb-4 transition-colors">
+                            <Mail className="w-6 h-6 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
+                          </div>
+                          <h4 className="text-lg font-bold text-white mb-1.5 group-hover:text-[#ffd90f] transition-colors">Enviar correo</h4>
+                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">Habla con soporte</p>
+                          <span className="text-xs sm:text-sm font-bold text-[#ffd90f] flex items-center gap-1.5 mt-auto pt-2 group-hover:translate-x-1 transition-transform">
+                            Contactar <ArrowRight className="w-4 h-4" />
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* Modal Footer Text */}
+                      <div className="pt-3 border-t border-zinc-800/80 text-center">
+                        <p className="text-xs sm:text-sm text-zinc-400/80 font-medium">Normalmente respondemos pronto</p>
+                      </div>
                     </motion.div>
                   )}
 
@@ -984,13 +1010,13 @@ export default function HomePage() {
                       <div className="space-y-5 w-full">
                         <div>
                           <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
-                          <input id="support-subject" type="text" placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ff7a93] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <input id="support-subject" type="text" placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
                         </div>
                         <div>
                           <label htmlFor="support-message" className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
-                          <textarea id="support-message" rows={5} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ff7a93] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
+                          <textarea id="support-message" rows={5} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
                         </div>
-                        <Button className="w-full bg-[#ff7a93] hover:bg-[#e66a82] text-white font-black text-lg py-6 rounded-xl">
+                        <Button className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-lg py-6 rounded-xl">
                           Enviar Correo
                         </Button>
                       </div>
