@@ -862,15 +862,21 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-[590px] bg-zinc-900 border-2 border-zinc-700 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col mx-auto my-auto max-h-[85vh] sm:max-h-[90vh]"
+              className="relative w-full max-w-[590px] bg-[#18181b] border border-[#ffd90f]/30 rounded-[24px] shadow-[0_0_35px_rgba(255,217,15,0.08),0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden z-10 flex flex-col mx-auto my-auto max-h-[85vh] sm:max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex justify-between items-start px-7 py-6 sm:px-8 sm:py-7 border-b border-zinc-800 bg-zinc-900/90">
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-xl sm:text-2xl font-black text-white">
-                    Servicio al cliente
+              <div className="flex justify-between items-start px-7 py-6 sm:px-8 sm:py-7 border-b border-zinc-800 bg-[#18181b]/95">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#ffd90f]/10 text-[#ffd90f] border border-[#ffd90f]/25 tracking-wide w-fit">
+                      Servicio al cliente
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                    <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-[#ffd90f] shrink-0" />
+                    ¿Necesitas ayuda?
                   </h3>
-                  <p className="text-xs sm:text-sm text-zinc-400 font-medium">¿Cómo podemos ayudarte?</p>
+                  <p className="text-xs sm:text-sm text-zinc-400 font-medium">Estamos aquí para ayudarte.</p>
                 </div>
                 <button 
                   onClick={() => {
@@ -878,7 +884,7 @@ export default function HomePage() {
                     setTimeout(() => setCustomerServiceView('selection'), 300);
                   }}
                   aria-label="Cerrar servicio al cliente"
-                  className="size-10 sm:size-11 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0 mt-0.5"
+                  className="size-10 sm:size-11 rounded-full bg-zinc-800/80 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0 mt-0.5"
                 >
                   <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
@@ -899,13 +905,13 @@ export default function HomePage() {
                         {/* Card 1: Comentario */}
                         <button 
                           onClick={() => { setCommentError(""); setCustomerServiceView('comment'); }}
-                          className="group bg-zinc-800/80 hover:bg-zinc-800 border-2 border-zinc-700 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all hover:-translate-y-1 active:translate-y-0 shadow-lg"
+                          className="group bg-zinc-900/90 hover:bg-zinc-800/90 border-2 border-zinc-700/60 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all duration-200 hover:-translate-y-1 active:translate-y-0 shadow-lg hover:shadow-[0_8px_25px_rgba(255,217,15,0.1)] cursor-pointer"
                         >
-                          <div className="w-12 h-12 rounded-xl bg-zinc-700/60 group-hover:bg-[#ffd90f]/20 flex items-center justify-center mb-4 transition-colors">
+                          <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700/60 group-hover:border-[#ffd90f]/40 group-hover:bg-[#ffd90f]/15 flex items-center justify-center mb-4 transition-colors">
                             <MessageCircle className="w-6 h-6 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
                           </div>
                           <h4 className="text-lg font-bold text-white mb-1.5 group-hover:text-[#ffd90f] transition-colors">Dejar comentario</h4>
-                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">Cuéntanos tu experiencia.</p>
+                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">Comparte tu experiencia</p>
                           <span className="text-xs sm:text-sm font-bold text-[#ffd90f] flex items-center gap-1.5 mt-auto pt-2 group-hover:translate-x-1 transition-transform">
                             Comentar <ArrowRight className="w-4 h-4" />
                           </span>
@@ -914,13 +920,13 @@ export default function HomePage() {
                         {/* Card 2: Enviar correo */}
                         <button 
                           onClick={() => setCustomerServiceView('email')}
-                          className="group bg-zinc-800/80 hover:bg-zinc-800 border-2 border-zinc-700 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all hover:-translate-y-1 active:translate-y-0 shadow-lg"
+                          className="group bg-zinc-900/90 hover:bg-zinc-800/90 border-2 border-zinc-700/60 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all duration-200 hover:-translate-y-1 active:translate-y-0 shadow-lg hover:shadow-[0_8px_25px_rgba(255,217,15,0.1)] cursor-pointer"
                         >
-                          <div className="w-12 h-12 rounded-xl bg-zinc-700/60 group-hover:bg-[#ffd90f]/20 flex items-center justify-center mb-4 transition-colors">
+                          <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700/60 group-hover:border-[#ffd90f]/40 group-hover:bg-[#ffd90f]/15 flex items-center justify-center mb-4 transition-colors">
                             <Mail className="w-6 h-6 text-zinc-400 group-hover:text-[#ffd90f] transition-colors" />
                           </div>
-                          <h4 className="text-lg font-bold text-white mb-1.5 group-hover:text-[#ffd90f] transition-colors">Enviar un correo</h4>
-                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">¿Tienes alguna duda o problema?</p>
+                          <h4 className="text-lg font-bold text-white mb-1.5 group-hover:text-[#ffd90f] transition-colors">Enviar correo</h4>
+                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">Habla con soporte</p>
                           <span className="text-xs sm:text-sm font-bold text-[#ffd90f] flex items-center gap-1.5 mt-auto pt-2 group-hover:translate-x-1 transition-transform">
                             Contactar <ArrowRight className="w-4 h-4" />
                           </span>
@@ -929,7 +935,7 @@ export default function HomePage() {
 
                       {/* Modal Footer Text */}
                       <div className="pt-3 border-t border-zinc-800/80 text-center">
-                        <p className="text-xs sm:text-sm text-zinc-500 font-medium">Soporte y atención de Pikagames</p>
+                        <p className="text-xs sm:text-sm text-zinc-400/80 font-medium">Normalmente respondemos pronto</p>
                       </div>
                     </motion.div>
                   )}
