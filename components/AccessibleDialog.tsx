@@ -15,7 +15,10 @@ export function AccessibleDialog({ open, title, description, onClose, children }
   return (
     <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm" />
+        <Dialog.Backdrop 
+          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-[4px]" 
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.72)', backdropFilter: 'blur(4px)' }} 
+        />
         <Dialog.Viewport className="fixed inset-0 z-[101] flex items-center justify-center overflow-y-auto overscroll-contain p-4 sm:p-6">
           <Dialog.Popup className="relative w-full flex items-center justify-center outline-none">
             <Dialog.Title className="sr-only">{title}</Dialog.Title>

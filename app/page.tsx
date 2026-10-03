@@ -862,10 +862,10 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-zinc-900 border-2 border-zinc-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col mx-auto my-auto max-h-[85vh] sm:max-h-[90vh]"
+              className="relative w-full max-w-[590px] bg-zinc-900 border-2 border-zinc-700 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col mx-auto my-auto max-h-[85vh] sm:max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex justify-between items-start px-6 py-5 border-b border-zinc-800 bg-zinc-900/90">
+              <div className="flex justify-between items-start px-7 py-6 sm:px-8 sm:py-7 border-b border-zinc-800 bg-zinc-900/90">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-xl sm:text-2xl font-black text-white">
                     Servicio al cliente
@@ -885,7 +885,7 @@ export default function HomePage() {
               </div>
 
               {/* Contenido */}
-              <div className="p-5 sm:p-6 md:p-8 flex flex-col justify-center relative overflow-y-auto">
+              <div className="p-7 sm:p-8 flex flex-col justify-center relative overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {customerServiceView === 'selection' && (
                     <motion.div 
