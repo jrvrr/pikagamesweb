@@ -781,9 +781,8 @@ export default function HomePage() {
             <Button 
               onClick={() => setIsCustomerServiceOpen(true)}
               size="lg" 
-              className="text-sm sm:text-lg md:text-xl font-extrabold px-6 py-3 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-zinc-800 text-white border-2 border-zinc-600 hover:bg-zinc-700 hover:border-[#ffd90f] hover:text-[#ffd90f] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:-translate-y-1 tracking-tight flex items-center gap-2.5 sm:gap-3"
+              className="text-sm sm:text-lg md:text-xl font-extrabold px-6 py-3 sm:px-8 sm:py-3.5 md:py-4 h-auto rounded-full bg-zinc-800 text-white border-2 border-zinc-600 hover:bg-zinc-700 hover:border-[#ffd90f] hover:text-[#ffd90f] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:-translate-y-1 tracking-tight flex items-center gap-2 sm:gap-3"
             >
-              <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-[#ffd90f] shrink-0" />
               <span>Servicio al cliente</span>
               <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 stroke-3 shrink-0" />
             </Button>
@@ -863,13 +862,13 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-zinc-900 border-2 border-zinc-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col my-auto max-h-[85vh] sm:max-h-[90vh]"
+              className="relative w-full max-w-xl bg-zinc-900 border-2 border-zinc-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden z-10 flex flex-col mx-auto my-auto max-h-[85vh] sm:max-h-[90vh]"
             >
               {/* Header */}
               <div className="flex justify-between items-start px-6 py-5 border-b border-zinc-800 bg-zinc-900/90">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
-                    <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-[#ffd90f]" /> Servicio al cliente
+                  <h3 className="text-xl sm:text-2xl font-black text-white">
+                    Servicio al cliente
                   </h3>
                   <p className="text-xs sm:text-sm text-zinc-400 font-medium">¿Cómo podemos ayudarte?</p>
                 </div>
