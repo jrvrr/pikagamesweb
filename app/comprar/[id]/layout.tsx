@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { isDemoGameId } from "@/lib/demoGames";
 
 type Props = { children: React.ReactNode; params: Promise<{ id: string }> };
-type RawgGame = { name?: string; description_raw?: string; background_image?: string | null; released?: string | null };
+type RawgGame = { name?: string; description_raw?: string; background_image?: string | null };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const game = await response.json() as RawgGame;
     if (!game.name) return fallback;
     const description = game.description_raw?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160)
-      || (game.released ? `${game.name}. Fecha de lanzamiento: ${game.released}.` : `Información del videojuego ${game.name}.`);
+      || `Información del videojuego ${game.name}.`;
     const title = `${game.name} | Videojuego`;
 
     return {

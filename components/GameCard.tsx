@@ -1,4 +1,4 @@
-import { Calendar, Eye, Gamepad2, Heart, ShoppingCart, Star, Trash2 } from "lucide-react";
+import { Eye, Gamepad2, Heart, ShoppingCart, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Game } from "@/lib/rawg";
 
@@ -11,7 +11,6 @@ interface GameCardProps {
   buyLabel?: string;
   isSwitch2?: boolean;
   isDemo?: boolean;
-  showReleaseDate?: boolean;
   onRemove?: (game: Game) => void;
 }
 
@@ -24,7 +23,6 @@ export function GameCard({
   buyLabel = "Comprar",
   isSwitch2 = false,
   isDemo = false,
-  showReleaseDate = true,
   onRemove,
 }: GameCardProps) {
   const rating = game.rating ? Number(game.rating).toFixed(1) : "4.8";
@@ -76,12 +74,6 @@ export function GameCard({
           </button>
         )}
 
-        {showReleaseDate && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-xs font-medium text-zinc-200">
-            <Calendar className="h-3.5 w-3.5 text-[#ffd90f]" />
-            <span>{game.released || "Próximamente"}</span>
-          </div>
-        )}
       </div>
 
       <div className="flex grow flex-col p-3 sm:p-4">

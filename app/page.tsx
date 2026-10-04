@@ -33,7 +33,6 @@ import {
   Loader2,
   Eye,
   Sparkles,
-  Calendar,
   Info,
   Check,
   Flame,
@@ -489,12 +488,6 @@ export default function HomePage() {
                         <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
                       )}
                       
-                      {/* Release date tag */}
-                      <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-md text-[#ffd90f] font-bold px-2.5 py-1 rounded-lg text-[11px] border border-zinc-700 flex items-center gap-1 shadow-md">
-                        <Calendar className="w-3 h-3 text-[#ffd90f]" />
-                        <span>{game.released ? game.released : 'Próximamente'}</span>
-                      </div>
-
                       {/* Bookmark button */}
                       <button
                         onClick={() => toggleSaveGame(game)}
@@ -829,7 +822,7 @@ export default function HomePage() {
             <div className="flex flex-col items-center md:items-end text-center md:text-right z-20 mt-12 md:mt-0 w-full md:w-1/3">
               <div className="flex flex-col space-y-4 w-full">
                 <div className="flex items-center justify-center md:justify-end gap-3 text-zinc-300 hover:text-white transition-colors">
-                  <a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="font-medium text-lg">81 3697 5487</a>
+                  <a href="https://wa.me/528136975457" target="_blank" rel="noreferrer" className="font-medium text-lg">81 3697 5457</a>
                   <MessageCircle className="w-5 h-5 text-[#ff7a93]" />
                 </div>
                 <div className="flex items-center justify-center md:justify-end gap-3 text-zinc-300 hover:text-white transition-colors">
@@ -1059,11 +1052,6 @@ export default function HomePage() {
                   <span className="bg-[#ffd90f] text-zinc-900 font-black text-xs px-3 py-1 rounded-full border border-zinc-900 flex items-center gap-1 shadow-md">
                     <Star className="w-3.5 h-3.5 fill-current" /> {detailModal.game.rating ? detailModal.game.rating.toFixed(1) : "4.8"} / 5
                   </span>
-                  {detailModal.game.released && (
-                    <span className="bg-zinc-900/90 text-white font-bold text-xs px-3 py-1 rounded-full border border-zinc-700 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#ffd90f]" /> {detailModal.game.released}
-                    </span>
-                  )}
                 </div>
 
                 {/* Title & Platform Header */}

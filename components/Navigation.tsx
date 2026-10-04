@@ -197,7 +197,7 @@ export function Navigation() {
                 <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Servicio al Cliente</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">¿Necesitas ayuda? Estamos aquí para resolver tus dudas.</p>
               </Link>
-              <a href="https://wa.me/528136975487" onClick={() => setIsMenuOpen(false)} target="_blank" rel="noreferrer" className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+              <a href="https://wa.me/528136975457" onClick={() => setIsMenuOpen(false)} target="_blank" rel="noreferrer" className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <MessageCircle className="w-12 h-12 text-[#25D366]" />
                 </div>

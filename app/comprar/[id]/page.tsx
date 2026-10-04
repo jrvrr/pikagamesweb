@@ -141,7 +141,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
       ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedOption.label} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
       : `Hola Pikagames, he apartado 1 boleto para "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Adjunto mi comprobante de pago.`;
     
-    window.open(`https://wa.me/528136975487?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/528136975457?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
   if (isLoading) {
@@ -519,7 +519,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <button
                   type="button"
                   onClick={sendWhatsAppComprobante}
-                  className="w-full rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] py-4 px-6 text-center font-black text-white text-sm shadow-[0_0_20px_rgba(37,211,102,0.3)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 uppercase tracking-wide"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#177245] px-6 py-4 text-center text-sm font-bold text-white shadow-[0_8px_18px_rgba(23,114,69,0.18)] transition-colors hover:bg-[#135f3a]"
                 >
                   <Send className="h-4 w-4 fill-current" />
                   Enviar Comprobante por WhatsApp
@@ -585,7 +585,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <button
                   type="button"
                   onClick={sendWhatsAppComprobante}
-                  className="w-full rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] py-4 px-6 text-center font-black text-white text-sm shadow-[0_0_20px_rgba(37,211,102,0.3)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 uppercase tracking-wide"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#177245] px-6 py-4 text-center text-sm font-bold text-white shadow-[0_8px_18px_rgba(23,114,69,0.18)] transition-colors hover:bg-[#135f3a]"
                 >
                   <Send className="h-4 w-4 fill-current" />
                   Enviar Comprobante por WhatsApp

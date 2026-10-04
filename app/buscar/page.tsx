@@ -13,7 +13,6 @@ import {
   Eye, 
   ShoppingCart, 
   Star, 
-  Calendar, 
   Gamepad2, 
   X
 } from "lucide-react";
@@ -327,13 +326,6 @@ function BuscarContent() {
                           <Heart className={`w-4 h-4 ${saved ? 'fill-zinc-900' : ''}`} />
                         </button>
 
-                        {/* Release date tag */}
-                        {game.released && (
-                          <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-md text-zinc-300 font-medium px-2 py-0.5 rounded text-[10px] border border-zinc-700 flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-[#ffd90f]" />
-                            <span>{game.released}</span>
-                          </div>
-                        )}
                       </div>
 
                       <div className="p-4 flex flex-col grow">
@@ -449,11 +441,6 @@ function BuscarContent() {
                   <span className="bg-[#ffd90f] text-zinc-900 font-extrabold px-3 py-1 rounded-full text-xs flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-current" /> {detailModal.game.rating ? detailModal.game.rating.toFixed(1) : "4.8"} / 5
                   </span>
-                  {detailModal.game.released && (
-                    <span className="bg-zinc-800 text-zinc-300 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#ffd90f]" /> Estreno: {detailModal.game.released}
-                    </span>
-                  )}
                   {detailModal.game.genres?.map(g => (
                     <span key={g.id} className="bg-zinc-800 text-zinc-300 font-medium px-3 py-1 rounded-full text-xs">
                       {g.name}

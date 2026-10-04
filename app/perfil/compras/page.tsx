@@ -23,6 +23,7 @@ export default function ComprasPage() {
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [purchasesLoadedAt, setPurchasesLoadedAt] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"all" | "pending">("all");
@@ -39,6 +40,7 @@ export default function ComprasPage() {
       const list = Array.isArray(result) ? result : result?.pedidos;
       if (!Array.isArray(list)) throw new Error("Respuesta no válida");
       setPurchases(list);
+      setPurchasesLoadedAt(Date.now());
     } catch {
       setError("No se pudieron cargar tus compras. Inténtalo de nuevo.");
     } finally {
@@ -54,9 +56,14 @@ export default function ComprasPage() {
     return <div className="flex min-h-screen items-center justify-center bg-[#111311]" role="status" aria-label="Cargando compras"><div className="size-8 animate-spin rounded-full border-4 border-[#ffd90f] border-t-transparent" /></div>;
   }
 
-  const pendingPurchases = purchases.filter((purchase) => ["pendiente", "pendiente_pago"].includes(purchase.estado?.toLowerCase() ?? ""));
-  const completedPurchases = purchases.filter((purchase) => !["pendiente", "pendiente_pago"].includes(purchase.estado?.toLowerCase() ?? ""));
-  const visiblePurchases = filter === "pending" ? pendingPurchases : completedPurchases;
+  const activePurchases = purchases.filter((purchase) => {
+    const isPending = ["pendiente", "pendiente_pago"].includes(purchase.estado?.toLowerCase() ?? "");
+    const createdAt = purchase.created_at ? new Date(purchase.created_at).getTime() : Number.NaN;
+    return !isPending || Number.isNaN(createdAt) || purchasesLoadedAt - createdAt < 24 * 60 * 60 * 1000;
+  });
+  const activePendingPurchases = activePurchases.filter((purchase) => ["pendiente", "pendiente_pago"].includes(purchase.estado?.toLowerCase() ?? ""));
+  const completedPurchases = activePurchases.filter((purchase) => !["pendiente", "pendiente_pago"].includes(purchase.estado?.toLowerCase() ?? ""));
+  const visiblePurchases = filter === "pending" ? activePendingPurchases : completedPurchases;
 
   return (
     <main id="main-content" className="min-h-screen bg-[#111311] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-20 text-zinc-200 md:px-6 md:pt-24 lg:pb-12">
