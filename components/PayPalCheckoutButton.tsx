@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { PayPalButtons, FUNDING, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+import { PayPalButtons, PayPalCardFieldsForm, PayPalCardFieldsProvider, FUNDING, usePayPalCardFields, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -32,6 +32,17 @@ interface PayPalCheckoutButtonProps {
   /** Called on payment error */
   onError?: (err: unknown) => void;
 }
+
+const cardFieldStyle = {
+  input: {
+    background: "#ffffff",
+    color: "#18181b",
+    "font-family": "Arial, Helvetica, sans-serif",
+    "font-size": "16px",
+  },
+  ":focus": { color: "#18181b" },
+  ".invalid": { color: "#b91c1c" },
+};
 
 export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
   const config = usePayPalConfig();
@@ -153,6 +164,19 @@ function PayPalCheckout({
     } catch (error) { failed(error); }
     finally { working(false); }
   };
+  const cancel = () => {
+    working(false);
+    setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
+    onCancel?.();
+  };
+  const submitCard = async (form: { submit: () => Promise<void> } | null) => {
+    if (!form) return;
+    paymentAttempted.current = true;
+    working(true);
+    setMessage("Procesando tarjeta de forma segura...");
+    try { await form.submit(); }
+    catch (error) { failed(error); }
+  };
 
   if (isPending) {
     return (
@@ -188,31 +212,18 @@ function PayPalCheckout({
         }}
         createOrder={createOrder}
         onApprove={approve}
-        onCancel={() => {
-          working(false);
-          setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
-          onCancel?.();
-        }}
+        onCancel={cancel}
         onError={buttonError}
       />
-      <PayPalButtons
-        key={`card-${buttonVersion}`}
-        fundingSource={FUNDING.CARD}
-        disabled={busy || paid}
-        style={{ layout: "vertical", color: "black", shape: "rect", label: "pay", height: 45 }}
+      <PayPalCardFieldsProvider
         createOrder={createOrder}
         onApprove={approve}
-        onCancel={() => {
-          working(false);
-          setMessage("Aprobación cancelada. Puedes retomar el mismo pedido.");
-          onCancel?.();
-        }}
+        onCancel={cancel}
         onError={buttonError}
+        style={cardFieldStyle}
       >
-        <p role="status" className="text-center text-xs text-amber-300">
-          El pago con tarjeta no está disponible para esta cuenta PayPal.
-        </p>
-      </PayPalButtons>
+        <CardPaymentForm disabled={busy || paid} onSubmit={submitCard} />
+      </PayPalCardFieldsProvider>
       {message && <p role="status" className="text-xs text-zinc-300">{message}</p>}
       {recoverable && !paid && (
         <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -235,5 +246,30 @@ function PayPalCheckout({
         </div>
       )}
     </div>
+  );
+}
+
+function CardPaymentForm({
+  disabled,
+  onSubmit,
+}: {
+  disabled: boolean;
+  onSubmit: (form: { submit: () => Promise<void> } | null) => Promise<void>;
+}) {
+  const { cardFieldsForm } = usePayPalCardFields();
+
+  return (
+    <section aria-label="Pago con tarjeta" className="rounded-xl border border-zinc-700 bg-white p-4 text-zinc-900 shadow-sm">
+      <p className="mb-3 text-sm font-bold">Paga con tarjeta</p>
+      <PayPalCardFieldsForm className="paypal-card-fields" />
+      <button
+        type="button"
+        disabled={disabled || !cardFieldsForm}
+        onClick={() => void onSubmit(cardFieldsForm)}
+        className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg bg-[#0070ba] px-4 text-sm font-bold text-white transition-colors hover:bg-[#005ea6] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Pagar con tarjeta
+      </button>
+    </section>
   );
 }
