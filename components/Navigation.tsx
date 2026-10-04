@@ -30,7 +30,7 @@ export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   
-  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/catalogo" ? "catalogo" : pathname === "/" ? "inicio" : "";
+  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/catalogo" ? "catalogo" : pathname === "/comprar" || pathname.startsWith("/comprar/") ? "comprar" : pathname === "/" ? "inicio" : "";
 
   // Clear search inputs when user navigates away from /buscar
   useEffect(() => {
@@ -115,7 +115,7 @@ export function Navigation() {
               <Gamepad2 className="w-5 h-5" /> Catálogo
             </Link>
 
-            <Link href="/catalogo" className="flex items-center gap-2 px-4 h-full text-white hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
+            <Link href="/comprar" className="flex items-center gap-2 px-4 h-full text-white hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
               <ShoppingBag className="w-5 h-5" /> Comprar
             </Link>
           </nav>
@@ -189,6 +189,13 @@ export function Navigation() {
                 </div>
                 <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Catálogo de Juegos</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Explora miles de títulos increíbles para tu consola.</p>
+              </Link>
+              <Link href="/comprar" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+                <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
+                  <ShoppingBag className="w-12 h-12 text-[#ffd90f]" />
+                </div>
+                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Comprar juegos</span>
+                <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Consulta los títulos disponibles y elige la cuenta que deseas comprar.</p>
               </Link>
               <Link href="/soporte" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
