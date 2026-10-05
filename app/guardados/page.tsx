@@ -11,7 +11,6 @@ import {
   ArrowLeft, 
   Gamepad2, 
   Star, 
-  Calendar, 
   Eye, 
   X, 
   Loader2 
@@ -181,13 +180,6 @@ export default function GuardadosPage() {
                     <Star className="w-3 h-3 fill-current" /> {game.rating ? Number(game.rating).toFixed(1) : "4.8"}
                   </div>
 
-                  {/* Release Date */}
-                  {game.released && (
-                    <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-md text-zinc-300 font-medium px-2 py-0.5 rounded text-[10px] border border-zinc-700 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-[#ffd90f]" />
-                      <span>{game.released}</span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Content */}
@@ -261,11 +253,6 @@ export default function GuardadosPage() {
                   <span className="bg-[#ffd90f] text-zinc-900 font-extrabold px-3 py-1 rounded-full text-xs flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-current" /> {detailModal.game.rating ? Number(detailModal.game.rating).toFixed(1) : "4.8"} / 5
                   </span>
-                  {detailModal.game.released && (
-                    <span className="bg-zinc-800 text-zinc-300 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#ffd90f]" /> Estreno: {detailModal.game.released}
-                    </span>
-                  )}
                 </div>
 
                 <div className="mb-6">

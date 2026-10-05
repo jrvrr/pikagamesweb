@@ -16,10 +16,10 @@ export default function SoportePage() {
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          <a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#25D366]/60">
+          <a href="https://wa.me/528136975457" target="_blank" rel="noreferrer" className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#25D366]/60">
             <MessageCircle className="h-7 w-7 text-[#25D366]" />
             <h2 className="mt-5 text-lg font-bold">WhatsApp</h2>
-            <p className="mt-2 text-sm text-zinc-400">81 3697 5487</p>
+            <p className="mt-2 text-sm text-zinc-400">81 3697 5457</p>
           </a>
           <a href="mailto:pikagamestore@gmail.com" className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#ffd90f]/60">
             <Mail className="h-7 w-7 text-[#ffd90f]" />

@@ -33,7 +33,6 @@ import {
   Loader2,
   Eye,
   Sparkles,
-  Calendar,
   Info,
   Check,
   Flame,
@@ -410,17 +409,17 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
               viewport={{ once: false, amount: 0.1 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.5 }}
-              className="flex flex-col md:flex-row justify-center items-center gap-12 w-full mt-8"
+              className="grid w-full min-w-0 grid-cols-1 items-center justify-items-center gap-8 mt-8 md:grid-cols-2 md:gap-10"
             >
               <img 
                 src="/1.png" 
                 alt="Catálogo Switch 1" 
-                className="-mt-4 md:-mt-8 h-60 md:h-80 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] hover:-translate-y-2 transition-transform duration-300"
+                className="-mt-4 h-auto max-h-60 w-full max-w-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] transition-transform duration-300 hover:-translate-y-2 md:-mt-8 md:max-h-80"
               />
               <img 
                 src="/2.avif" 
                 alt="Catálogo Switch 2" 
-                className="h-48 md:h-72 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] hover:-translate-y-2 transition-transform duration-300"
+                className="h-auto max-h-60 w-full max-w-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] transition-transform duration-300 hover:-translate-y-2 md:max-h-72"
               />
             </motion.div>
           </div>
@@ -489,12 +488,6 @@ export default function HomePage() {
                         <div className="w-full h-full flex items-center justify-center text-zinc-600"><Gamepad2 size={40} /></div>
                       )}
                       
-                      {/* Release date tag */}
-                      <div className="absolute bottom-2 left-2 bg-zinc-900/90 backdrop-blur-md text-[#ffd90f] font-bold px-2.5 py-1 rounded-lg text-[11px] border border-zinc-700 flex items-center gap-1 shadow-md">
-                        <Calendar className="w-3 h-3 text-[#ffd90f]" />
-                        <span>{game.released ? game.released : 'Próximamente'}</span>
-                      </div>
-
                       {/* Bookmark button */}
                       <button
                         onClick={() => toggleSaveGame(game)}
@@ -829,7 +822,7 @@ export default function HomePage() {
             <div className="flex flex-col items-center md:items-end text-center md:text-right z-20 mt-12 md:mt-0 w-full md:w-1/3">
               <div className="flex flex-col space-y-4 w-full">
                 <div className="flex items-center justify-center md:justify-end gap-3 text-zinc-300 hover:text-white transition-colors">
-                  <a href="https://wa.me/528136975487" target="_blank" rel="noreferrer" className="font-medium text-lg">81 3697 5487</a>
+                  <a href="https://wa.me/528136975457" target="_blank" rel="noreferrer" className="font-medium text-lg">81 3697 5457</a>
                   <MessageCircle className="w-5 h-5 text-[#ff7a93]" />
                 </div>
                 <div className="flex items-center justify-center md:justify-end gap-3 text-zinc-300 hover:text-white transition-colors">
@@ -868,12 +861,9 @@ export default function HomePage() {
               <div className="flex justify-between items-start px-7 py-6 sm:px-8 sm:py-7 border-b border-zinc-800 bg-[#18181b]/95">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#ffd90f]/10 text-[#ffd90f] border border-[#ffd90f]/25 tracking-wide w-fit">
-                      Servicio al cliente
-                    </span>
+                    
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
-                    <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-[#ffd90f] shrink-0" />
                     ¿Necesitas ayuda?
                   </h3>
                   <p className="text-xs sm:text-sm text-zinc-400 font-medium">Estamos aquí para ayudarte.</p>
@@ -933,10 +923,7 @@ export default function HomePage() {
                         </button>
                       </div>
 
-                      {/* Modal Footer Text */}
-                      <div className="pt-3 border-t border-zinc-800/80 text-center">
-                        <p className="text-xs sm:text-sm text-zinc-400/80 font-medium">Normalmente respondemos pronto</p>
-                      </div>
+          
                     </motion.div>
                   )}
 
@@ -1065,11 +1052,6 @@ export default function HomePage() {
                   <span className="bg-[#ffd90f] text-zinc-900 font-black text-xs px-3 py-1 rounded-full border border-zinc-900 flex items-center gap-1 shadow-md">
                     <Star className="w-3.5 h-3.5 fill-current" /> {detailModal.game.rating ? detailModal.game.rating.toFixed(1) : "4.8"} / 5
                   </span>
-                  {detailModal.game.released && (
-                    <span className="bg-zinc-900/90 text-white font-bold text-xs px-3 py-1 rounded-full border border-zinc-700 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#ffd90f]" /> {detailModal.game.released}
-                    </span>
-                  )}
                 </div>
 
                 {/* Title & Platform Header */}

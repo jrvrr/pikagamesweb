@@ -12,7 +12,6 @@ import {
   Heart, 
   ShoppingCart, 
   Star, 
-  Calendar, 
   ArrowLeft, 
   Loader2, 
   ChevronDown, 
@@ -485,11 +484,6 @@ function CatalogoContent() {
                   <span className="bg-[#ffd90f] text-zinc-900 font-extrabold px-3 py-1 rounded-full text-xs flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-current" /> {detailModal.game.rating ? Number(detailModal.game.rating).toFixed(1) : "4.8"} / 5
                   </span>
-                  {detailModal.game.released && (
-                    <span className="bg-zinc-800 text-zinc-300 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#ffd90f]" /> Estreno: {detailModal.game.released}
-                    </span>
-                  )}
                   {detailModal.game.genres?.map(g => (
                     <span key={g.id} className="bg-zinc-800 text-zinc-300 font-medium px-3 py-1 rounded-full text-xs">
                       {g.name}
