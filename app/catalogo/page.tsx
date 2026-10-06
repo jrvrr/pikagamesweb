@@ -303,7 +303,7 @@ function CatalogoContent() {
         {/* Filter Controls & Search */}
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center mb-8">
           {/* Genre & Tag Chips */}
-          <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
+          <div className="scrollbar-horizontal flex flex-nowrap items-center gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:pb-0">
             {[
               { id: 'todos', label: 'Populares' },
               { id: 'estrenos', label: 'Nuevos Estrenos' },

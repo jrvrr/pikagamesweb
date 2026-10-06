@@ -174,7 +174,7 @@ export function Navigation() {
       <button type="button" tabIndex={-1} aria-label="Cerrar menú de navegación" onClick={() => setIsMenuOpen(false)} className={`fixed inset-0 top-14 lg:top-16 z-50 border-0 bg-black/70 p-0 backdrop-blur-sm transition-all duration-500 ${isMenuOpen ? "opacity-100 visible" : "pointer-events-none opacity-0 invisible"}`} />
 
       {/* Mega Menu (Dropdown) */}
-      <div id="navigation-menu" className={`fixed top-14 lg:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-60 cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] lg:max-h-[calc(100vh-4rem)] pb-28 lg:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
+      <div id="navigation-menu" className={`scrollbar-compact fixed top-14 lg:top-16 left-0 w-full bg-[#111] border-t border-zinc-800 shadow-2xl transition-all duration-300 flex flex-col z-60 cursor-default overflow-y-auto max-h-[calc(100vh-3.5rem)] lg:max-h-[calc(100vh-4rem)] pb-28 lg:pb-0 ${isMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-4"}`}>
         <div className="max-w-6xl mx-auto w-full py-5 md:py-12 px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-5 md:gap-8 relative z-50">
           
           {/* Left Main Content */}
