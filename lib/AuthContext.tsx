@@ -181,8 +181,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(normalizedUser);
     setSessionError(null);
 
+    const isAdmin = normalizedUser.rol.trim().toLowerCase() === "admin";
+    router.replace(isAdmin ? "/admin" : "/perfil");
     await loadFavorites(true);
-    router.push("/perfil");
   };
 
   const logout = () => {

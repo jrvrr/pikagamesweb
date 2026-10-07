@@ -17,6 +17,10 @@ export default function PerfilPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://pikagamesapiweb.vercel.app/api";
 
   useEffect(() => {
+    if (!isLoading && user?.rol.trim().toLowerCase() === "admin") {
+      router.replace("/admin");
+      return;
+    }
     if (!isLoading && !user) router.push("/");
     if (user) setUserInfo({ nombre: user.nombre || "", apellidos: user.apellidos || "", email: user.email || "" });
   }, [user, isLoading, router]);
