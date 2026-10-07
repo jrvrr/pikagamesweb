@@ -28,6 +28,19 @@ export async function getPopularGames(page = 1, pageSize = 12, options: FetchOpt
   }
 }
 
+export async function getGamesByGenre(genreId: number, page = 1, pageSize = 12, options: FetchOptions = {}): Promise<Game[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/games?key=${API_KEY}&genres=${genreId}&page=${page}&page_size=${pageSize}&ordering=-rating&platforms=7`);
+    if (!res.ok) throw Object.assign(new Error('Failed to fetch games by genre'), { status: res.status });
+    const data = await res.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('Error fetching games by genre:', error);
+    if (options.throwOnError) throw error;
+    return [];
+  }
+}
+
 export async function getUpcomingGames(page = 1, pageSize = 8, options: FetchOptions = {}): Promise<Game[]> {
   try {
     const today = new Date().toISOString().split('T')[0];

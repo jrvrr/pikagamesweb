@@ -151,7 +151,7 @@ export function Navigation() {
               {isLoading ? (
                 <div className="w-24 h-full bg-zinc-800/50 animate-pulse rounded-full"></div>
               ) : user ? (
-                <Link href={user.rol.toLowerCase() === "admin" ? "/admin" : "/perfil"} className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm">
+                <Link href={user.rol.trim().toLowerCase() === "admin" ? "/admin" : "/perfil"} className="flex items-center gap-2 px-6 h-full text-[#18181b] bg-[#ffd90f] border-2 border-[#ffd90f] hover:bg-[#e5c30d] hover:border-[#e5c30d] rounded-full transition-colors shadow-sm">
                   <User className="w-5 h-5" />
                   <span className="max-w-30 truncate font-bold">{user.nombre.split(" ")[0]}</span>
                 </Link>
@@ -187,8 +187,8 @@ export function Navigation() {
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <Gamepad2 className="w-12 h-12 text-[#ffd90f]" />
                 </div>
-                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Catálogo de Juegos</span>
-                <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Explora miles de títulos increíbles para tu consola.</p>
+                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Catálogos por tipo</span>
+                <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Encuentra juegos por acción, aventura, RPG, carreras y más.</p>
               </Link>
               <Link href="/comprar" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
@@ -226,8 +226,8 @@ export function Navigation() {
                   <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Guardados
                 </Link>
                 {user ? (
-                  <Link href={user.rol.toLowerCase() === "admin" ? "/admin" : "/perfil"} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> {user.rol.toLowerCase() === "admin" ? "Panel administrativo" : "Mi Cuenta"}
+                  <Link href={user.rol.trim().toLowerCase() === "admin" ? "/admin" : "/perfil"} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> {user.rol.trim().toLowerCase() === "admin" ? "Panel administrativo" : "Mi Cuenta"}
                   </Link>
                 ) : (
                   <button onClick={() => { setIsAuthModalOpen(true); setIsMenuOpen(false); }} className="flex items-center w-full gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 focus:outline-none text-left text-sm sm:text-base">

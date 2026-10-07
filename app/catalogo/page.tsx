@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { GameCard } from "@/components/GameCard";
@@ -17,7 +17,7 @@ import {
   ChevronDown, 
   X
 } from "lucide-react";
-import { getPopularGames, getNewReleases, searchGames, getGameDetails, Game } from "@/lib/rawg";
+import { getPopularGames, getNewReleases, getGamesByGenre, searchGames, getGameDetails, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
 import { AccessibleDialog } from "@/components/AccessibleDialog";
@@ -106,10 +106,83 @@ const popularSearches = [
   { query: "Super Smash Bros Ultimate", matches: (name: string) => name.includes("smash") && name.includes("ultimate") },
 ];
 
+const gameCategories = [
+  { id: 'accion', label: 'Acción', description: 'Combate, aventuras intensas y grandes desafíos.', genreId: 4 },
+  { id: 'aventura', label: 'Aventura', description: 'Explora mundos, historias y nuevos descubrimientos.', genreId: 3 },
+  { id: 'rpg', label: 'RPG', description: 'Construye tu personaje y vive historias épicas.', genreId: 5 },
+  { id: 'carreras', label: 'Carreras', description: 'Velocidad, circuitos y competencia sobre ruedas.', genreId: 1 },
+  { id: 'deportes', label: 'Deportes', description: 'Compite en tus disciplinas favoritas.', genreId: 15 },
+  { id: 'lucha', label: 'Lucha', description: 'Enfréntate en combates uno contra uno.', genreId: 6 },
+  { id: 'plataformas', label: 'Plataformas', description: 'Salta, supera obstáculos y descubre secretos.', genreId: 83 },
+  { id: 'estrategia', label: 'Estrategia', description: 'Planea cada movimiento para conseguir la victoria.', genreId: 10 },
+  { id: 'simulacion', label: 'Simulación', description: 'Crea, administra y controla nuevas experiencias.', genreId: 14 },
+];
+
+const genreIds = Object.fromEntries(gameCategories.map((category) => [category.id, category.genreId])) as Record<string, number>;
+
+function CatalogCategories() {
+  const [categoryGames, setCategoryGames] = useState<Record<string, Game[]>>({});
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all(gameCategories.map(async (category) => [category.id, await getGamesByGenre(category.genreId, 1, 24)] as const)).then((results) => {
+      if (active) setCategoryGames(Object.fromEntries(results.map(([id, games]) => [id, games.filter((game) => game.background_image)])));
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    const hasCarouselItems = Object.values(categoryGames).some((games) => games.length > 1);
+    if (!hasCarouselItems) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') setCarouselIndex((current) => current + 1);
+    }, 4500);
+    return () => window.clearInterval(interval);
+  }, [categoryGames]);
+
+  return (
+    <main id="main-content" className="min-h-screen bg-[#111311] px-4 pb-20 pt-24 text-zinc-100 sm:px-6 md:pt-28">
+      <div className="mx-auto max-w-6xl">
+        <Link href="/" className="mb-8 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white">
+          <ArrowLeft aria-hidden="true" className="size-4" /> Volver al inicio
+        </Link>
+        <header className="mb-8 max-w-3xl">
+          <p className="mb-2 text-sm font-bold uppercase text-[#ffd90f]">Catálogos</p>
+          <h1 className="text-3xl font-black text-white sm:text-5xl">Elige un tipo de juego</h1>
+          <p className="mt-3 text-pretty text-zinc-400">Explora nuestros catálogos por género y encuentra tu próximo juego para Nintendo Switch.</p>
+        </header>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {gameCategories.map((category, categoryIndex) => {
+            const games = categoryGames[category.id] ?? [];
+            const game = games.length ? games[(carouselIndex + categoryIndex) % games.length] : null;
+            return (
+            <Link key={category.id} href={`/comprar?categoria=${category.id}`} className="group relative isolate flex min-h-64 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 hover:border-[#ffd90f]">
+              {game && <img src={game.background_image} alt={game.name} className="absolute inset-0 size-full object-cover" />}
+              <div className="absolute inset-0 bg-zinc-950/65 group-hover:bg-zinc-950/45" />
+              <div className="relative mt-auto p-5 sm:p-6">
+                <h2 className="text-2xl font-black text-white">{category.label}</h2>
+                <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-200">{game?.name ?? 'Cargando juegos destacados…'}</p>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-200">{category.description}</p>
+                <span className="mt-4 inline-flex text-sm font-bold text-[#ffd90f]">Ver juegos</span>
+              </div>
+            </Link>
+            );
+          })}
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function CatalogoContent() {
+  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isGamesPage = pathname === '/comprar';
+  const categoryParam = searchParams.get('categoria') ?? 'todos';
   const [consoleTab, setConsoleTab] = useState<'all' | 'switch1' | 'switch2'>('all');
-  const [genreFilter, setGenreFilter] = useState<string>('todos');
+  const [genreFilter, setGenreFilter] = useState<string>(genreIds[categoryParam] ? categoryParam : 'todos');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [games, setGames] = useState<Game[]>([]);
@@ -138,6 +211,8 @@ function CatalogoContent() {
       let fetched: Game[] = [];
       if (searchQuery.trim()) {
         fetched = await searchGames(searchQuery.trim(), pageNum, 12, { throwOnError: true });
+      } else if (genreIds[genreFilter]) {
+        fetched = await getGamesByGenre(genreIds[genreFilter], pageNum, 12, { throwOnError: true });
       } else if (genreFilter === 'mario') {
         fetched = await searchGames('Mario', pageNum, 12, { throwOnError: true });
       } else if (genreFilter === 'zelda') {
@@ -184,9 +259,20 @@ function CatalogoContent() {
   };
 
   useEffect(() => {
+    if (!isGamesPage) return;
+    const nextCategory = genreIds[categoryParam] ? categoryParam : 'todos';
+    setGenreFilter(nextCategory);
+    setSearchQuery('');
+  }, [categoryParam, isGamesPage]);
+
+  useEffect(() => {
+    if (!isGamesPage) {
+      setIsLoading(false);
+      return;
+    }
     setPage(1);
     loadGames(1, true);
-  }, [genreFilter, searchQuery]);
+  }, [genreFilter, searchQuery, isGamesPage]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -218,6 +304,8 @@ function CatalogoContent() {
     if (consoleTab === 'switch1') return games;
     return games;
   })();
+
+  if (!isGamesPage) return <CatalogCategories />;
 
   return (
     <main id="main-content" className="min-h-screen bg-[#111311] text-zinc-100 font-sans pt-24 md:pt-28 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-16">
@@ -257,10 +345,10 @@ function CatalogoContent() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-800">
             <div>
               <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-                Catálogo de Juegos
+                Juegos disponibles para comprar
               </h1>
               <p className="text-zinc-400 mt-2 font-medium text-sm md:text-base max-w-2xl">
-                Explora la biblioteca más completa de títulos para <strong className="text-white">Nintendo Switch 1</strong> y los próximos estrenos para <strong className="text-[#ffd90f]">Nintendo Switch 2</strong>.
+                Elige un juego, revisa sus opciones disponibles y continúa al checkout para completar tu compra.
               </p>
             </div>
 
@@ -306,10 +394,7 @@ function CatalogoContent() {
           <div className="scrollbar-horizontal flex flex-nowrap items-center gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:pb-0">
             {[
               { id: 'todos', label: 'Populares' },
-              { id: 'estrenos', label: 'Nuevos Estrenos' },
-              { id: 'mario', label: 'Super Mario' },
-              { id: 'zelda', label: 'The Legend of Zelda' },
-              { id: 'pokemon', label: 'Pokémon' },
+              ...gameCategories.map((category) => ({ id: category.id, label: category.label })),
             ].map((cat) => (
               <button
                 key={cat.id}

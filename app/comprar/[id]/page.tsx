@@ -198,7 +198,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
           <Gamepad2 className="mx-auto mb-5 h-14 w-14 text-[#ffd90f]" />
           <h1 className="text-2xl font-black">Juego no encontrado</h1>
           <p className="mt-3 text-zinc-400">Vuelve al catálogo para explorar más títulos disponibles.</p>
-          <Link href="/catalogo" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#ffd90f] px-5 py-3 text-sm font-black text-zinc-950">
+        <Link href="/comprar" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#ffd90f] px-5 py-3 text-sm font-black text-zinc-950">
             <ArrowLeft className="h-4 w-4" /> Volver al catálogo
           </Link>
         </div>
@@ -209,7 +209,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   return (
     <main className="min-h-screen bg-[#111311] pb-24 pt-24 text-zinc-100 md:pt-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Link href="/catalogo" className="mb-6 inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-xs font-bold text-zinc-300 transition-colors hover:border-[#ffd90f] hover:text-[#ffd90f]">
+        <Link href="/comprar" className="mb-6 inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-xs font-bold text-zinc-300 transition-colors hover:border-[#ffd90f] hover:text-[#ffd90f]">
           <ArrowLeft className="h-4 w-4" /> Volver al catálogo
         </Link>
 
