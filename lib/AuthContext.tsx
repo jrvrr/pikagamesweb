@@ -182,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSessionError(null);
 
     await loadFavorites(true);
-    router.push("/perfil");
+    router.push(normalizedUser.rol.toLowerCase() === "admin" ? "/admin" : "/perfil");
   };
 
   const logout = () => {

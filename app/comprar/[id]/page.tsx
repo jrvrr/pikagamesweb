@@ -65,6 +65,9 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
   const [isReservedModalOpen, setIsReservedModalOpen] = useState(false);
   const [isPaypalPaid, setIsPaypalPaid] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [manualOrderId, setManualOrderId] = useState<string | null>(null);
+  const [isReserveSubmitting, setIsReserveSubmitting] = useState(false);
+  const [reserveError, setReserveError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -129,8 +132,41 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  const handleReserveClick = () => {
-    setIsReservedModalOpen(true);
+  const handleReserveClick = async () => {
+    if (manualOrderId) {
+      setIsReservedModalOpen(true);
+      return;
+    }
+    if (!user) {
+      setReserveError("Inicia sesión para reservar tu pedido.");
+      return;
+    }
+    if (!selectedProduct) {
+      setReserveError("Este juego no tiene un producto disponible para reservar.");
+      return;
+    }
+
+    setIsReserveSubmitting(true);
+    setReserveError("");
+    try {
+      const pedido = await apiFetch("/pedidos", {
+        method: "POST",
+        body: JSON.stringify({
+          request_id: crypto.randomUUID(),
+          metodo_pago: paymentMethod,
+          productos: [{ producto_id: selectedProduct.id, cantidad: 1 }],
+        }),
+      });
+      if (!pedido?.id || pedido.estado !== "pendiente_pago" || pedido.metodo_pago !== paymentMethod) {
+        throw new Error("No se pudo crear la reserva");
+      }
+      setManualOrderId(String(pedido.id));
+      setIsReservedModalOpen(true);
+    } catch (error) {
+      setReserveError(error instanceof Error ? error.message : "No se pudo crear la reserva. Intenta de nuevo.");
+    } finally {
+      setIsReserveSubmitting(false);
+    }
   };
 
 
@@ -139,7 +175,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     if (!game) return;
     const message = paymentMethod === "paypal"
       ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedOption.label} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
-      : `Hola Pikagames, he apartado 1 boleto para "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Adjunto mi comprobante de pago.`;
+      : `Hola Pikagames, he apartado 1 boleto para "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Pedido #${manualOrderId}. Adjunto mi comprobante de pago.`;
     
     window.open(`https://wa.me/528136975457?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
@@ -239,7 +275,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     <button
                       key={type}
                       type="button"
-                      disabled={paypalBusy || isPaypalPaid}
+                      disabled={paypalBusy || isPaypalPaid || isReserveSubmitting || Boolean(manualOrderId)}
                       onClick={() => setAccountType(type)}
                       className={`relative flex items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
                         isSelected
@@ -268,7 +304,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción PayPal */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid}
+                  disabled={paypalBusy || isPaypalPaid || isReserveSubmitting || Boolean(manualOrderId)}
                   onClick={() => setPaymentMethod("paypal")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "paypal"
@@ -283,7 +319,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción OXXO */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid}
+                  disabled={paypalBusy || isPaypalPaid || isReserveSubmitting || Boolean(manualOrderId)}
                   onClick={() => setPaymentMethod("oxxo")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "oxxo"
@@ -298,7 +334,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 {/* Opción Transferencia */}
                 <button
                   type="button"
-                  disabled={paypalBusy || isPaypalPaid}
+                  disabled={paypalBusy || isPaypalPaid || isReserveSubmitting || Boolean(manualOrderId)}
                   onClick={() => setPaymentMethod("transferencia")}
                   className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all ${
                     paymentMethod === "transferencia"
@@ -436,14 +472,18 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               </div>
 
               {paymentMethod !== "paypal" && (
+                <>
+                {reserveError && <p role="alert" className="mb-3 rounded-xl border border-rose-400/30 bg-rose-400/10 p-3 text-xs text-rose-100">{reserveError}</p>}
                 <button
                   type="button"
+                  disabled={isReserveSubmitting}
                   onClick={handleReserveClick}
-                  className="w-full rounded-2xl bg-[#ffd90f] hover:bg-[#ffe45c] py-4 px-6 text-center font-black text-zinc-950 text-base shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:scale-[1.01] active:scale-[0.99] uppercase tracking-wider flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ffd90f] px-6 py-4 text-center text-base font-black uppercase tracking-wider text-zinc-950 shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:bg-[#ffe45c] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span>Reservar Boleto</span>
+                  {isReserveSubmitting ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : null}<span>{isReserveSubmitting ? "Creando pedido…" : "Reservar Boleto"}</span>
                   <Send className="h-4 w-4" />
                 </button>
+                </>
               )}
             </div>
           </aside>
@@ -496,6 +536,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                     <span>Monto Total:</span>
                     <strong className="text-sm font-black text-white">${formattedPrice} MXN</strong>
                   </div>
+                  {manualOrderId && <div className="flex items-center justify-between border-t border-zinc-800 pt-2 text-zinc-300"><span>Pedido:</span><strong className="font-bold text-white">#{manualOrderId}</strong></div>}
                 </div>
 
                 <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-left text-xs space-y-2">
