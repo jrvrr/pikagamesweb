@@ -11,6 +11,7 @@ import { AccessibleDialog } from "@/components/AccessibleDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { HeroSwitch } from "@/components/HeroSwitch";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import {
   MessageCircle,
   Home,
@@ -109,6 +110,7 @@ export default function HomePage() {
   const [insertingCategory, setInsertingCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario' | null>(null);
   const [insertedCategory, setInsertedCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario' | null>(null);
   const shouldReduceMotion = useReducedMotion();
+  const insertionDuration = shouldReduceMotion ? 0 : 18000;
 
   // Game Detail Modal ("Ver Videojuego") State
   const [detailModal, setDetailModal] = useState<{isOpen: boolean; game: Game | null; isLoading: boolean}>({
@@ -120,7 +122,14 @@ export default function HomePage() {
   // Upcoming games state
   const [upcomingGames, setUpcomingGames] = useState<Game[]>([]);
   const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(true);
+  const [introTimedOut, setIntroTimedOut] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
   const [gameListErrors, setGameListErrors] = useState<Partial<Record<GameListKey, string>>>({});
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setIntroTimedOut(true), 12000);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   const loadGameList = useCallback(async (
     key: GameListKey,
@@ -175,21 +184,20 @@ export default function HomePage() {
     if (insertingCategory || category === insertedCategory) return;
 
     setInsertingCategory(category);
-    const insertionDuration = shouldReduceMotion ? 0 : 520;
-    await new Promise((resolve) => window.setTimeout(resolve, insertionDuration));
-    setInsertedCategory(category);
     setCatalogCategory(category);
-    setInsertingCategory(null);
+    window.setTimeout(() => {
+      setInsertedCategory(category);
+      setInsertingCategory(null);
+    }, insertionDuration);
+
+    document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+
     if (category === 'mario' && marioGames.length === 0) {
       setIsLoadingMario(true);
       await loadGameList("mario", () => searchGames('Mario', 1, 8, { throwOnError: true }), setMarioGames, () => setIsLoadingMario(false));
     } else if (category === 'precio' && priceGames.length === 0) {
       setIsLoadingPrice(true);
       await loadGameList("price", () => getPopularGames(2, 8, { throwOnError: true }), setPriceGames, () => setIsLoadingPrice(false));
-    }
-    const catalogoElement = document.getElementById('catalogo');
-    if (catalogoElement) {
-      catalogoElement.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -290,9 +298,25 @@ export default function HomePage() {
         alignment: index % 2 === 0 ? "pb-8 md:pb-12" : "pt-8 md:pt-12",
       }));
 
+  const introProgress = Number(!isLoadingGames) + Number(!isLoadingUpcoming) + Number(!isLoadingNewReleases);
+
+  useEffect(() => {
+    if (introProgress < 3 && !introTimedOut) return;
+    const timeout = window.setTimeout(() => setShowIntro(false), introProgress === 3 && !shouldReduceMotion ? 2400 : 0);
+    return () => window.clearTimeout(timeout);
+  }, [introProgress, introTimedOut, shouldReduceMotion]);
+
+  useEffect(() => {
+    if (!showIntro) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [showIntro]);
+
   return (
     <div className="min-h-screen bg-[#111311] text-zinc-100 font-sans">
-      <main id="main-content">
+      <AnimatePresence>{showIntro && <LoadingScreen progress={introProgress / 3} />}</AnimatePresence>
+      <main id="main-content" aria-busy={showIntro}>
       {/* Hero Section */}
       <section className="relative w-full min-h-175 md:min-h-200 flex flex-col md:flex-row items-center justify-between px-6 md:px-12 pb-12 pt-32 md:pt-40 overflow-hidden border-b-4 border-zinc-900 bg-[#111311]">
         {/* Animated Background */}
@@ -308,7 +332,12 @@ export default function HomePage() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 flex flex-col items-start max-w-xl">
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, x: -56, y: 16 }}
+          animate={showIntro && !shouldReduceMotion ? { opacity: 0, x: -56, y: 16 } : { opacity: 1, x: 0, y: 0 }}
+          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          className="relative z-10 flex flex-col items-start max-w-xl"
+        >
           <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white uppercase leading-[1.05] mb-6">
             Tu Universo de <span className="text-[#ffd90f]">Nintendo</span> en un solo lugar
           </h1>
@@ -322,35 +351,43 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-        </div>
+        </motion.div>
 
         {/* Hero Visuals */}
-        <div className="relative z-10 mt-12 md:mt-0 w-full md:w-[52%] md:shrink-0 flex items-center justify-center">
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, x: 90, y: 24, rotate: 7, scale: 0.82 }}
+          animate={showIntro && !shouldReduceMotion
+            ? { opacity: 0, x: 90, y: 24, rotate: 7, scale: 0.82 }
+            : { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 85, damping: 15, delay: 0.22 }}
+          whileHover={shouldReduceMotion ? undefined : { y: -8, rotate: -1, scale: 1.02 }}
+          className="relative z-10 mt-12 md:mt-0 w-full md:w-[52%] md:shrink-0 flex items-center justify-center"
+        >
           <div className="relative w-full max-w-2xl flex items-center justify-center">
             <div className="absolute inset-0 bg-linear-to-tr from-[#ffd90f]/20 to-transparent rounded-full blur-3xl" />
             <HeroSwitch />
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ¿Qué buscas? Section */}
       <section className="relative z-10 overflow-hidden border-b-4 border-zinc-900 bg-white px-6 pt-4 pb-12 md:px-12 md:pb-16">
         <motion.h2 
-          initial={{ opacity: 0, x: -100 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, x: -64, y: 12 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
+          viewport={{ once: false, amount: 0.25 }}
+          transition={{ duration: 0.8, type: "spring", bounce: 0.35 }}
           className="relative z-20 mb-44 text-center text-3xl font-black text-balance uppercase tracking-tight text-zinc-900"
         >
           ¿Qué buscas?
         </motion.h2>
-        <div className="relative z-10 mt-8 grid min-w-160 grid-cols-4 overflow-visible rounded-3xl border-4 border-zinc-950 bg-zinc-900 shadow-xl">
+        <div className="relative z-10 mt-8 grid w-full min-w-0 grid-cols-2 gap-x-3 gap-y-48 overflow-visible shadow-xl md:grid-cols-4 md:gap-0 md:rounded-2xl md:bg-zinc-900">
           {[
             { id: 'precio' as const, title: 'Precio', image: '/png/cartucho3.png' },
             { id: 'popular' as const, title: 'Popular', image: '/png/cartucho4.png' },
             { id: 'estreno' as const, title: 'Estreno', image: '/png/cartucho1.png' },
             { id: 'mario' as const, title: 'Mario', image: '/png/cartucho2.png' }
-          ].map((item) => {
+          ].map((item, index) => {
             const isSelected = catalogCategory === item.id;
             const isInserted = (insertingCategory ?? insertedCategory) === item.id;
             const isInserting = insertingCategory === item.id;
@@ -362,21 +399,27 @@ export default function HomePage() {
                 disabled={Boolean(insertingCategory)}
                 aria-pressed={isSelected}
                 aria-label={`Ver juegos de ${item.title}`}
-                className="group relative h-20 border-r-2 border-zinc-700 text-center last:border-r-0 disabled:cursor-wait"
+                className="group relative h-20 border-0 text-center disabled:cursor-wait md:border-r-2 md:border-zinc-700 md:last:border-r-0"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 36, scale: 0.94 }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: { duration: 0.65, delay: index * 0.1, type: "spring", bounce: 0.3 },
+                }}
+                viewport={{ once: false, amount: 0.2 }}
                 whileTap={shouldReduceMotion ? undefined : { transform: "translateY(2px) scale(0.98)" }}
-                transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                transition={{ duration: 0.40, ease: [0.23, 1, 0.32, 1] }}
               >
                 <span className="pointer-events-none absolute bottom-full left-1/2 z-0 w-28 -translate-x-1/2" aria-hidden="true">
                   <motion.span
                     className="block"
                     animate={{
                       transform: isInserted
-                        ? ["translateY(0)", "translateY(-8px)", "translateY(116px)"]
-                        : "translateY(0)",
+                        ? ["translateY(-8px)", "translateY(-16px)", "translateY(108px)"]
+                        : "translateY(-8px)",
                     }}
-                    transition={shouldReduceMotion
-                      ? { duration: 0 }
-                      : { duration: 0.52, times: [0, 0.18, 1], ease: [0.77, 0, 0.175, 1] }}
+                    transition={{ duration: insertionDuration / 1000, times: [0, 0.12, 1], ease: "linear" }}
                   >
                     <Image
                       src={item.image}
@@ -389,9 +432,10 @@ export default function HomePage() {
                 </span>
 
                 <span className={cn(
-                  "absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-900 px-3 text-white transition-colors duration-200 group-hover:bg-zinc-800",
+                  "absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-zinc-900 px-3 text-white transition-colors duration-200 group-hover:bg-zinc-800 md:rounded-none md:first:rounded-l-2xl md:last:rounded-r-2xl",
                   isInserted && "bg-zinc-800",
                 )}>
+                  <span className="absolute top-0 left-1/2 h-2 w-25 -translate-x-1/2 rounded-b-md bg-white" aria-hidden="true" />
                   <span className="absolute top-2 h-0.5 w-20 rounded-full bg-zinc-600" aria-hidden="true" />
                   <span className="mt-2 text-balance text-sm font-black uppercase md:text-base">{item.title}</span>
                   <span aria-live="polite" className={cn("text-xs font-semibold text-zinc-400", isInserted && "text-[#ffd90f]")}>
