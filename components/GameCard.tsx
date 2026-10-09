@@ -88,16 +88,16 @@ export function GameCard({
           <Button
             onClick={() => onView(game)}
             variant="outline"
-            className="min-h-11 min-w-0 w-full gap-1 border-zinc-700 bg-zinc-800 px-2 text-xs font-bold text-zinc-100 hover:border-[#ffd90f] hover:bg-zinc-700"
+            className="min-w-0 w-full gap-1 border-zinc-700 bg-zinc-800 px-2 text-[10px] font-bold tracking-wide text-zinc-100 hover:border-[#ffd90f] hover:bg-zinc-700 sm:text-xs"
           >
-            <Eye className="h-3.5 w-3.5 shrink-0 text-[#ffd90f] sm:h-4 sm:w-4" />
+            <Eye className="h-4 w-4 shrink-0 text-[#ffd90f]" />
             <span className="min-w-0 truncate">ver detalles</span>
           </Button>
           {!isDemo && <Button
             onClick={() => onBuy(game)}
-            className="min-h-11 min-w-0 w-full gap-1 border-0 bg-[#ffd90f] px-2 text-xs font-black text-zinc-950 hover:bg-[#ffe45c]"
+            className="min-w-0 w-full gap-1 border-0 bg-[#ffd90f] px-2 text-[10px] font-black tracking-wide text-zinc-950 hover:bg-[#ffe45c] sm:text-xs"
           >
-            <ShoppingCart className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            <ShoppingCart className="h-4 w-4 shrink-0" />
             <span className="min-w-0 truncate">{buyLabel.toLowerCase()}</span>
           </Button>}
         </div>
