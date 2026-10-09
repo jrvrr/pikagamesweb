@@ -189,17 +189,17 @@ select:focus-visible {
   background-position: 0 0, 12px 12px;
 }
 
-.loader-glow {
-  animation: loader-glow 2.4s ease-in-out infinite alternate;
+.loader-trace {
+  stroke-dashoffset: 100;
+  animation: loader-trace 2.8s ease-in-out infinite alternate;
 }
 
 .loader-aura {
   animation: loader-aura 2.8s ease-in-out infinite alternate;
 }
 
-@keyframes loader-glow {
-  from { filter: brightness(0.35) drop-shadow(0 0 4px rgb(255 204 35 / 0.2)); }
-  to { filter: brightness(1) drop-shadow(0 0 32px rgb(255 204 35 / 0.8)); }
+@keyframes loader-trace {
+  to { stroke-dashoffset: 0; }
 }
 
 @keyframes loader-aura {
