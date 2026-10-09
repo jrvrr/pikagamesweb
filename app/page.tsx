@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { AccessibleDialog } from "@/components/AccessibleDialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,6 +44,7 @@ import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, sear
 import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
 import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface ApiComment {
   id: string | number;
@@ -51,7 +53,6 @@ interface ApiComment {
   mensaje: string;
   fecha_creacion?: string;
 }
-
 type GameListKey = "popular" | "upcoming" | "releases" | "mario" | "price";
 
 export default function HomePage() {
@@ -103,8 +104,11 @@ export default function HomePage() {
   const [priceGames, setPriceGames] = useState<Game[]>([]);
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
 
-  // Active category selected from '¿Qué buscas?' folders
+  // Active category selected from '¿Qué buscas?' cartridges
   const [catalogCategory, setCatalogCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario'>('popular');
+  const [insertingCategory, setInsertingCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario' | null>(null);
+  const [insertedCategory, setInsertedCategory] = useState<'popular' | 'estreno' | 'precio' | 'mario' | null>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   // Game Detail Modal ("Ver Videojuego") State
   const [detailModal, setDetailModal] = useState<{isOpen: boolean; game: Game | null; isLoading: boolean}>({
@@ -166,9 +170,16 @@ export default function HomePage() {
     }
   };
 
-  // Handle folder card clicks to filter and scroll to catalog
-  const handleFolderClick = async (category: 'popular' | 'estreno' | 'precio' | 'mario') => {
+  // Handle cartridge clicks to filter and scroll to catalog
+  const handleCartridgeClick = async (category: 'popular' | 'estreno' | 'precio' | 'mario') => {
+    if (insertingCategory || category === insertedCategory) return;
+
+    setInsertingCategory(category);
+    const insertionDuration = shouldReduceMotion ? 0 : 520;
+    await new Promise((resolve) => window.setTimeout(resolve, insertionDuration));
+    setInsertedCategory(category);
     setCatalogCategory(category);
+    setInsertingCategory(null);
     if (category === 'mario' && marioGames.length === 0) {
       setIsLoadingMario(true);
       await loadGameList("mario", () => searchGames('Mario', 1, 8, { throwOnError: true }), setMarioGames, () => setIsLoadingMario(false));
@@ -323,67 +334,75 @@ export default function HomePage() {
       </section>
 
       {/* ¿Qué buscas? Section */}
-      <section className="relative z-10 py-16 md:py-20 px-6 md:px-12 bg-white border-b-4 border-zinc-900 overflow-hidden">
+      <section className="relative z-10 overflow-hidden border-b-4 border-zinc-900 bg-white px-6 pt-4 pb-12 md:px-12 md:pb-16">
         <motion.h2 
           initial={{ opacity: 0, x: -100 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: false, amount: 0.2 }}
           transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
-          className="text-3xl font-black mb-10 uppercase tracking-tight text-center text-zinc-900"
+          className="relative z-20 mb-44 text-center text-3xl font-black text-balance uppercase tracking-tight text-zinc-900"
         >
           ¿Qué buscas?
         </motion.h2>
-        <motion.div 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.3 }}
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: { staggerChildren: 0.1 }
-            }
-          }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto"
-        >
+        <div className="relative z-10 mt-8 grid min-w-160 grid-cols-4 overflow-visible rounded-3xl border-4 border-zinc-950 bg-zinc-900 shadow-xl">
           {[
-            { id: 'precio' as const, title: 'Precio', folder: '/svg/folder1.svg', cartucho: '/png/cartucho3.png' },
-            { id: 'popular' as const, title: 'Popular', folder: '/svg/folder2.svg', cartucho: '/png/cartucho4.png' },
-            { id: 'estreno' as const, title: 'Estreno', folder: '/svg/folder3.svg', cartucho: '/png/cartucho1.png' },
-            { id: 'mario' as const, title: 'Mario', folder: '/svg/folder4.svg', cartucho: '/png/cartucho2.png' }
+            { id: 'precio' as const, title: 'Precio', image: '/png/cartucho3.png' },
+            { id: 'popular' as const, title: 'Popular', image: '/png/cartucho4.png' },
+            { id: 'estreno' as const, title: 'Estreno', image: '/png/cartucho1.png' },
+            { id: 'mario' as const, title: 'Mario', image: '/png/cartucho2.png' }
           ].map((item) => {
             const isSelected = catalogCategory === item.id;
+            const isInserted = (insertingCategory ?? insertedCategory) === item.id;
+            const isInserting = insertingCategory === item.id;
             return (
-              <motion.div 
-                variants={{ hidden: { opacity: 0, y: 100, scale: 0.8 }, visible: { opacity: 1, y: 0, scale: 1 } }}
-                key={item.title} 
-                onClick={() => handleFolderClick(item.id)}
-                className={`group cursor-pointer hover:-translate-y-2 transition-all flex flex-col items-center justify-center pt-8 md:pt-12 pb-4 rounded-2xl ${
-                  isSelected ? 'scale-105' : ''
-                }`}
-                title={`Ver juegos de ${item.title}`}
+              <motion.button
+                type="button"
+                key={item.id}
+                onClick={() => void handleCartridgeClick(item.id)}
+                disabled={Boolean(insertingCategory)}
+                aria-pressed={isSelected}
+                aria-label={`Ver juegos de ${item.title}`}
+                className="group relative h-20 border-r-2 border-zinc-700 text-center last:border-r-0 disabled:cursor-wait"
+                whileTap={shouldReduceMotion ? undefined : { transform: "translateY(2px) scale(0.98)" }}
+                transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
               >
-                {/* Contenedor ajustado a la carpeta para posicionar bien el cartucho */}
-                <div className="relative w-32 md:w-40 flex items-end justify-center">
-                  {/* Cartucho (Guardado adentro, sale al hover) */}
-                  <div className="absolute bottom-2 w-16 md:w-20 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-16 md:group-hover:-translate-y-20 z-10 flex flex-col items-center justify-start">
-                     <img src={item.cartucho} alt={`Cartucho ${item.title}`} className="w-full h-auto relative z-10" />
-                  </div>
+                <span className="pointer-events-none absolute bottom-full left-1/2 z-0 w-28 -translate-x-1/2" aria-hidden="true">
+                  <motion.span
+                    className="block"
+                    animate={{
+                      transform: isInserted
+                        ? ["translateY(0)", "translateY(-8px)", "translateY(116px)"]
+                        : "translateY(0)",
+                    }}
+                    transition={shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.52, times: [0, 0.18, 1], ease: [0.77, 0, 0.175, 1] }}
+                  >
+                    <Image
+                      src={item.image}
+                      alt=""
+                      width={834}
+                      height={1200}
+                      className="h-auto w-full drop-shadow-xl"
+                    />
+                  </motion.span>
+                </span>
 
-                  {/* Carpeta (Frente) con el texto */}
-                  <div className={`relative z-20 w-full group-hover:scale-[1.03] transition-transform duration-300 flex flex-col items-center justify-center ${isSelected ? 'ring-4 ring-zinc-900 rounded-2xl shadow-xl' : ''}`}>
-                    <img src={item.folder} alt={`Carpeta ${item.title}`} className="w-full h-auto relative z-20 drop-shadow-md" />
-                    
-                    {/* Texto alineado sobre la carpeta */}
-                    <span className="absolute top-[55%] md:top-[60%] w-[80%] text-center font-black text-[12px] md:text-sm uppercase tracking-tighter text-zinc-900 z-30 leading-none" style={{ transform: 'translateY(-50%)' }}>
-                      {item.title}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
+                <span className={cn(
+                  "absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-900 px-3 text-white transition-colors duration-200 group-hover:bg-zinc-800",
+                  isInserted && "bg-zinc-800",
+                )}>
+                  <span className="absolute top-2 h-0.5 w-20 rounded-full bg-zinc-600" aria-hidden="true" />
+                  <span className="mt-2 text-balance text-sm font-black uppercase md:text-base">{item.title}</span>
+                  <span aria-live="polite" className={cn("text-xs font-semibold text-zinc-400", isInserted && "text-[#ffd90f]")}>
+                    {isInserting ? 'Insertando…' : isInserted ? 'Insertado' : 'Insertar'}
+                  </span>
+                </span>
+              </motion.button>
             );
           })}
-        </motion.div>
+          <span className="pointer-events-none absolute inset-x-0 top-full z-20 h-20 bg-white" aria-hidden="true" />
+        </div>
       </section>
 
       {/* Slanted Wrapper for Black Gap and Pink Section */}
