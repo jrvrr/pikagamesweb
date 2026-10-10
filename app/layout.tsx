@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigation";
@@ -54,6 +55,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </MotionConfig>
           </PayPalProviderWrapper>
         </AuthProvider>
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2764357872004638"
+          strategy="beforeInteractive"
+          async
+          crossOrigin="anonymous"
+        />
         <SpeedInsights />
       </body>
     </html>
