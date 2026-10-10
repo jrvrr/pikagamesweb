@@ -85,7 +85,8 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
   const asuntoEscapado = escaparHtml_(asunto);
   const correoEscapado = escaparHtml_(correo);
   const mensajeFormateado = escaparHtml_(mensaje).replace(/\r\n|\r|\n/g, '<br>');
-  const mailtoReply = `mailto:${encodeURIComponent(correo)}?subject=${encodeURIComponent('Re: [PikaGames #' + ticketId + '] ' + asunto)}`;
+  const asuntoRespuesta = encodeURIComponent('Re: [PikaGames #' + ticketId + '] ' + asunto);
+  const mailtoReply = `mailto:${correo}?subject=${asuntoRespuesta}`;
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -111,12 +112,12 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
                       PIKA<span style="color:#ffd90f;">GAMES</span>
                     </span>
                     <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#ffd90f;text-transform:uppercase;margin-top:4px;">
-                      Centro de Soporte al Cliente
+                      CENTRO DE SOPORTE AL CLIENTE
                     </div>
                   </td>
                   <td align="right" style="vertical-align:middle;">
-                    <span style="display:inline-block;padding:6px 12px;background-color:rgba(255,217,15,0.12);border:1px solid #ffd90f;border-radius:20px;font-size:12px;font-weight:700;color:#ffd90f;">
-                      #${ticketId}
+                    <span style="display:inline-block;padding:6px 14px;background-color:rgba(255,217,15,0.12);border:1px solid #ffd90f;border-radius:20px;font-size:12px;font-weight:800;color:#ffd90f;letter-spacing:0.5px;">
+                      TICKET #${ticketId}
                     </span>
                   </td>
                 </tr>
@@ -128,7 +129,7 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
           <tr>
             <td style="padding:32px;">
               <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#ffffff;line-height:1.3;">
-                📬 Nuevo mensaje recibido desde la web
+                Nuevo mensaje recibido desde la web
               </h1>
               <p style="margin:0 0 24px;font-size:14px;color:#a1a1aa;line-height:1.5;">
                 Un usuario ha enviado una solicitud a través del formulario de contacto. A continuación se detallan los datos:
@@ -137,16 +138,16 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
               <!-- Tabla de Metadatos -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#27272a;border-radius:10px;margin-bottom:24px;border-collapse:separate;">
                 <tr>
-                  <td style="padding:14px 18px;border-bottom:1px solid #3f3f46;width:30%;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#ffd90f;">
-                    👤 Cliente
+                  <td style="padding:14px 18px;border-bottom:1px solid #3f3f46;width:28%;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#ffd90f;">
+                    CLIENTE
                   </td>
                   <td style="padding:14px 18px;border-bottom:1px solid #3f3f46;font-size:14px;color:#ffffff;font-weight:600;word-break:break-all;">
-                    <a href="mailto:${correoEscapado}" style="color:#ffffff;text-decoration:none;">${correoEscapado}</a>
+                    <a href="mailto:${correo}" style="color:#ffffff;text-decoration:underline;">${correoEscapado}</a>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:14px 18px;border-bottom:1px solid #3f3f46;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#ffd90f;">
-                    📝 Asunto
+                    ASUNTO
                   </td>
                   <td style="padding:14px 18px;border-bottom:1px solid #3f3f46;font-size:14px;color:#ffffff;font-weight:600;">
                     ${asuntoEscapado}
@@ -154,7 +155,7 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
                 </tr>
                 <tr>
                   <td style="padding:14px 18px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#ffd90f;">
-                    ⏰ Fecha
+                    FECHA
                   </td>
                   <td style="padding:14px 18px;font-size:13px;color:#d4d4d8;">
                     ${fechaStr} (Hora CDMX)
@@ -164,7 +165,7 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
 
               <!-- Sección del Mensaje -->
               <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#a1a1aa;margin-bottom:8px;">
-                💬 Contenido del Mensaje
+                CONTENIDO DEL MENSAJE
               </div>
               <div style="background-color:#09090b;border:1px solid #27272a;border-left:4px solid #ffd90f;border-radius:8px;padding:18px 20px;margin-bottom:28px;font-size:15px;line-height:1.7;color:#f4f4f5;word-break:break-word;">
                 ${mensajeFormateado}
@@ -175,7 +176,7 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
                 <tr>
                   <td align="center">
                     <a href="${mailtoReply}" target="_blank" style="display:inline-block;padding:14px 28px;background-color:#ffd90f;color:#09090b;font-size:14px;font-weight:800;text-decoration:none;border-radius:10px;text-align:center;box-shadow:0 4px 14px rgba(255,217,15,0.3);">
-                      ↩ Responder al Cliente
+                      Responder al Cliente (${correoEscapado})
                     </a>
                   </td>
                 </tr>
@@ -188,7 +189,7 @@ function crearCorreoHtml_(asunto, mensaje, correo, ticketId) {
           <tr>
             <td style="background-color:#09090b;padding:20px 32px;border-top:1px solid #27272a;font-size:12px;color:#71717a;line-height:1.6;text-align:center;">
               <p style="margin:0 0 6px;">
-                💡 <strong>Tip:</strong> Puedes pulsar el botón de responder o responder directamente a este correo (se enviará a <span style="color:#a1a1aa;">${correoEscapado}</span>).
+                Puedes pulsar el botón superior o responder directamente a este correo (la respuesta irá a <strong style="color:#ffd90f;">${correoEscapado}</strong>).
               </p>
               <p style="margin:0;color:#52525b;font-size:11px;">
                 © PikaGames • Enviado de forma segura desde <a href="https://pikagames.shop" style="color:#ffd90f;text-decoration:none;">pikagames.shop</a>

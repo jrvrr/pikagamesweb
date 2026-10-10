@@ -47,6 +47,7 @@ import { isDemoGameId } from "@/lib/demoGames";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { countWords } from "@/lib/supportEmail";
+import { AuthModal } from "@/components/AuthModal";
 
 interface ApiComment {
   id: string | number;
@@ -65,6 +66,7 @@ export default function HomePage() {
   const [apiComments, setApiComments] = useState<ApiComment[]>([]);
   
   // Modal states
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
   const [customerServiceView, setCustomerServiceView] = useState<'selection' | 'comment' | 'email'>('selection');
   const [rating, setRating] = useState(0);
@@ -83,6 +85,11 @@ export default function HomePage() {
 
   const handleSupportEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!user) {
+      setEmailError("Debes iniciar sesión para enviar un mensaje de soporte.");
+      setIsAuthModalOpen(true);
+      return;
+    }
     const form = event.currentTarget;
     const fields = new FormData(form);
     if (countWords(String(fields.get("subject") || "")) > 30 || countWords(String(fields.get("message") || "")) > 50) {
@@ -1100,28 +1107,47 @@ export default function HomePage() {
                       <button onClick={() => setCustomerServiceView('selection')} className="text-zinc-400 hover:text-white mb-6 flex items-center gap-2 self-start font-medium transition-colors">
                         <ChevronLeft className="w-5 h-5" /> Volver
                       </button>
-                      <form onSubmit={handleSupportEmailSubmit} className="space-y-5 w-full">
-                        {emailError && <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{emailError}</p>}
-                        {emailSent && <p role="status" className="rounded-xl border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300">Tu correo se envió correctamente. Te responderemos pronto.</p>}
-                        <div>
-                          <label htmlFor="support-email" className="block text-sm font-bold text-zinc-300 mb-2">Tu correo</label>
-                          <input key={user?.email || "guest"} id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} readOnly={!!user?.email} autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors read-only:cursor-not-allowed read-only:opacity-70" />
+                      {!user ? (
+                        <div className="flex flex-col items-center justify-center text-center py-4 px-2">
+                          <div className="w-14 h-14 rounded-2xl bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center mb-4 text-[#ffd90f]">
+                            <Mail className="w-7 h-7" />
+                          </div>
+                          <h3 className="text-lg font-bold text-white mb-2">Inicia sesión para enviar un mensaje</h3>
+                          <p className="text-xs sm:text-sm text-zinc-400 max-w-sm mb-6 leading-relaxed">
+                            Para dar seguimiento a tu solicitud y responderte directamente a tu cuenta, debes iniciar sesión.
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={() => setIsAuthModalOpen(true)}
+                            className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-base py-5 rounded-xl shadow-[0_4px_20px_rgba(255,217,15,0.2)]"
+                          >
+                            Iniciar Sesión / Registrarme
+                          </Button>
                         </div>
-                        <div>
-                          <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
-                          <input id="support-subject" name="subject" type="text" required maxLength={220} aria-describedby="support-subject-limit" aria-invalid={subjectWords > 30} onChange={(event) => setSubjectWords(countWords(event.target.value))} placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
-                          <p id="support-subject-limit" className={`mt-1 text-xs tabular-nums ${subjectWords > 30 ? "text-red-300" : "text-zinc-400"}`}>{subjectWords}/30 palabras</p>
-                        </div>
-                        <div>
-                          <label htmlFor="support-message" className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
-                          <textarea id="support-message" name="message" rows={5} required maxLength={5000} aria-describedby="support-message-limit" aria-invalid={messageWords > 50} onChange={(event) => setMessageWords(countWords(event.target.value))} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
-                          <p id="support-message-limit" className={`mt-1 text-xs tabular-nums ${messageWords > 50 ? "text-red-300" : "text-zinc-400"}`}>{messageWords}/50 palabras</p>
-                        </div>
-                        <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
-                        <Button type="submit" disabled={emailSending || emailSent} className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-lg py-6 rounded-xl">
-                          {emailSent ? "¡Correo enviado!" : emailSending ? "Enviando..." : "Enviar Correo"}
-                        </Button>
-                      </form>
+                      ) : (
+                        <form onSubmit={handleSupportEmailSubmit} className="space-y-5 w-full">
+                          {emailError && <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{emailError}</p>}
+                          {emailSent && <p role="status" className="rounded-xl border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300">Tu correo se envió correctamente. Te responderemos pronto.</p>}
+                          <div>
+                            <label htmlFor="support-email" className="block text-sm font-bold text-zinc-300 mb-2">Tu correo</label>
+                            <input key={user?.email || "guest"} id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} readOnly autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors read-only:cursor-not-allowed read-only:opacity-70" />
+                          </div>
+                          <div>
+                            <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
+                            <input id="support-subject" name="subject" type="text" required maxLength={220} aria-describedby="support-subject-limit" aria-invalid={subjectWords > 30} onChange={(event) => setSubjectWords(countWords(event.target.value))} placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                            <p id="support-subject-limit" className={`mt-1 text-xs tabular-nums ${subjectWords > 30 ? "text-red-300" : "text-zinc-400"}`}>{subjectWords}/30 palabras</p>
+                          </div>
+                          <div>
+                            <label htmlFor="support-message" className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
+                            <textarea id="support-message" name="message" rows={5} required maxLength={5000} aria-describedby="support-message-limit" aria-invalid={messageWords > 50} onChange={(event) => setMessageWords(countWords(event.target.value))} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
+                            <p id="support-message-limit" className={`mt-1 text-xs tabular-nums ${messageWords > 50 ? "text-red-300" : "text-zinc-400"}`}>{messageWords}/50 palabras</p>
+                          </div>
+                          <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+                          <Button type="submit" disabled={emailSending || emailSent} className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-lg py-6 rounded-xl">
+                            {emailSent ? "¡Correo enviado!" : emailSending ? "Enviando..." : "Enviar Correo"}
+                          </Button>
+                        </form>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1258,6 +1284,9 @@ export default function HomePage() {
           </AccessibleDialog>
       )}
 
+
+      {/* Modal de Autenticación */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
     </div>
   );
