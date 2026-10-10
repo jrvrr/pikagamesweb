@@ -923,7 +923,7 @@ export default function HomePage() {
                   <MessageCircle className="w-5 h-5 text-[#ff7a93]" />
                 </div>
                 <div className="flex items-center justify-center md:justify-end gap-3 text-zinc-300 hover:text-white transition-colors">
-                  <a href="mailto:pikagamestore@gmail.com" className="font-medium">pikagamestore@gmail.com</a>
+                  <a href="mailto:supportpikagames@gmail.com" className="font-medium">supportpikagames@gmail.com</a>
                   <Mail className="w-5 h-5 text-[#ff7a93]" />
                 </div>
               </div>
