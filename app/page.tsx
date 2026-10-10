@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -71,9 +71,43 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const commentUserName = user
     ? `${user.nombre || ""} ${user.apellidos || ""}`.trim() || user.email
     : "";
+
+  const handleSupportEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const fields = new FormData(form);
+    setEmailSending(true);
+    setEmailError("");
+
+    try {
+      const response = await fetch("/api/support-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: fields.get("email"),
+          subject: fields.get("subject"),
+          message: fields.get("message"),
+          website: fields.get("website"),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.ok !== true) {
+        throw new Error(result.error || "No se pudo enviar el correo.");
+      }
+      setEmailSent(true);
+      form.reset();
+    } catch (error) {
+      setEmailError(error instanceof Error ? error.message : "No se pudo enviar el correo.");
+    } finally {
+      setEmailSending(false);
+    }
+  };
 
   const loadComments = async () => {
     try {
@@ -972,7 +1006,7 @@ export default function HomePage() {
 
                         {/* Card 2: Enviar correo */}
                         <button 
-                          onClick={() => setCustomerServiceView('email')}
+                          onClick={() => { setEmailError(""); setEmailSent(false); setCustomerServiceView('email'); }}
                           className="group bg-zinc-900/90 hover:bg-zinc-800/90 border-2 border-zinc-700/60 hover:border-[#ffd90f] rounded-2xl p-5 sm:p-6 flex flex-col items-start text-left transition-all duration-200 hover:-translate-y-1 active:translate-y-0 shadow-lg hover:shadow-[0_8px_25px_rgba(255,217,15,0.1)] cursor-pointer"
                         >
                           <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700/60 group-hover:border-[#ffd90f]/40 group-hover:bg-[#ffd90f]/15 flex items-center justify-center mb-4 transition-colors">
@@ -1057,19 +1091,26 @@ export default function HomePage() {
                       <button onClick={() => setCustomerServiceView('selection')} className="text-zinc-400 hover:text-white mb-6 flex items-center gap-2 self-start font-medium transition-colors">
                         <ChevronLeft className="w-5 h-5" /> Volver
                       </button>
-                      <div className="space-y-5 w-full">
+                      <form onSubmit={handleSupportEmailSubmit} className="space-y-5 w-full">
+                        {emailError && <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{emailError}</p>}
+                        {emailSent && <p role="status" className="rounded-xl border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300">Tu correo se envió correctamente. Te responderemos pronto.</p>}
+                        <div>
+                          <label htmlFor="support-email" className="block text-sm font-bold text-zinc-300 mb-2">Tu correo</label>
+                          <input id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                        </div>
                         <div>
                           <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
-                          <input id="support-subject" type="text" placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <input id="support-subject" name="subject" type="text" required maxLength={120} placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
                         </div>
                         <div>
                           <label htmlFor="support-message" className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
-                          <textarea id="support-message" rows={5} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
+                          <textarea id="support-message" name="message" rows={5} required maxLength={5000} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
                         </div>
-                        <Button className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-lg py-6 rounded-xl">
-                          Enviar Correo
+                        <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+                        <Button type="submit" disabled={emailSending || emailSent} className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-lg py-6 rounded-xl">
+                          {emailSent ? "¡Correo enviado!" : emailSending ? "Enviando..." : "Enviar Correo"}
                         </Button>
-                      </div>
+                      </form>
                     </motion.div>
                   )}
                 </AnimatePresence>
