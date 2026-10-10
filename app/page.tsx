@@ -97,7 +97,7 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: fields.get("email"),
+          email: user?.email || fields.get("email"),
           subject: fields.get("subject"),
           message: fields.get("message"),
           website: fields.get("website"),
@@ -1105,7 +1105,7 @@ export default function HomePage() {
                         {emailSent && <p role="status" className="rounded-xl border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300">Tu correo se envió correctamente. Te responderemos pronto.</p>}
                         <div>
                           <label htmlFor="support-email" className="block text-sm font-bold text-zinc-300 mb-2">Tu correo</label>
-                          <input key={user?.email || "guest"} id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <input key={user?.email || "guest"} id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} readOnly={!!user?.email} autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors read-only:cursor-not-allowed read-only:opacity-70" />
                         </div>
                         <div>
                           <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
