@@ -10,22 +10,12 @@ function doPost(e) {
     const mensaje = String(datos.mensaje || '').trim();
     const correo = String(datos.correo || '').trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) || correo.length > 254 ||
-        !asunto || asunto.length > 120 || /[\r\n]/.test(asunto) ||
-        !mensaje || mensaje.length > 5000) {
+        !asunto || asunto.length > 220 || contarPalabras_(asunto) > 30 || /[\r\n]/.test(asunto) ||
+        !mensaje || mensaje.length > 5000 || contarPalabras_(mensaje) > 50) {
       throw new Error('Datos inválidos');
     }
 
-    MailApp.sendEmail({
-      to: CORREO_DESTINO,
-      subject: 'PikaGames - ' + asunto,
-      body: 'NUEVO MENSAJE DE SOPORTE\n\n' +
-        'Correo del cliente: ' + correo + '\n' +
-        'Asunto: ' + asunto + '\n\n' +
-        'Mensaje:\n' + mensaje,
-      htmlBody: crearCorreoHtml_(asunto, mensaje, correo),
-      replyTo: correo,
-      name: 'PikaGames Soporte',
-    });
+    enviarCorreo_(asunto, mensaje, correo);
     return responder_({ success: true });
   } catch (error) {
     console.error(error);
@@ -34,47 +24,56 @@ function doPost(e) {
 }
 
 function probarCorreo() {
-  MailApp.sendEmail({
-    to: CORREO_DESTINO,
-    subject: 'Prueba de PikaGames',
-    body: 'El sistema de soporte funciona correctamente.',
-    htmlBody: crearCorreoHtml_('Prueba de PikaGames', 'El sistema de soporte funciona correctamente.', 'cliente@ejemplo.com'),
-  });
+  enviarCorreo_('Prueba interna', 'Este mensaje solo comprueba el diseño del correo.', 'ejemplo@correo.com');
+}
+
+function enviarCorreo_(asunto, mensaje, correo) {
+  const asuntoCorreo = 'PikaGames - ' + asunto + ' [' + Utilities.getUuid().slice(0, 8) + ']';
+  const texto = 'NUEVO MENSAJE DE SOPORTE\n\n' +
+    'Correo del cliente: ' + correo + '\n' +
+    'Asunto: ' + asunto + '\n\n' +
+    'Mensaje:\n' + mensaje;
+  const enviado = GmailApp.createDraft(CORREO_DESTINO, asuntoCorreo, texto, {
+    htmlBody: crearCorreoHtml_(asunto, mensaje, correo),
+    replyTo: correo,
+    name: 'PikaGames Soporte',
+  }).send();
+  try {
+    enviado.getThread().moveToInbox().markUnread();
+  } catch (error) {
+    // El correo ya salió; fallar aquí provocaría un reintento duplicado.
+    console.error('Correo enviado, pero no se pudo colocar en Recibidos:', error);
+  }
 }
 
 function crearCorreoHtml_(asunto, mensaje, correo) {
   return `
-    <div style="margin:0;padding:32px 12px;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border-collapse:separate;border-spacing:0;border-radius:18px;overflow:hidden;background:#111311;">
-        <tr><td height="7" style="background:#ffd90f;font-size:0;line-height:0;">&nbsp;</td></tr>
-        <tr><td style="padding:30px 30px 24px;background:#111311;">
-          <p style="margin:0 0 28px;color:#ffd90f;font-size:24px;font-weight:900;letter-spacing:2px;">PIKA<span style="color:#ffffff;">GAMES</span></p>
-          <p style="margin:0 0 10px;color:#ff7a93;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">● Nuevo mensaje de soporte</p>
-          <h1 style="margin:0;color:#ffffff;font-size:26px;line-height:1.2;font-weight:900;word-break:break-word;">${escaparHtml_(asunto)}</h1>
+    <div style="margin:0;padding:32px 12px;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#242424;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border:1px solid #e2e2e2;border-collapse:collapse;background:#ffffff;">
+        <tr><td style="padding:30px 36px 22px;">
+          <p style="margin:0;color:#1f1f1f;font-size:18px;font-weight:700;">PikaGames</p>
+          <p style="margin:6px 0 0;color:#666666;font-size:12px;">Atención al cliente</p>
         </td></tr>
-        <tr><td style="padding:0 30px 16px;background:#111311;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;border:1px solid #343438;border-radius:12px;background:#18181b;">
-            <tr><td style="padding:18px 20px;">
-              <p style="margin:0 0 6px;color:#a1a1aa;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Correo del cliente</p>
-              <p style="margin:0;color:#ffd90f;font-size:15px;font-weight:700;word-break:break-all;">${escaparHtml_(correo)}</p>
-            </td></tr>
-          </table>
+        <tr><td style="padding:0 36px;"><div style="border-top:1px solid #e2e2e2;"></div></td></tr>
+        <tr><td style="padding:28px 36px 24px;">
+          <h1 style="margin:0 0 22px;color:#242424;font-size:22px;line-height:1.3;font-weight:700;">Nuevo mensaje de soporte</h1>
+          <p style="margin:0 0 8px;color:#666666;font-size:12px;font-weight:700;">ASUNTO</p>
+          <p style="margin:0 0 22px;color:#242424;font-size:16px;line-height:1.5;word-break:break-word;">${escaparHtml_(asunto)}</p>
+          <p style="margin:0 0 8px;color:#666666;font-size:12px;font-weight:700;">CORREO DEL CLIENTE</p>
+          <p style="margin:0 0 22px;font-size:15px;word-break:break-all;"><a href="mailto:${escaparHtml_(correo)}" style="color:#1457a6;text-decoration:underline;">${escaparHtml_(correo)}</a></p>
+          <p style="margin:0 0 8px;color:#666666;font-size:12px;font-weight:700;">MENSAJE</p>
+          <p style="margin:0;color:#242424;font-size:15px;line-height:1.7;word-break:break-word;">${escaparHtml_(mensaje).replace(/\r\n|\r|\n/g, '<br>')}</p>
         </td></tr>
-        <tr><td style="padding:0 30px 26px;background:#111311;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;border-left:4px solid #ffd90f;border-radius:10px;background:#202023;">
-            <tr><td style="padding:20px;">
-              <p style="margin:0 0 12px;color:#ff7a93;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;">Mensaje</p>
-              <p style="margin:0;color:#ffffff;font-size:15px;line-height:1.7;word-break:break-word;">${escaparHtml_(mensaje).replace(/\r\n|\r|\n/g, '<br>')}</p>
-            </td></tr>
-          </table>
+        <tr><td style="padding:20px 36px;border-top:1px solid #e2e2e2;color:#666666;font-size:12px;line-height:1.5;">
+          Responde a este mensaje para contactar al cliente.<br>
+          Enviado desde pikagames.shop
         </td></tr>
-        <tr><td style="padding:0 30px 30px;background:#111311;color:#a1a1aa;font-size:12px;line-height:1.5;">
-          Responde a este correo para contestar directamente al cliente.<br>
-          Enviado desde <span style="color:#ffd90f;">pikagames.shop</span>
-        </td></tr>
-        <tr><td height="5" style="background:#ff7a93;font-size:0;line-height:0;">&nbsp;</td></tr>
       </table>
     </div>`;
+}
+
+function contarPalabras_(valor) {
+  return valor.trim() ? valor.trim().split(/\s+/).length : 0;
 }
 
 function escaparHtml_(valor) {

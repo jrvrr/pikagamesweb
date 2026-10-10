@@ -1,3 +1,5 @@
+import { countWords } from "@/lib/supportEmail";
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
@@ -25,8 +27,8 @@ export async function POST(request: Request) {
   if (website) return Response.json({ ok: true });
   if (
     typeof email !== "string" || email.length > 254 || !emailPattern.test(email.trim()) ||
-    typeof subject !== "string" || !subject.trim() || subject.length > 120 || /[\r\n]/.test(subject) ||
-    typeof message !== "string" || !message.trim() || message.length > 5000
+    typeof subject !== "string" || !subject.trim() || subject.length > 220 || countWords(subject) > 30 || /[\r\n]/.test(subject) ||
+    typeof message !== "string" || !message.trim() || message.length > 5000 || countWords(message) > 50
   ) {
     return Response.json({ error: "Revisa tu correo, asunto y mensaje." }, { status: 400 });
   }

@@ -46,6 +46,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { isDemoGameId } from "@/lib/demoGames";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { countWords } from "@/lib/supportEmail";
 
 interface ApiComment {
   id: string | number;
@@ -74,6 +75,8 @@ export default function HomePage() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [subjectWords, setSubjectWords] = useState(0);
+  const [messageWords, setMessageWords] = useState(0);
   const commentUserName = user
     ? `${user.nombre || ""} ${user.apellidos || ""}`.trim() || user.email
     : "";
@@ -82,6 +85,10 @@ export default function HomePage() {
     event.preventDefault();
     const form = event.currentTarget;
     const fields = new FormData(form);
+    if (countWords(String(fields.get("subject") || "")) > 30 || countWords(String(fields.get("message") || "")) > 50) {
+      setEmailError("El asunto admite hasta 30 palabras y el mensaje hasta 50.");
+      return;
+    }
     setEmailSending(true);
     setEmailError("");
 
@@ -102,6 +109,8 @@ export default function HomePage() {
       }
       setEmailSent(true);
       form.reset();
+      setSubjectWords(0);
+      setMessageWords(0);
     } catch (error) {
       setEmailError(error instanceof Error ? error.message : "No se pudo enviar el correo.");
     } finally {
@@ -1096,15 +1105,17 @@ export default function HomePage() {
                         {emailSent && <p role="status" className="rounded-xl border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300">Tu correo se envió correctamente. Te responderemos pronto.</p>}
                         <div>
                           <label htmlFor="support-email" className="block text-sm font-bold text-zinc-300 mb-2">Tu correo</label>
-                          <input id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <input key={user?.email || "guest"} id="support-email" name="email" type="email" required maxLength={254} defaultValue={user?.email || ""} autoComplete="email" placeholder="tu@correo.com" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
                         </div>
                         <div>
                           <label htmlFor="support-subject" className="block text-sm font-bold text-zinc-300 mb-2">Asunto</label>
-                          <input id="support-subject" name="subject" type="text" required maxLength={120} placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <input id="support-subject" name="subject" type="text" required maxLength={220} aria-describedby="support-subject-limit" aria-invalid={subjectWords > 30} onChange={(event) => setSubjectWords(countWords(event.target.value))} placeholder="Problema con mi pedido / Duda general" className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors" />
+                          <p id="support-subject-limit" className={`mt-1 text-xs tabular-nums ${subjectWords > 30 ? "text-red-300" : "text-zinc-400"}`}>{subjectWords}/30 palabras</p>
                         </div>
                         <div>
                           <label htmlFor="support-message" className="block text-sm font-bold text-zinc-300 mb-2">Mensaje</label>
-                          <textarea id="support-message" name="message" rows={5} required maxLength={5000} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
+                          <textarea id="support-message" name="message" rows={5} required maxLength={5000} aria-describedby="support-message-limit" aria-invalid={messageWords > 50} onChange={(event) => setMessageWords(countWords(event.target.value))} placeholder="Escribe aquí los detalles..." className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-[#ffd90f] rounded-xl px-4 py-3 text-white font-medium outline-none transition-colors resize-none"></textarea>
+                          <p id="support-message-limit" className={`mt-1 text-xs tabular-nums ${messageWords > 50 ? "text-red-300" : "text-zinc-400"}`}>{messageWords}/50 palabras</p>
                         </div>
                         <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
                         <Button type="submit" disabled={emailSending || emailSent} className="w-full bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 font-black text-lg py-6 rounded-xl">
