@@ -1,5 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Soporte",
+  description: "Contacta al equipo de PikaGames para recibir ayuda con el catálogo y las compras.",
+  alternates: { canonical: "/soporte" },
+  openGraph: {
+    type: "website", locale: "es_MX", siteName: "PikaGames",
+    title: "Soporte | PikaGames",
+    description: "Contacta al equipo de PikaGames para recibir ayuda con el catálogo y las compras.",
+    url: "/soporte",
+  },
+};
 
 export default function SoportePage() {
   return (

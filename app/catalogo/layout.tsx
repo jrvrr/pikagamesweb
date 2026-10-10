@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Catálogo de juegos",
-  description: "Explora información de videojuegos para Nintendo Switch en el catálogo de PikaGames.",
+  title: "Catálogo de videojuegos para Nintendo Switch",
+  description: "Explora videojuegos activos para Nintendo Switch por género y consulta las opciones disponibles en la tienda PikaGames.",
   alternates: { canonical: "/catalogo" },
   openGraph: {
     type: "website",
     locale: "es_MX",
     siteName: "PikaGames",
-    title: "Catálogo de juegos | PikaGames",
-    description: "Explora información de videojuegos para Nintendo Switch en el catálogo de PikaGames.",
+    title: "Catálogo de videojuegos para Nintendo Switch | PikaGames",
+    description: "Explora videojuegos activos para Nintendo Switch por género y consulta las opciones disponibles en la tienda PikaGames.",
     url: "/catalogo",
   },
 };

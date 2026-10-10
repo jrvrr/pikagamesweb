@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Buscar videojuegos",
   description: "Busca videojuegos para Nintendo Switch y consulta información de cada título en PikaGames.",
   alternates: { canonical: "/buscar" },
+  robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     locale: "es_MX",

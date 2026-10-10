@@ -18,19 +18,17 @@ import PayPalProviderWrapper from "@/components/PayPalProviderWrapper";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.pikagames.shop"),
-  title: { default: "PikaGames | Juegos para Nintendo Switch", template: "%s | PikaGames" },
-  description: "Explora informaci\u00f3n, novedades y t\u00edtulos para Nintendo Switch en PikaGames.",
-  alternates: { canonical: "/" },
+  title: { default: "PikaGames | Tienda de videojuegos para Nintendo Switch", template: "%s | PikaGames" },
+  description: "Explora juegos activos para Nintendo Switch, consulta sus detalles y opciones de compra en PikaGames.",
   openGraph: {
     type: "website",
     locale: "es_MX",
     siteName: "PikaGames",
-    title: "PikaGames | Juegos para Nintendo Switch",
-    description: "Explora informaci\u00f3n, novedades y t\u00edtulos para Nintendo Switch en PikaGames.",
-    url: "/",
+    title: "PikaGames | Tienda de videojuegos para Nintendo Switch",
+    description: "Explora juegos activos para Nintendo Switch, consulta sus detalles y opciones de compra en PikaGames.",
     images: [{ url: "/icon.png", alt: "PikaGames" }],
   },
-  twitter: { card: "summary", title: "PikaGames | Juegos para Nintendo Switch", description: "Explora informaci\u00f3n, novedades y t\u00edtulos para Nintendo Switch en PikaGames." },
+  twitter: { card: "summary", title: "PikaGames | Tienda de videojuegos para Nintendo Switch", description: "Explora juegos activos para Nintendo Switch, consulta sus detalles y opciones de compra en PikaGames." },
   icons: { icon: "/icon.png", shortcut: "/icon.png", apple: "/icon.png" },
 };
 
