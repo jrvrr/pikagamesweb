@@ -1,5 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, Mail, MessageCircle } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Soporte",
+  description: "Contacta al equipo de PikaGames para recibir ayuda con el catálogo y las compras.",
+  alternates: { canonical: "/soporte" },
+  openGraph: {
+    type: "website", locale: "es_MX", siteName: "PikaGames",
+    title: "Soporte | PikaGames",
+    description: "Contacta al equipo de PikaGames para recibir ayuda con el catálogo y las compras.",
+    url: "/soporte",
+  },
+};
 
 export default function SoportePage() {
   return (
@@ -21,10 +34,10 @@ export default function SoportePage() {
             <h2 className="mt-5 text-lg font-bold">WhatsApp</h2>
             <p className="mt-2 text-sm text-zinc-400">81 3697 5457</p>
           </a>
-          <a href="mailto:pikagamestore@gmail.com" className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#ffd90f]/60">
+          <a href="mailto:supportpikagames@gmail.com" className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#ffd90f]/60">
             <Mail className="h-7 w-7 text-[#ffd90f]" />
             <h2 className="mt-5 text-lg font-bold">Correo electrónico</h2>
-            <p className="mt-2 break-all text-sm text-zinc-400">pikagamestore@gmail.com</p>
+            <p className="mt-2 break-all text-sm text-zinc-400">supportpikagames@gmail.com</p>
           </a>
         </div>
       </div>

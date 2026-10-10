@@ -1,3 +1,3 @@
-import CatalogoPage from "@/app/catalogo/page";
+import CatalogoPage from "@/app/catalogo/CatalogoClient";
 
 export default CatalogoPage;
