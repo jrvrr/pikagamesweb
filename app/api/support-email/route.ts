@@ -46,18 +46,32 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ correo: email.trim(), asunto: subject.trim(), mensaje: message.trim(), secret }),
       cache: "no-store",
+      redirect: "follow",
       signal: AbortSignal.timeout(15000),
     });
+
     if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      console.error(`Apps Script error HTTP ${response.status}:`, errorText);
       throw new Error(response.status === 401 || response.status === 403
-        ? `Apps Script rechazó el acceso anónimo (${response.status}). Revisa los permisos de la implementación.`
+        ? `Apps Script rechazó el acceso anónimo (${response.status}). Revisa los permisos de la implementación web (debe ser 'Cualquier persona').`
         : `Apps Script respondió con HTTP ${response.status}.`);
     }
-    if (!response.headers.get("content-type")?.includes("application/json")) {
-      throw new Error("Apps Script no devolvió JSON. Revisa el acceso y la versión publicada.");
+
+    const responseText = await response.text();
+    let result: { success?: boolean; error?: string } = {};
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      console.error("Apps Script no devolvió JSON. Respuesta recibida:", responseText.slice(0, 300));
+      throw new Error("Apps Script no devolvió JSON. Revisa el acceso público y la versión publicada de la implementación.");
     }
-    const result = await response.json();
-    if (result?.success !== true) throw new Error("El script no confirmó el envío.");
+
+    if (result?.success !== true) {
+      console.error("Apps Script devolvió error interno:", result?.error || result);
+      throw new Error(result?.error || "El script no confirmó el envío.");
+    }
+
     return Response.json({ ok: true });
   } catch (error) {
     console.error("Error al enviar correo de soporte:", error);
