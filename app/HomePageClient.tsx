@@ -39,7 +39,10 @@ import {
   Check,
   Flame,
   Headphones,
-  ArrowRight
+  ArrowRight,
+  UserRound,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -544,7 +547,7 @@ export default function HomePage() {
       </div>
 
       {/* Próximamente Section */}
-      <section className="relative z-10 py-20 px-6 md:px-12 border-t-4 border-b-4 border-zinc-900 bg-white overflow-hidden" id="proximos">
+      <section className="relative z-10 py-20 px-6 md:px-12 border-t-4 border-zinc-900 bg-white overflow-hidden" id="proximos">
         <div className="max-w-6xl mx-auto flex flex-col items-center">
           <motion.div 
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -639,6 +642,86 @@ export default function HomePage() {
               })}
             </motion.div>
           )}
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="account-guide-title"
+        className="bg-account-dots text-[#26313a]"
+      >
+        <div className="grid lg:min-h-[35rem] lg:grid-cols-2">
+            <div className="overflow-hidden bg-[#c9f1ff]/75 p-7 sm:p-9 lg:p-12 xl:p-16">
+              <motion.div
+                initial={shouldReduceMotion ? false : { opacity: 0, x: -48 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.35 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
+                className="flex h-full flex-col justify-between"
+              >
+              <div>
+                <span className="inline-flex rounded-full bg-[#d8f4ff] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]">Guía para elegir</span>
+                <h2 id="account-guide-title" className="mt-5 max-w-sm text-3xl font-black uppercase leading-[1.05] tracking-tight sm:text-4xl">¿Cómo funcionan las cuentas?</h2>
+                <p className="mt-4 max-w-sm text-sm font-semibold leading-relaxed text-[#35434c]">Elige cómo quieres jugar tu próximo título de Nintendo Switch.</p>
+              </div>
+              <p className="mt-10 max-w-xs text-2xl font-black uppercase leading-tight tracking-tight">
+                <span className="box-decoration-clone bg-[#2b88bd] px-2 py-1 text-[#e9f8ff]">Tú eliges dónde jugar.</span>
+              </p>
+              </motion.div>
+            </div>
+
+            <div className="grid grid-rows-2">
+              <div className="flex flex-col justify-center overflow-hidden bg-[#d8f4ff]/95 p-6 sm:p-8 lg:p-10 xl:p-12">
+                <motion.div
+                  initial={shouldReduceMotion ? false : { opacity: 0, x: 48 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.35 }}
+                  transition={{ duration: 0.65, ease: "easeOut" }}
+                >
+                <div className="flex items-end gap-4">
+                  <span className="text-5xl font-black leading-none text-[#60afe0]" aria-hidden="true">01</span>
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em]">Cuenta</p><h3 className="text-2xl font-black uppercase leading-none">Principal</h3></div>
+                </div>
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <UserRound aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Tu perfil</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Puedes jugar desde tu propio perfil si lo prefieres.</p>
+                  </div>
+                  <div>
+                    <Wifi aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Con red</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Juegas con conexión a internet.</p>
+                  </div>
+                </div>
+                </motion.div>
+              </div>
+
+              <div className="flex flex-col justify-center overflow-hidden bg-[#86ccef]/95 p-6 sm:p-8 lg:p-10 xl:p-12">
+                <motion.div
+                  initial={shouldReduceMotion ? false : { opacity: 0, x: 48 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.35 }}
+                  transition={{ duration: 0.65, delay: 0.1, ease: "easeOut" }}
+                >
+                <div className="flex items-end gap-4">
+                  <span className="text-5xl font-black leading-none text-[#3c9ad2]" aria-hidden="true">02</span>
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em]">Cuenta</p><h3 className="text-2xl font-black uppercase leading-none">Secundaria</h3></div>
+                </div>
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <UserRound aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Perfil incluido</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Juegas desde el perfil que te entregamos.</p>
+                  </div>
+                  <div>
+                    <WifiOff aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Sin red</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Juegas sin conexión a internet.</p>
+                  </div>
+                </div>
+                </motion.div>
+              </div>
+            </div>
         </div>
       </section>
 
