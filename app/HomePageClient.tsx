@@ -39,7 +39,10 @@ import {
   Check,
   Flame,
   Headphones,
-  ArrowRight
+  ArrowRight,
+  UserRound,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { getPopularGames, getUpcomingGames, getNewReleases, getGameDetails, searchGames, Game } from "@/lib/rawg";
 import { useAuth } from "@/lib/AuthContext";
@@ -641,6 +644,70 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      <motion.section
+        aria-labelledby="account-guide-title"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.65, type: "spring", bounce: 0.3 }}
+        className="bg-white px-4 py-16 sm:px-6 sm:py-20"
+      >
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border-[3px] border-[#2b83b8] bg-account-dots text-[#104f7b] shadow-[10px_10px_0_#76c8ed]">
+          <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
+            <div className="relative flex flex-col justify-between border-b-[3px] border-[#2b83b8] bg-[#c9f1ff]/75 p-7 sm:p-9 lg:border-b-0 lg:border-r-[3px]">
+              <div>
+                <span className="inline-flex rounded-full bg-[#d8f4ff] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#165d91]">Guía para elegir</span>
+                <h2 id="account-guide-title" className="mt-5 max-w-sm text-3xl font-black uppercase leading-[1.05] tracking-tight sm:text-4xl">¿Cómo funcionan las cuentas?</h2>
+                <p className="mt-4 max-w-sm text-sm font-semibold leading-relaxed text-[#236b99]">Elige cómo quieres jugar tu próximo título de Nintendo Switch.</p>
+              </div>
+              <div className="mt-10 flex items-center gap-3 border-t-2 border-[#65b4de] pt-4 text-xs font-black uppercase tracking-[0.14em] text-[#165d91]">
+                <Gamepad2 aria-hidden="true" className="size-7" /> Dos formas de jugar
+              </div>
+            </div>
+
+            <div className="divide-y-[3px] divide-[#58a9d6]">
+              <div className="bg-[#d8f4ff]/95 p-6 sm:p-8">
+                <div className="flex items-end gap-4">
+                  <span className="text-5xl font-black leading-none text-[#60afe0]" aria-hidden="true">01</span>
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2d79a9]">Cuenta</p><h3 className="text-2xl font-black uppercase leading-none">Principal</h3></div>
+                </div>
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  <div className="border-l-4 border-[#70bde8] pl-3">
+                    <UserRound aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Tu perfil</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Puedes jugar desde tu propio perfil si lo prefieres.</p>
+                  </div>
+                  <div className="border-l-4 border-[#70bde8] pl-3">
+                    <Wifi aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Con red</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Juegas con conexión a internet.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#86ccef]/95 p-6 sm:p-8">
+                <div className="flex items-end gap-4">
+                  <span className="text-5xl font-black leading-none text-[#3c9ad2]" aria-hidden="true">02</span>
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#256f9f]">Cuenta</p><h3 className="text-2xl font-black uppercase leading-none">Secundaria</h3></div>
+                </div>
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  <div className="border-l-4 border-[#4aa6d8] pl-3">
+                    <UserRound aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Perfil incluido</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Juegas desde el perfil que te entregamos.</p>
+                  </div>
+                  <div className="border-l-4 border-[#4aa6d8] pl-3">
+                    <WifiOff aria-hidden="true" className="mb-2 size-5" />
+                    <p className="text-xs font-black uppercase tracking-wide">Sin red</p>
+                    <p className="mt-1 text-sm font-medium leading-snug">Juegas sin conexión a internet.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* Catálogo Section */}
       <section className="py-20 px-6 md:px-12 border-b-4 border-zinc-900 bg-white overflow-hidden" id="catalogo">

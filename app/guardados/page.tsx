@@ -90,7 +90,7 @@ export default function GuardadosPage() {
               Tus Guardados
             </h1>
             <p className="text-zinc-400 mt-2 font-medium text-sm md:text-base">
-              Los tÃ­tulos que guardaste para tu Nintendo Switch, siempre disponibles.
+              Los títulos que guardaste para tu Nintendo Switch, siempre disponibles.
             </p>
           </div>
           <div className="mt-4 md:mt-0 bg-zinc-900 px-5 md:px-6 py-2 md:py-3 rounded-full border-2 border-zinc-800 flex items-center gap-3">
@@ -126,15 +126,15 @@ export default function GuardadosPage() {
                 !
               </div>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-3 uppercase tracking-tight">Tu lista de guardados estÃ¡ vacÃ­a</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-3 uppercase tracking-tight">Tu lista de guardados está vacía</h2>
             <p className="text-zinc-400 max-w-md mb-8 text-sm md:text-base font-medium">
-              AÃºn no has guardado ningÃºn juego. Explora nuestro catÃ¡logo y presiona el corazÃ³n en los tÃ­tulos que mÃ¡s te gusten.
+              Aún no has guardado ningún juego. Explora nuestro catálogo y presiona el corazón en los títulos que más te gusten.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/catalogo">
                 <Button size="lg" className="bg-[#ffd90f] hover:bg-[#e5c30d] text-zinc-900 rounded-full font-black px-8 py-6 text-base shadow-lg transition-all hover:scale-105">
                   <Gamepad2 className="w-5 h-5 mr-2" />
-                  Explorar CatÃ¡logo Switch
+                  Explorar Catálogo Switch
                 </Button>
               </Link>
               <Link href="/buscar">
@@ -231,7 +231,7 @@ export default function GuardadosPage() {
             {detailModal.isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
                 <Loader2 className="w-10 h-10 animate-spin text-[#ffd90f] mb-3" />
-                <p>Cargando informaciÃ³n del juego...</p>
+                <p>Cargando información del juego...</p>
               </div>
             ) : (
               <div>
@@ -256,9 +256,9 @@ export default function GuardadosPage() {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">DescripciÃ³n</h3>
+                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Descripción</h3>
                   <p className="text-zinc-300 text-sm leading-relaxed max-h-48 overflow-y-auto pr-2">
-                    {detailModal.game.description_raw || "SumÃ©rgete en esta aventura Ã©pica diseÃ±ada para Nintendo Switch con grÃ¡ficos optimizados, controles fluidos y horas de entretenimiento garantizado."}
+                    {detailModal.game.description_raw || "Sumérgete en esta aventura épica diseñada para Nintendo Switch con gráficos optimizados, controles fluidos y horas de entretenimiento garantizado."}
                   </p>
                 </div>
 

@@ -17,7 +17,9 @@ import {
   Clock, 
   AlertTriangle,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  UserRound,
+  Wifi
 } from "lucide-react";
 import { getGameDetails, type Game } from "@/lib/rawg";
 import { motion, AnimatePresence } from "framer-motion";
@@ -175,7 +177,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
     if (!game) return;
     const message = paymentMethod === "paypal"
       ? `Hola Pikagames, he completado mi pago por PayPal para "${game.name}" (${selectedOption.label} - $${confirmation?.total} MXN). Pedido #${confirmation?.pedidoId}, captura ${confirmation?.captureId}. Solicito coordinar la entrega.`
-      : `Hola Pikagames, he apartado 1 boleto para "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Pedido #${manualOrderId}. Adjunto mi comprobante de pago.`;
+      : `Hola Pikagames, he reservado el juego "${game.name}" (${selectedOption.label} - $${formattedPrice} MXN) mediante ${paymentMethodLabels[paymentMethod]}. Pedido #${manualOrderId}. Adjunto mi comprobante de pago.`;
     
     window.open(`https://wa.me/528136975457?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
@@ -294,6 +296,34 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
+            <section aria-labelledby="account-guide-title" className="bg-account-dots mt-5 overflow-hidden rounded-2xl border-2 border-[#123653] p-4 text-[#082b45] shadow-[4px_4px_0_#123653]">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <span className="inline-flex rounded-full bg-[#123653] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#a7e8ff]">Guía rápida</span>
+                  <h3 id="account-guide-title" className="mt-2 text-lg font-black leading-tight">¿Cómo funcionan las cuentas?</h3>
+                </div>
+                <Gamepad2 aria-hidden="true" className="size-8 shrink-0 -rotate-12" />
+              </div>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <article className={`rounded-xl border-2 p-3 transition-colors ${accountType === "principal" ? "border-[#123653] bg-white shadow-[3px_3px_0_#123653]" : "border-[#123653]/30 bg-white/75"}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-[#123653] text-[#a7e8ff]"><UserRound aria-hidden="true" className="size-4" /></span>
+                    <span className="text-xs font-black uppercase tracking-wide">Principal</span>
+                  </div>
+                  <p className="mt-2 text-xs font-bold leading-snug">Puedes jugar desde tu perfil si lo prefieres.</p>
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#31536c]"><Wifi aria-hidden="true" className="size-3.5" /> Con conexión a internet</p>
+                </article>
+                <article className={`rounded-xl border-2 p-3 transition-colors ${accountType === "secundaria" ? "border-[#123653] bg-white shadow-[3px_3px_0_#123653]" : "border-[#123653]/30 bg-white/75"}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-[#123653] text-[#a7e8ff]"><Gamepad2 aria-hidden="true" className="size-4" /></span>
+                    <span className="text-xs font-black uppercase tracking-wide">Secundaria</span>
+                  </div>
+                  <p className="mt-2 text-xs font-bold leading-snug">Juega desde el perfil que te entregamos.</p>
+                  <p className="mt-1 text-[11px] font-semibold text-[#31536c]">Sin conexión a internet</p>
+                </article>
+              </div>
+            </section>
+
             {/* 2. SELECCIÓN DE MÉTODO DE PAGO */}
             <div className="mt-6 space-y-3">
               <label className="block text-xs font-black uppercase tracking-wider text-zinc-300">
@@ -389,7 +419,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>Tienes un máximo de 4 horas para realizar el depósito y verificar tu boleto por WhatsApp.</span>
+                    <span>Tienes un máximo de 4 horas para realizar el depósito y confirmar tu pedido por WhatsApp.</span>
                   </div>
 
                   <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
@@ -426,7 +456,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
-                    <span>Tienes 4 horas para realizar la transferencia y verificar tu boleto enviando tu recibo.</span>
+                    <span>Tienes 4 horas para realizar la transferencia y confirmar tu pedido enviando tu recibo.</span>
                   </div>
 
                   <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 text-xs">
@@ -480,7 +510,7 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   onClick={handleReserveClick}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ffd90f] px-6 py-4 text-center text-base font-black uppercase tracking-wider text-zinc-950 shadow-[0_0_25px_rgba(255,217,15,0.2)] transition-all hover:bg-[#ffe45c] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isReserveSubmitting ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : null}<span>{isReserveSubmitting ? "Creando pedido…" : "Reservar Boleto"}</span>
+                  {isReserveSubmitting ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : null}<span>{isReserveSubmitting ? "Creando pedido…" : "Reservar Juego"}</span>
                   <Send className="h-4 w-4" />
                 </button>
                 </>
@@ -517,9 +547,9 @@ export default function ComprarJuegoPage({ params }: { params: Promise<{ id: str
                   <span className="inline-block rounded-full bg-[#ffd90f]/10 border border-[#ffd90f]/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#ffd90f] mb-2">
                     ¡Reserva Registrada!
                   </span>
-                  <h3 className="text-2xl font-black text-white">Boleto Reservado</h3>
+                  <h3 className="text-2xl font-black text-white">Juego Reservado</h3>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Has apartado 1 boleto para <strong className="text-white">{game.name}</strong>
+                    Has reservado el juego <strong className="text-white">{game.name}</strong>
                   </p>
                 </div>
 

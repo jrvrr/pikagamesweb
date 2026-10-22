@@ -189,6 +189,12 @@ select:focus-visible {
   background-position: 0 0, 12px 12px;
 }
 
+.bg-account-dots {
+  background-color: #a7e8ff;
+  background-image: radial-gradient(rgba(18, 54, 83, 0.55) 1.5px, transparent 2px);
+  background-size: 22px 22px;
+}
+
 .loader-trace {
   stroke-dashoffset: 100;
   animation: loader-trace 2.8s ease-in-out infinite alternate;
