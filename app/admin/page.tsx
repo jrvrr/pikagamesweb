@@ -6,19 +6,23 @@ import {
   Check,
   Clock3,
   CreditCard,
+  Gift,
   LayoutDashboard,
   LogOut,
   MessageSquare,
   RefreshCw,
   ShieldCheck,
   Star,
+  Trophy,
   X,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
+import { SorteosAdmin } from "./SorteosAdmin";
+import { GanadoresAdmin } from "./GanadoresAdmin";
 
-type Tab = "resumen" | "comentarios" | "pagos";
+type Tab = "resumen" | "comentarios" | "pagos" | "sorteos" | "ganadores";
 type ReviewStatus = "pendiente" | "aprobado" | "rechazado";
 
 type AdminComment = {
@@ -163,6 +167,8 @@ export default function AdminPage() {
     { id: "resumen", label: "Resumen", icon: LayoutDashboard },
     { id: "comentarios", label: "Comentarios", icon: MessageSquare, count: pendingComments },
     { id: "pagos", label: "Pagos", icon: CreditCard, count: pendingPayments },
+    { id: "sorteos", label: "Sorteos", icon: Gift },
+    { id: "ganadores", label: "Ganadores", icon: Trophy },
   ];
 
   return (
@@ -204,6 +210,8 @@ export default function AdminPage() {
 
           {tab === "comentarios" && <ReviewComments comments={comments} loading={isLoading} busyId={busyId} onStatusChange={changeCommentStatus} />}
           {tab === "pagos" && <ReviewPayments payments={payments} loading={isLoading} busyId={busyId} onStatusChange={changePaymentStatus} />}
+          {tab === "sorteos" && <SorteosAdmin onOpenGanadores={() => setTab("ganadores")} />}
+          {tab === "ganadores" && <GanadoresAdmin onOpenSorteos={() => setTab("sorteos")} />}
         </section>
       </div>
     </main>

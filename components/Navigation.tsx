@@ -15,7 +15,8 @@ import {
   ChevronDown,
   HelpCircle,
   Home,
-  X
+  X,
+  Ticket
 } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 import Link from "next/link";
@@ -30,7 +31,7 @@ export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   
-  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/catalogo" ? "catalogo" : pathname === "/comprar" || pathname.startsWith("/comprar/") ? "comprar" : pathname === "/" ? "inicio" : "";
+  const activeTab: string = pathname === "/perfil" ? "perfil" : pathname === "/guardados" ? "guardados" : pathname === "/buscar" ? "buscar" : pathname === "/catalogo" ? "catalogo" : pathname === "/comprar" || pathname.startsWith("/comprar/") ? "comprar" : pathname === "/rifas" || pathname.startsWith("/rifas/") ? "rifas" : pathname === "/" ? "inicio" : "";
 
   // Clear search inputs when user navigates away from /buscar
   useEffect(() => {
@@ -118,6 +119,10 @@ export function Navigation() {
             <Link href="/comprar" className="flex items-center gap-2 px-4 h-full text-white hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
               <ShoppingBag className="w-5 h-5" /> Comprar
             </Link>
+
+            <Link href="/rifas" className="flex items-center gap-2 px-4 h-full hover:text-[#ffd90f] hover:bg-zinc-800 transition-colors">
+              <Ticket className="w-5 h-5" /> Rifas
+            </Link>
           </nav>
 
           <div className="grow"></div>
@@ -197,6 +202,13 @@ export function Navigation() {
                 <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Comprar juegos</span>
                 <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Consulta los títulos disponibles y elige la cuenta que deseas comprar.</p>
               </Link>
+              <Link href="/rifas" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
+                <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
+                  <Ticket className="w-12 h-12 text-[#ffd90f]" />
+                </div>
+                <span className="font-bold text-white group-hover/item:text-[#ffd90f] transition-colors text-base md:text-lg">Rifas y sorteos</span>
+                <p className="hidden md:block text-xs text-zinc-500 mt-2 font-normal leading-relaxed">Compra boletos para las rifas activas y consulta a los ganadores.</p>
+              </Link>
               <Link href="/soporte" onClick={() => setIsMenuOpen(false)} className="flex flex-col group/item bg-zinc-900/80 px-4 py-2.5 sm:py-3 md:p-6 rounded-xl hover:bg-zinc-800 border border-zinc-800 transition-all">
                 <div className="hidden md:flex w-full h-28 bg-[#18181b] rounded-xl mb-4 items-center justify-center group-hover/item:scale-105 transition-transform shadow-inner border border-zinc-800/50">
                   <HelpCircle className="w-12 h-12 text-[#ffd90f]" />
@@ -224,6 +236,9 @@ export function Navigation() {
                 </Link>
                 <Link href="/guardados" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
                   <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Guardados
+                </Link>
+                <Link href="/rifas" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">
+                  <Ticket className="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd90f]" /> Rifas
                 </Link>
                 {user ? (
                   <Link href={user.rol.trim().toLowerCase() === "admin" ? "/admin" : "/perfil"} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 md:py-3 bg-zinc-900 rounded-xl text-white font-bold hover:bg-zinc-800 transition-colors border border-zinc-800 text-sm sm:text-base">

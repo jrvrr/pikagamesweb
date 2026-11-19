@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: `${siteUrl}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${siteUrl}/catalogo`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${siteUrl}/rifas`, changeFrequency: "daily", priority: 0.8 },
     { url: `${siteUrl}/soporte`, changeFrequency: "monthly", priority: 0.3 },
     ...(games.length ? [{ url: `${siteUrl}/nintendo-switch`, changeFrequency: "daily" as const, priority: 0.9 }] : []),
     ...categoryEntries,
