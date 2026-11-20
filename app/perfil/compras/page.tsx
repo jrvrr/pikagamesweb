@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
-import { ArrowLeft, CalendarDays, Gamepad2, ShoppingBag, Ticket } from "lucide-react";
+import { ArrowLeft, CalendarDays, Gamepad2, ShoppingBag } from "lucide-react";
 
 type PurchaseItem = { titulo_snapshot?: string; tipo_cuenta_snapshot?: string; cantidad?: number };
 type Purchase = {
@@ -15,8 +15,6 @@ type Purchase = {
   created_at?: string;
   PedidoDetalles?: PurchaseItem[];
   pedido_detalles?: PurchaseItem[];
-  boletos?: { id: string; numero: number; estado: string }[];
-  sorteo?: { slug: string; titulo: string } | null;
 };
 
 const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
@@ -96,11 +94,6 @@ export default function ComprasPage() {
                 </div>
                 {hasValidDate && <p className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500"><CalendarDays aria-hidden="true" className="size-3.5" />{purchaseDate.toLocaleDateString("es-MX", { dateStyle: "medium" })}</p>}
                 {itemsWithTitle.length > 0 && <ul className="mt-3 space-y-1.5">{itemsWithTitle.map((item, index) => <li key={`${purchase.id}-${index}`} className="flex items-center gap-2 text-sm text-zinc-300"><Gamepad2 aria-hidden="true" className="size-4 shrink-0 text-zinc-500" /><span>{item.titulo_snapshot}{item.cantidad && item.cantidad > 1 ? ` × ${item.cantidad}` : ""}</span>{item.tipo_cuenta_snapshot && <span className="ml-auto text-xs capitalize text-zinc-500">{item.tipo_cuenta_snapshot}</span>}</li>)}</ul>}
-                {purchase.boletos && purchase.boletos.length > 0 && <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-zinc-300">
-                  <Ticket aria-hidden="true" className="size-4 shrink-0 text-[#ffd90f]" />
-                  <span>{purchase.boletos.length} boleto{purchase.boletos.length === 1 ? "" : "s"} #{purchase.boletos.map((boleto) => boleto.numero).join(", #")}</span>
-                  {purchase.sorteo && <Link href={`/rifas/${purchase.sorteo.slug}`} className="text-[#ffd90f] underline underline-offset-2">{purchase.sorteo.titulo}</Link>}
-                </p>}
                 {total !== null && Number.isFinite(total) && <p className="mt-3 text-right text-sm text-zinc-500">Total: <strong className="tabular-nums text-white">{currency.format(total)}</strong></p>}
               </li>;
             })}</ul>

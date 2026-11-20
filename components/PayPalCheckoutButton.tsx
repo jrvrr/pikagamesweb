@@ -24,8 +24,6 @@ type PayPalConfirmationResponse = Partial<Omit<PayPalConfirmation, "pagoEstado" 
 interface PayPalCheckoutButtonProps {
   productId: string;
   userId: string;
-  /** Optional: create the order/pedido yourself (e.g. raffle tickets) and return its id. */
-  createPedido?: () => Promise<string>;
   /** Called when payment is successfully captured */
   onSuccess: (details: PayPalConfirmation) => void;
   onBusy?: (busy: boolean) => void;
@@ -63,7 +61,6 @@ export default function PayPalCheckoutButton(props: PayPalCheckoutButtonProps) {
 function PayPalCheckout({
   productId,
   userId,
-  createPedido,
   paypalEnv,
   onSuccess,
   onBusy,
@@ -138,22 +135,15 @@ function PayPalCheckout({
       if (!session.current.pedidoId) {
         session.current.requestId ||= crypto.randomUUID();
         save();
-        let pedidoId: string;
-        if (createPedido) {
-          pedidoId = await createPedido();
-          if (!pedidoId) throw new Error("Pedido inválido");
-        } else {
-          const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
-            request_id: session.current.requestId,
-            metodo_pago: "paypal",
-            productos: [{ producto_id: productId, cantidad: 1 }],
-          }) });
-          if (!pedido?.id || pedido.estado !== "pendiente_pago" || pedido.metodo_pago !== "paypal") {
-            throw new Error("Pedido inválido");
-          }
-          pedidoId = String(pedido.id);
+        const pedido = await apiFetch("/pedidos", { method: "POST", body: JSON.stringify({
+          request_id: session.current.requestId,
+          metodo_pago: "paypal",
+          productos: [{ producto_id: productId, cantidad: 1 }],
+        }) });
+        if (!pedido?.id || pedido.estado !== "pendiente_pago" || pedido.metodo_pago !== "paypal") {
+          throw new Error("Pedido inválido");
         }
-        session.current.pedidoId = pedidoId;
+        session.current.pedidoId = String(pedido.id);
         save();
       }
       const order = await apiFetch("/paypal/crear-orden", { method: "POST", body: JSON.stringify({ pedidoId: session.current.pedidoId }) });
